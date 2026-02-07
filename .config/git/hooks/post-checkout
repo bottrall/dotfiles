@@ -23,8 +23,10 @@ fi
 
 # Files to replicate (edit this list to taste)
 files=(
-  ".env"
+  ".bundle/config"
   ".env.local"
+  ".env"
+  ".vscode/settings.json"
   "config/credentials/development.key"
 )
 
