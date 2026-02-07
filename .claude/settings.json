@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+
+      "Bash(cat *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(less *)",
+      "Bash(ls *)",
+      "Bash(tail *)",
+      "Bash(tree *)",
+
+      "Bash(git *)",
+      "Bash(gh *)",
+
+      "Bash(bin/*)",
+      "Bash(bundle exec *)",
+      "Bash(docker *)",
+      "Bash(pnpm *)"
+    ],
+    "defaultMode": "plan"
+  },
+  "model": "opus",
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  }
+}

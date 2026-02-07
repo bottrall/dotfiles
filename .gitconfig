@@ -1,0 +1,22 @@
+[pull]
+	rebase = true
+	tags = true
+[fetch]
+	prune = true
+	pruneTags = true
+[push]
+	default = current
+	followTags = true
+[status]
+	showUntrackedFiles = all
+[rebase]
+	instructionFormat = [%an] - %s
+[alias]
+	pf = push --force-with-lease
+	co = checkout
+[user]
+	name = Jake Bottrall
+	email = 75273444+bottrall@users.noreply.github.com
+[core]
+	editor = vim
+	hooksPath = ~/.config/git/hooks

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run only in a git repo
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
+
+# Determine current worktree and "main" worktree (the one with the real .git dir)
+curr_wt="$(git rev-parse --show-toplevel)"
+gitdir="$(git rev-parse --git-dir)"
+
+# In a linked worktree, --git-dir looks like: /path/to/main/.git/worktrees/<name>
+if [[ "$gitdir" != */.git/worktrees/* ]]; then
+  # We're in the main worktree; nothing to do
+  exit 0
+fi
+
+main_git="${gitdir%%/.git/worktrees/*}/.git"
+main_wt="$(git -C "$curr_wt" rev-parse --path-format=absolute --git-common-dir 2>/dev/null | sed 's#/.git$##')"
+if [[ -z "${main_wt:-}" || ! -d "$main_wt" ]]; then
+  # Fallback: derive from main_git
+  main_wt="${main_git%/.git}"
+fi
+
+# Files to replicate (edit this list to taste)
+files=(
+  ".env"
+  ".env.local"
+  "config/credentials/development.key"
+)
+
+# Copy if missing; if you prefer symlinks, see note below.
+for f in "${files[@]}"; do
+  src="$main_wt/$f"
+  dst="$curr_wt/$f"
+
+  [[ -e "$src" ]] || continue
+  [[ -e "$dst" ]] && continue
+
+  mkdir -p "$(dirname "$dst")"
+  ln -s "$src" "$dst"
+  echo "[worktree] copied $f"
+done
