@@ -78,6 +78,7 @@ link_file ".gitconfig"
 link_file ".config/git/ignore"
 link_file ".config/git/hooks/post-checkout"
 link_file ".config/starship.toml"
+link_dir  ".config/sh"
 link_dir  ".config/ghostty"
 link_dir  ".config/htop"
 link_file ".claude/CLAUDE.md"
@@ -87,11 +88,13 @@ link_dir  ".claude/docs"
 # --- macOS only ---
 if [[ "$OS" == "Darwin" ]]; then
   link_file ".zshrc"
+  link_dir  ".config/zsh"
 fi
 
 # --- Linux only ---
 if [[ "$OS" == "Linux" ]]; then
   link_file ".bashrc"
+  link_dir  ".config/bash"
   link_dir  ".config/hypr"
   link_dir  ".config/waybar"
   link_dir  ".config/wofi"

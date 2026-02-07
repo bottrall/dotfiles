@@ -1,10 +1,15 @@
 eval "$(starship init bash)"
+eval "$(rbenv init -)"
 
-# rbenv
-if command -v rbenv &>/dev/null; then
-  eval "$(rbenv init -)"
-fi
+# Source shared configs
+for f in ~/.config/sh/*.sh; do
+  [[ -f "$f" ]] && source "$f"
+done
 
-# nvm
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+# Source modular configs
+for f in ~/.config/bash/*.bash; do
+  [[ -f "$f" ]] && source "$f"
+done
+
+# Machine-specific overrides (not tracked)
+[[ -f ~/.bashrc.local ]] && source ~/.bashrc.local
