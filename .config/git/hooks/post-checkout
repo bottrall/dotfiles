@@ -26,6 +26,7 @@ files=(
   ".bundle/config"
   ".env.local"
   ".env"
+  ".overmind.env"
   ".vscode/settings.json"
   "config/credentials/development.key"
 )
