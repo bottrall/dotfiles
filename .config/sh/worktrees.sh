@@ -35,6 +35,8 @@ wta() {
     git worktree add "$worktree_path" "$branch"
   else
     git worktree add -b "$branch" "$worktree_path" "origin/${default_branch}"
+    git config "branch.${branch}.remote" "origin"
+    git config "branch.${branch}.merge" "refs/heads/${branch}"
   fi
 
   if [[ $? -eq 0 ]]; then
