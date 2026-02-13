@@ -4,7 +4,7 @@
 
 Provide thorough documentation:
 
-- **Ruby:** RDoc
+- **Ruby:** RBS inline
 - **TypeScript:** JSDoc
 
 Internal code should be self-documenting with strong type definitions.
