@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "Read",
-
       "Bash(cat *)",
       "Bash(echo *)",
       "Bash(find *)",
@@ -12,14 +11,12 @@
       "Bash(ls *)",
       "Bash(tail *)",
       "Bash(tree *)",
-
       "Bash(git *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(git reset *)",
       "Bash(gh *)",
-
       "Bash(bin/*)",
       "Bash(bundle exec *)",
       "Bash(docker *)",
@@ -30,5 +27,6 @@
   "model": "opus",
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true
-  }
+  },
+  "skipDangerousModePermissionPrompt": true
 }
