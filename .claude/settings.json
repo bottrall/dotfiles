@@ -4,6 +4,7 @@
       "Read",
 
       "Bash(cat *)",
+      "Bash(echo *",
       "Bash(find *)",
       "Bash(grep *)",
       "Bash(head *)",
