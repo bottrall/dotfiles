@@ -1,2 +1,6 @@
 background = #000
 background-opacity = 0.75
+split-inherit-working-directory = true
+tab-inherit-working-directory = false
+window-inherit-working-directory = false
+working-directory = home
