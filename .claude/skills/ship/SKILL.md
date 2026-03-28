@@ -48,7 +48,7 @@ Search for a pull request template in the repo. Check these paths **in order** a
 <bullet points describing the changes>
 
 ## Test plan
-<bullet points for how to verify the changes>
+<bullet points for manual verification — things CI doesn't cover, e.g. visual/UX checks, environment-specific behavior, integration with external services. Omit this section entirely if CI covers everything.>
 ```
 
 - Always append the following footer to the body:
