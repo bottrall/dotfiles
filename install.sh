@@ -84,7 +84,7 @@ link_dir  ".config/htop"
 link_file ".claude/CLAUDE.md"
 link_file ".claude/settings.json"
 link_dir  ".claude/docs"
-link_dir  ".claude/commands"
+link_dir  ".claude/skills"
 
 # --- macOS only ---
 if [[ "$OS" == "Darwin" ]]; then
