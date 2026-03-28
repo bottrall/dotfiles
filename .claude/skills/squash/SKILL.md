@@ -1,3 +1,9 @@
+---
+name: squash
+description: Squash all commits on the current branch into a single commit and force push
+disable-model-invocation: true
+---
+
 # Squash
 
 Squash all commits on the current branch into a single commit and force push to the remote.

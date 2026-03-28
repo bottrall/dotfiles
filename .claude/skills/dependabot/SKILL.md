@@ -1,3 +1,9 @@
+---
+name: dependabot
+description: Review and merge open Dependabot PRs with risk assessment
+disable-model-invocation: true
+---
+
 # Dependabot
 
 Review and merge open Dependabot PRs. Auto-merge low-risk updates, prompt for high-risk ones, and retry PRs that hit conflicts after earlier merges.

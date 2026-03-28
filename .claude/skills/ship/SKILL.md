@@ -1,3 +1,9 @@
+---
+name: ship
+description: Prepare and open a pull request for the current branch
+disable-model-invocation: true
+---
+
 # Ship
 
 Prepare and open a pull request for the current branch.
