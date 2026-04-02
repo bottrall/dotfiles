@@ -41,6 +41,12 @@ wta() {
 
   if [[ $? -eq 0 ]]; then
     cd "$worktree_path"
+
+    if [[ -f "pnpm-lock.yaml" ]]; then
+      echo "Installing node dependencies in background..."
+      pnpm install --frozen-lockfile --prefer-offline >/dev/null 2>&1 &
+      disown
+    fi
   fi
 }
 
