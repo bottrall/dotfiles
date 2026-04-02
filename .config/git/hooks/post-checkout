@@ -29,7 +29,6 @@ files=(
   ".overmind.env"
   ".vscode/settings.json"
   "config/credentials/development.key"
-  "node_modules"
 )
 
 # Copy if missing; if you prefer symlinks, see note below.
