@@ -44,7 +44,7 @@ wta() {
 
     if [[ -f "pnpm-lock.yaml" ]]; then
       echo "Installing node dependencies in background..."
-      pnpm install --frozen-lockfile --prefer-offline >/dev/null 2>&1 &
+      pnpm install --frozen-lockfile --prefer-offline </dev/null >/dev/null 2>&1 &
       disown
     fi
   fi
