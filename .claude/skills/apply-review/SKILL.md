@@ -1,9 +1,9 @@
 ---
-name: address-review
+name: apply-review
 description: Find and address REVIEW comments in files changed on the current branch
 ---
 
-# Address Review
+# Apply Review
 
 Find and address all `REVIEW:` comments in files changed on the current branch.
 
