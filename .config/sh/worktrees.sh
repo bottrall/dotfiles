@@ -30,6 +30,10 @@ wta() {
     fi
   fi
 
+  # Claude Code worktree isolation sets local core.hooksPath to .git/hooks,
+  # overriding global hooksPath. Unset it so global hooks (e.g. post-checkout) work.
+  git config --local --unset core.hooksPath 2>/dev/null
+
   if git show-ref --verify --quiet "refs/heads/${branch}" || \
      git show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
     git worktree add "$worktree_path" "$branch"
