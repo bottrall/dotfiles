@@ -40,7 +40,8 @@ glazimate-next() {
       }
     }
   }' --jq '.data.node.items.nodes[]
-    | "\(.id)\t\(.fieldValueByName.optionId)\t\(.content.number)\t\(.content.title)\t\([.content.blockedBy.nodes[].state] | if length == 0 then "NONE" elif all(. == "CLOSED") then "CLEAR" else "BLOCKED" end)"')
+    | select(.content.number != null)
+    | "\(.id)\t\(.fieldValueByName.optionId)\t\(.content.number)\t\(.content.title)\t\([(.content.blockedBy.nodes // [])[].state] | if length == 0 then "NONE" elif all(. == "CLOSED") then "CLEAR" else "BLOCKED" end)"')
 
   # Promote unblocked backlog items to Ready
   local promoted=0
