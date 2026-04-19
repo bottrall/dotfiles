@@ -5,11 +5,23 @@ description: Multi-agent code review of changes on the current branch; reports f
 
 # Code Review
 
-Code review all changes on the current branch (`git diff main...HEAD`) and report findings inline in chat. Do not post to GitHub.
+Code review all changes on the current branch and report findings inline in chat. Do not post to GitHub.
 
 **Agent assumptions (applies to all agents and subagents):**
 - All tools are functional and will work without error. Do not test tools or make exploratory calls. Make sure this is clear to every subagent that is launched.
 - Only call a tool if it is required to complete the task. Every tool call should have a clear purpose.
+
+## Review scope
+
+All changes since the current branch diverged from the default branch, **including staged and unstaged work**. Do not use `main...HEAD` (three-dot) — it excludes uncommitted changes.
+
+- Detect the default branch with `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
+- Compute the merge-base once: `BASE=$(git merge-base <default-branch> HEAD)`.
+- Unified diff: `git diff $BASE`
+- File list: `git diff --name-only $BASE`
+- Stat: `git diff --stat $BASE`
+
+Pass these exact commands to every subagent.
 
 ## Steps
 
@@ -17,24 +29,29 @@ Code review all changes on the current branch (`git diff main...HEAD`) and repor
 
 Launch a **haiku** agent to verify there are changes on the current branch:
 
-- Run `git diff --stat main...HEAD` (replace `main` with the repo's default branch if different — detect via `git symbolic-ref refs/remotes/origin/HEAD` if needed).
-- If there are no changes, stop and tell me there's nothing to review.
-- If the current branch **is** the default branch, stop and tell me to switch to a feature branch first.
+- Compute `BASE` as defined in the Review scope section.
+- Run `git diff --stat $BASE`.
+- If there are no changes (committed, staged, or unstaged), stop and tell me there's nothing to review.
+- If the current branch **is** the default branch, stop and tell me to switch to a feature branch first (even if there are uncommitted changes).
 
 ### 2. Discover CLAUDE.md files
 
 Launch a **haiku** agent to return a list of file paths (not contents) for all relevant `CLAUDE.md` files:
 
 - The repo root `CLAUDE.md`, if it exists.
-- Any `CLAUDE.md` files in directories containing files modified on the current branch (use `git diff --name-only main...HEAD` to get the changed file list).
+- Any `CLAUDE.md` files in directories containing files modified on the current branch (use `git diff --name-only $BASE` to get the changed file list — this includes uncommitted changes).
 
 ### 3. Summarize the changes
 
-Launch a **sonnet** agent to read `git diff main...HEAD` and `git log --oneline main..HEAD` and return a short summary of what the branch does. This summary provides context to the reviewers in step 4.
+Launch a **sonnet** agent to summarize the branch. The agent should:
+
+- Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline <default-branch>..HEAD` (commits only).
+- Run `git status --porcelain`; if non-empty, note in the summary which files have uncommitted changes so the reviewers in step 4 have that context.
+- Return a short summary of what the branch does.
 
 ### 4. Parallel review (4 agents)
 
-Launch 4 agents in parallel. Each agent receives the branch summary from step 3 and returns a list of issues, where each issue includes a description and the reason it was flagged (e.g. "CLAUDE.md adherence", "bug"). The agents:
+Launch 4 agents in parallel. Each agent receives the branch summary from step 3 and returns a list of issues, where each issue includes a description and the reason it was flagged (e.g. "CLAUDE.md adherence", "bug"). Each agent must use `git diff $BASE` (per the Review scope section) to read the changes — **not** `git diff main...HEAD`, which would silently drop uncommitted work. The agents:
 
 **Agents 1 + 2: CLAUDE.md compliance (sonnet)**
 Audit changes for CLAUDE.md compliance in parallel. When evaluating compliance for a file, only consider `CLAUDE.md` files that share a file path with the file or its parents.
