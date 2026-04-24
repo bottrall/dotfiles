@@ -63,7 +63,7 @@ Search for a pull request template in the repo. Check these paths **in order** a
 - **If no PR exists:** create one:
 
 ```
-gh pr create --draft --title "<title>" --body "$(cat <<'EOF'
+gh pr create --draft --assignee @me --title "<title>" --body "$(cat <<'EOF'
 <body>
 EOF
 )"
