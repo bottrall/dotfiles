@@ -7,7 +7,7 @@ The universal principles in `CLAUDE.md` apply (functional patterns, code organiz
 - Use blocks, `Proc`, and lambdas for composition — they're the Ruby-flavored equivalent of higher-order functions.
 - Use `freeze` for shared constants and value objects.
 - Prefer keyword arguments for clarity; avoid positional booleans.
-- In application code, don't add Sorbet (`# typed:`) or RBS speculatively — only where the project already uses them. For library exports, see *Documentation* below.
+- In application code, don't add Sorbet (`# typed:`) or RBS speculatively — only where the project already uses them. For library exports, see _Documentation_ below.
 
 ## Code Organization
 

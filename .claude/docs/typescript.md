@@ -56,26 +56,17 @@ export function format({ amountCents, currency }: Money) {
 Prefer discriminated unions over class hierarchies for variant types — better narrowing, trivial serialization, exhaustive `switch`.
 
 ```ts
-type Result<T, E> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
 function describe<T, E>(r: Result<T, E>) {
   switch (r.ok) {
-    case true: return `value: ${r.value}`;
-    case false: return `error: ${r.error}`;
+    case true:
+      return `value: ${r.value}`;
+    case false:
+      return `error: ${r.error}`;
   }
 }
 ```
-
-### React / JSX
-
-- Function components only. No class components.
-- Hooks at the top of the function body; never call hooks conditionally or inside loops.
-- Default to server components in apps that support them; add `'use client'` only where you actually need interactivity, refs, or browser APIs.
-- Prefer composition (`children`, slot props) over prop-heavy mega-components. Small, focused components are easier to read, test, and reuse.
-
-**Smell:** props named `is*` / `has*` piling up usually means the component should split into focused variants — or the variant axis should become a discriminated union prop.
 
 ## Types
 

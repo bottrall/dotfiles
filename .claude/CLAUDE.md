@@ -25,15 +25,15 @@ These apply across every language. The language docs hold the language-specific 
 
 ### Inheritance and composition
 
-Inheritance is *very strong* coupling — stronger than people appreciate when they reach for it — and the costs only show up later, once the hierarchy has grown enough that backing out is expensive. Three failure modes to watch for:
+Inheritance is _very strong_ coupling — stronger than people appreciate when they reach for it — and the costs only show up later, once the hierarchy has grown enough that backing out is expensive. Three failure modes to watch for:
 
 - **You inherit everything, not just what you wanted.** `Penguin extends Bird` inherits `fly()`, which it can't actually do. Subclassing to reuse one method drags along every field, override surface, and assumption the parent has.
-- **Real domains rarely decompose into clean single-parent trees.** A `BankAccount` is checking-vs-savings *and* business-vs-personal *and* domestic-vs-international. A single inheritance chain can only express one of those axes; the others become awkward flags or duplicated subtrees.
+- **Real domains rarely decompose into clean single-parent trees.** A `BankAccount` is checking-vs-savings _and_ business-vs-personal _and_ domestic-vs-international. A single inheritance chain can only express one of those axes; the others become awkward flags or duplicated subtrees.
 - **Deep chains hide where behavior comes from and inflate blast radius.** When `AdminUser extends PowerUser extends User extends ApplicationRecord`, finding which class defines a method requires walking the chain, and any change risks breaking subclasses you didn't know existed.
 
-Default to **composition**: pass collaborators ("has-a") instead of inheriting from a parent ("is-a"). For shared *shape*, use an interface, structural type, or duck typing — that separates "usable in this context" from "kind of this thing", which inheritance conflates. Build small, focused units and assemble objects by combining the pieces they need, rather than locating them in a taxonomy.
+Default to **composition**: pass collaborators ("has-a") instead of inheriting from a parent ("is-a"). For shared _shape_, use an interface, structural type, or duck typing — that separates "usable in this context" from "kind of this thing", which inheritance conflates. Build small, focused units and assemble objects by combining the pieces they need, rather than locating them in a taxonomy.
 
-Reserve `extends` / Ruby `<` for genuine "is-a" with shared *implementation*, or framework-mandated parents (`ApplicationRecord`, `Sidekiq::Worker`, NestJS providers, custom `Error` subclasses).
+Reserve `extends` / Ruby `<` for genuine "is-a" with shared _implementation_, or framework-mandated parents (`ApplicationRecord`, `Sidekiq::Worker`, NestJS providers, custom `Error` subclasses).
 
 ### Dependency injection
 
