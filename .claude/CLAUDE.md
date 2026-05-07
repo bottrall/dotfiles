@@ -9,7 +9,8 @@
 
 ## Guidelines
 
-- [Programming Style](docs/programming-style.md) - Functional patterns, error handling
-- [Testing](docs/testing.md) - Single assertion principle
-- [Documentation](docs/documentation.md) - Public API docs
-- [Git](docs/git.md) - Conventional Commits
+**Before writing or editing code, you MUST first read the relevant doc:**
+
+- TypeScript / JavaScript / TSX / JSX → [docs/typescript.md](docs/typescript.md) (REQUIRED before writing TS/JS)
+- Ruby (incl. Rails) → [docs/ruby.md](docs/ruby.md) (REQUIRED before writing Ruby)
+- Test files (`*.test.*`, `*.spec.*`, `*_spec.rb`, `*_test.rb`, files under `__tests__/`, `spec/`, `test/`) → [docs/testing.md](docs/testing.md) (REQUIRED before writing or editing tests)
