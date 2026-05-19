@@ -6,7 +6,7 @@ The universal principles in `CLAUDE.md` apply (functional patterns, code organiz
 
 - Prefer a single options object over positional booleans — `fn({ admin: true, active: false })` not `fn(true, false)`. Names at the call site beat unlabeled flags every time.
 - Named exports over default exports for non-React modules — they're refactor-safe and grep-able. React components may default-export per project convention.
-- camelCase for values, PascalCase for types and components, SCREAMING_SNAKE for module-level constants.
+- camelCase for values (including module-level constants), PascalCase for types and components. No SCREAMING_SNAKE — the "magic primitive constant" carve-out has a fuzzy boundary and drifts under review, and module scope is already visible in tooling. One rule scales; two rules require judgment on every declaration.
 
 ## Code Organization
 
