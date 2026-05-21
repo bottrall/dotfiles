@@ -41,15 +41,24 @@ Search for a pull request template in the repo. Check these paths **in order** a
 
 - Derive a short PR title (< 70 chars) from the branch commits.
 - **If a template was found:** fill it in using the branch's diff (`git diff main...HEAD`) and commit history. Leave any section empty rather than guessing.
-- **If no template was found:** use this format:
+- **If no template was found:** write a human-friendly description using the format below. Prefer prose over bullet lists — a reviewer should be able to read it top-to-bottom and understand the change without scanning the diff. Don't restate what the diff already shows; explain the intent.
 
 ```
-## Summary
-<bullet points describing the changes>
+## Problem
+<What problem does this PR solve? Why does it matter? Include user-visible symptoms, bug context, or the motivation behind the feature. If there's a linked issue or ticket, reference it.>
 
-## Test plan
-<bullet points for manual verification — things CI doesn't cover, e.g. visual/UX checks, environment-specific behavior, integration with external services. Omit this section entirely if CI covers everything.>
+## Solution
+<How does this PR solve the problem? Explain the approach and any notable trade-offs or alternatives considered. Call out anything subtle a reviewer might otherwise miss (e.g. migration ordering, feature flags, follow-up work).>
+
+## Proof
+<Evidence the change works. State what's already covered and tell the author what's still needed:
+- If CI fully covers it, say so explicitly ("CI is sufficient — see new tests in <file>").
+- If the change is visual or UX-related, instruct the author: "Attach a screenshot of <X>" or "Attach a demo video showing <Y>".
+- If it requires manual verification in a specific environment, dataset, or external integration, instruct the author to confirm those steps and paste the results.
+- If reviewers need to run something locally, list the exact steps.>
 ```
+
+Infer the content from the branch's diff, commit messages, and any linked issue. If you genuinely can't determine the problem or solution from the available context, leave a placeholder like `<TODO: describe the problem>` rather than inventing one — better to flag the gap than fabricate intent. For **Proof**, always include explicit instructions to the author for any evidence you can't produce yourself (screenshots, videos, manual test output).
 
 - Always append the following footer to the body:
 
