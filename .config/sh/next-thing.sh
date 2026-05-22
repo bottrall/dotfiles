@@ -1,13 +1,19 @@
-glazimate-next() {
+next-thing() {
   local project_id="PVT_kwDOEGXJvM4BUbLD"
   local field_id="PVTSSF_lADOEGXJvM4BUbLDzhBjW-U"
   local backlog_option_id="405af02e"
   local ready_option_id="5b7f2f3f"
   local in_progress_option_id="28af537d"
-  local repo="bottralldotdev/glazimate"
 
   if ! git rev-parse --git-dir > /dev/null 2>&1; then
     echo "Error: Not in a git repository"
+    return 1
+  fi
+
+  local repo
+  repo=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null)
+  if [[ -z "$repo" ]]; then
+    echo "Error: Could not detect a GitHub repo for the current directory"
     return 1
   fi
 
@@ -28,6 +34,7 @@ glazimate-next() {
               ... on Issue {
                 number
                 title
+                repository { nameWithOwner }
                 blockedBy(first: 20) {
                   nodes {
                     state
@@ -41,6 +48,7 @@ glazimate-next() {
     }
   }' --jq '.data.node.items.nodes[]
     | select(.content.number != null)
+    | select(.content.repository.nameWithOwner == "'"$repo"'")
     | "\(.id)\t\(.fieldValueByName.optionId)\t\(.content.number)\t\(.content.title)\t\([(.content.blockedBy.nodes // [])[].state] | if length == 0 then "NONE" elif all(. == "CLOSED") then "CLEAR" else "BLOCKED" end)"')
 
   # Promote unblocked backlog items to Ready
@@ -103,7 +111,7 @@ glazimate-next() {
     | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' \
     | cut -c1-72)
 
-  gh issue develop "$issue_number" --repo "$repo" --name "$branch" --base main
+  gh issue develop "$issue_number" --repo "$repo" --name "$branch"
 
   git fetch origin "$branch" --quiet
 
