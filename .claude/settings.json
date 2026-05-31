@@ -19,10 +19,18 @@
     "defaultMode": "bypassPermissions"
   },
   "model": "opus[1m]",
+  "env": {
+    "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"
+  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "code-review@claude-plugins-official": false
   },
+  "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
-  "autoMemoryEnabled": false
+  "voiceEnabled": true,
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  }
 }
