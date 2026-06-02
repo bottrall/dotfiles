@@ -37,6 +37,38 @@ link_file() {
   echo "LINK    $1"
 }
 
+link_as() {
+  local src="$DOTFILES/$1"
+  local dst="$HOME/$2"
+
+  if [[ ! -e "$src" ]]; then
+    echo "SKIP    $2 (source $1 missing)"
+    return
+  fi
+
+  local parent
+  parent="$(dirname "$dst")"
+  mkdir -p "$parent"
+
+  if [[ -L "$dst" ]]; then
+    local current
+    current="$(readlink "$dst")"
+    if [[ "$current" == "$src" ]]; then
+      echo "OK      $2 -> $1"
+      return
+    fi
+    rm "$dst"
+  elif [[ -e "$dst" ]]; then
+    local backup_dst="$BACKUP/$2"
+    mkdir -p "$(dirname "$backup_dst")"
+    mv "$dst" "$backup_dst"
+    echo "BACKUP  $2 -> $backup_dst"
+  fi
+
+  ln -s "$src" "$dst"
+  echo "LINK    $2 -> $1"
+}
+
 link_dir() {
   local src="$DOTFILES/$1"
   local dst="$HOME/$1"
@@ -81,10 +113,12 @@ link_file ".config/starship.toml"
 link_dir  ".config/sh"
 link_dir  ".config/ghostty"
 link_dir  ".config/htop"
-link_file ".claude/CLAUDE.md"
+# Portable agent config (harness-agnostic source of truth in .agents/)
+link_as   ".agents/AGENTS.md" ".claude/CLAUDE.md"
+link_as   ".agents/docs"      ".claude/docs"
+link_as   ".agents/skills"    ".claude/skills"
+# Claude-specific config
 link_file ".claude/settings.json"
-link_dir  ".claude/docs"
-link_dir  ".claude/skills"
 
 # --- macOS only ---
 if [[ "$OS" == "Darwin" ]]; then
