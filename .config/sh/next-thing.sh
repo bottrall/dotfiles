@@ -120,5 +120,5 @@ next-thing() {
   echo "Branch: ${branch}"
   echo ""
 
-  cc "/plan Implement ${repo}#${issue_number}"
+  cc "/grill-me Implement ${repo}#${issue_number}"
 }
