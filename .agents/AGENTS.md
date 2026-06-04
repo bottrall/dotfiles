@@ -89,6 +89,7 @@ Loops use `continue` for the same effect; error paths use early `return Result.e
 
 - Public APIs and libraries: provide thorough docstrings (JSDoc / RBS) on exported symbols.
 - Internal code is self-documenting via strong types and clear names. Don't add comments that just restate the code.
+- Don't hard-wrap markdown prose — write one line per paragraph and let it soft-wrap. (Hard-wrapping code comments at the usual column width is fine.)
 
 ## Language docs (REQUIRED before editing)
 
