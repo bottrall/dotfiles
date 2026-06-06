@@ -14,7 +14,7 @@ Personal dotfiles for macOS and Arch Linux.
 
 **Hyprland** (Linux) — Hyprland, Hyprpaper, Hypridle, Hyprlock, Waybar, Wofi
 
-**Agents** — harness-agnostic instructions, docs, and skills live in `.agents/` (`AGENTS.md`, `docs/`, `skills/`) as the source of truth. `install.sh` symlinks them into Claude Code's locations (`~/.claude/CLAUDE.md` → `.agents/AGENTS.md`, plus `docs/` and `skills/`), so other harnesses can point at the same `.agents/` later.
+**Agents** — harness-agnostic instructions, docs, and skills live in `.agents/` (`AGENTS.md`, `docs/`, `skills/`) as the source of truth. `install.sh` symlinks them into each harness's locations: Claude Code (`~/.claude/CLAUDE.md` → `.agents/AGENTS.md`, plus `docs/` and `skills/`) and Riffer Code (`~/.riffer-code/AGENTS.md` → `.agents/AGENTS.md`, plus `docs/` and `skills/`, keeping the `AGENTS.md` name since Riffer uses that convention natively).
 
 **Claude Code** — harness-specific `settings.json` (lives in `.claude/`)
 

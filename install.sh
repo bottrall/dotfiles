@@ -119,6 +119,10 @@ link_as   ".agents/docs"      ".claude/docs"
 link_as   ".agents/skills"    ".claude/skills"
 # Claude-specific config
 link_file ".claude/settings.json"
+# Riffer Code uses the AGENTS.md convention natively, so keep the name as-is
+link_as   ".agents/AGENTS.md" ".riffer-code/AGENTS.md"
+link_as   ".agents/docs"      ".riffer-code/docs"
+link_as   ".agents/skills"    ".riffer-code/skills"
 
 # --- macOS only ---
 if [[ "$OS" == "Darwin" ]]; then
