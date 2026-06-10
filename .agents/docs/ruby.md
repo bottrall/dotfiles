@@ -1,6 +1,6 @@
 # Ruby Style
 
-The universal principles in `CLAUDE.md` apply (functional patterns, code organization, inheritance/composition, DI, nesting, error handling, documentation). This doc covers Ruby-specific idioms and examples.
+The universal principles in `CLAUDE.md` apply (functional patterns, code organization, inheritance/composition, DI, nesting, error handling, comments and documentation). This doc covers Ruby-specific idioms and examples.
 
 ## Style
 

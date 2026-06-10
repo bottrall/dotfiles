@@ -85,11 +85,18 @@ Loops use `continue` for the same effect; error paths use early `return Result.e
 - Don't use thrown exceptions for control flow. Return a Result/Either/discriminated union or `[:ok, value]` / `[:error, reason]` tuple instead.
 - Reserve `throw` / `raise` for truly exceptional circumstances — programmer errors, unrecoverable state, framework-level boundaries.
 
-### Documentation
+### Comments and documentation
 
-- Public APIs and libraries: provide thorough docstrings (JSDoc / RBS) on exported symbols.
-- Internal code is self-documenting via strong types and clear names. Don't add comments that just restate the code.
-- Don't hard-wrap markdown prose — write one line per paragraph and let it soft-wrap. (Hard-wrapping code comments at the usual column width is fine.)
+A comment exists to explain a **why** the code itself cannot — never a **how**, and never a restatement of what the code already says. This bar governs all prose, from inline comments to docstrings on the public API. Types are not prose's job: parameters, return values, and field types live in the type system (TypeScript types, RBS/rbs-inline `#:` annotations), not in comments that duplicate them.
+
+- **Public surface** (exported symbols — functions, classes, constants, public methods) gets at minimum a brief description: one verb-first sentence on one line (`Serializes the definition to JSON.`). A second sentence is reserved strictly for a "why" — a non-obvious constraint or rationale — never a second sentence of "how". If a description needs more than one sentence to say _what_ it does, that's a smell the symbol does too much. _Exempt:_ a constant whose name and value already carry the full meaning (`VERSION = "0.30.0"`), and an empty namespace/placeholder whose members are documented individually.
+- **Internal and private code** is self-documenting via strong types and clear names. A comment survives here **only** if it explains a why a competent reader cannot recover from the code and names alone — a non-local constraint, an external-system quirk, a deliberate non-obvious tradeoff. A description of _what_ it does, or a why that's evident from the code, gets cut.
+- **Inline comments** meet the same bar: kept only to explain the why of something genuinely ambiguous. `TODO` / `FIXME` / `HACK` markers are tracked work and stay; `NOTE` / `REVIEW` are subject to the why-rule.
+- **No history.** A comment describes the present, never how the code got there. Change narration — "was X, now Y", "previously used Z" — has no place; the reader cares about what is, not what was. State a still-true constraint in the present tense ("the API returns null for empty results — guard"), never as the story of the bug that revealed it.
+
+Language docs cover the docstring mechanics (JSDoc tags, RDoc directives, rbs-inline) for each ecosystem.
+
+Don't hard-wrap markdown prose — write one line per paragraph and let it soft-wrap. (Hard-wrapping code comments at the usual column width is fine.)
 
 ## Language docs (REQUIRED before editing)
 
