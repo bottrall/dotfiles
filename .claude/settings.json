@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"
+  },
   "permissions": {
     "allow": [
       "Read",
@@ -19,18 +22,16 @@
     "defaultMode": "bypassPermissions"
   },
   "model": "opus[1m]",
-  "env": {
-    "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"
-  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "code-review@claude-plugins-official": false
   },
-  "autoMemoryEnabled": false,
-  "skipDangerousModePermissionPrompt": true,
-  "voiceEnabled": true,
   "voice": {
     "enabled": true,
     "mode": "hold"
-  }
+  },
+  "autoMemoryEnabled": false,
+  "skipDangerousModePermissionPrompt": true,
+  "voiceEnabled": true,
+  "effortLevel": "xhigh"
 }
