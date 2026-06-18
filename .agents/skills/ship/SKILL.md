@@ -16,7 +16,7 @@ Prepare and open a pull request for the current branch.
 - If there are changes, stage and commit them. **Run staging and committing as separate commands — never combine them into a single chained command.**
   - Stage relevant files by name (never use `git add -A` or `git add .`).
   - Write a commit message using **Conventional Commits** (`feat:`, `fix:`, `chore:`, etc.).
-  - Commit using a HEREDOC for the message and include the `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` trailer.
+  - Commit using a HEREDOC for the message and include the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
   - Run `git status` after committing to verify success.
 - Run `git log --oneline main..HEAD` (or the repo's default branch) to confirm there are commits to ship. If the branch **is** the default branch, stop and tell me to create a feature branch first.
 
