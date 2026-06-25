@@ -62,6 +62,8 @@ function processOrder(order: Order, db: Database, email: Emailer) {
 
 **Smell:** a function or class taking 8+ dependencies is doing too much — split it. DI makes coupling visible; visible coupling is what lets you notice when there's too much.
 
+**Framework conventions are exempt.** A framework's own global collaborators — the ones it expects you to call by name — are idiomatic to reach for directly, not DI violations: Rails `ActiveRecord` models (`User.find`, `user.save`), `ActionMailer` (`UserMailer.welcome(user).deliver_later`), `ActiveJob`. They ship with first-class test seams (the test database, `ActionMailer::TestHelper` / `assert_emails`, `perform_enqueued_jobs`), so calling them in place costs none of the testability or swappability DI exists to protect — the seam is already there. The rule still binds collaborators that lack such a seam: third-party clients (`Stripe::Client`, an HTTP or S3 SDK) and your own service objects — inject those.
+
 ### Nesting
 
 Never nest more than three levels deep. Two techniques to keep things flat:
