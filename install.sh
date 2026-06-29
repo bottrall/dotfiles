@@ -113,15 +113,15 @@ link_file ".config/starship.toml"
 link_dir  ".config/sh"
 link_dir  ".config/ghostty"
 link_dir  ".config/htop"
-# Portable agent config (harness-agnostic source of truth in .agents/)
-link_as   ".agents/AGENTS.md" ".claude/CLAUDE.md"
-link_as   ".agents/docs"      ".claude/docs"
+# Portable agent config (harness-agnostic source of truth in .agents/) - disabled as I experiment with encapsulating rules in projects more.
+# link_as   ".agents/AGENTS.md" ".claude/CLAUDE.md"
+# link_as   ".agents/docs"      ".claude/docs"
 link_as   ".agents/skills"    ".claude/skills"
 # Claude-specific config
 link_file ".claude/settings.json"
-# Riffer Code uses the AGENTS.md convention natively, so keep the name as-is
-link_as   ".agents/AGENTS.md" ".riffer-code/AGENTS.md"
-link_as   ".agents/docs"      ".riffer-code/docs"
+# Riffer Code uses the AGENTS.md convention natively, so keep the name as-is - disabled as I experiment with encapsulating rules in projects more.
+# link_as   ".agents/AGENTS.md" ".riffer-code/AGENTS.md"
+# link_as   ".agents/docs"      ".riffer-code/docs"
 link_as   ".agents/skills"    ".riffer-code/skills"
 
 # --- macOS only ---
