@@ -27,6 +27,7 @@
     "code-review@claude-plugins-official": false
   },
   "effortLevel": "xhigh",
+  "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
@@ -34,5 +35,5 @@
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "voiceEnabled": true,
-  "tui": "fullscreen"
+  "agentPushNotifEnabled": true
 }
