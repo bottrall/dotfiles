@@ -17,6 +17,21 @@ This loop is **fully autonomous**. It never pauses between phases, and it pushes
 
 Create a todo list before starting. Track a single **cycle counter** starting at 1. Every return to Phase 1 — whether triggered by review findings or CI failure — increments it. When the counter would exceed the cap, stop and hand back instead of looping.
 
+## Model selection
+
+Every subagent launch includes a deliberate model choice, picked from whatever tiers the Agent tool currently exposes. No phase is mapped to a model — decide per launch, per cycle, by weighing:
+
+- **Judgment density.** How much of the task is reasoning versus mechanical execution? Following explicit instructions (commit, push, fill a template, watch checks, verify a single quoted claim) needs far less capability than open-ended design, debugging, or spotting what _isn't_ written in the diff.
+- **Cost of a miss.** What happens if this subagent gets it wrong? A weak build gets caught by review; a weak review ships the bug. Work that gates the loop deserves more capability than work the loop double-checks.
+- **Ambiguity of the input.** A cycle-1 "implement the task" prompt is open-ended; a cycle-2 "fix exactly these quoted findings" prompt is nearly mechanical. The same phase can warrant different models on different cycles.
+- **Recovery cost.** A cheap model that fails burns a subagent; a cheap model that _plausibly_ succeeds burns a whole cycle. When wrong-but-confident output is hard to detect downstream, pay for capability up front.
+
+Generation and verification are asymmetric: checking work often demands more capability than producing it, because the checker must catch what the producer missed. Don't assume the reviewer can be weaker than the builder just because the diff is small.
+
+This applies to anything delegated, not just the phases that already prescribe subagents — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch.
+
+Omitting the model (inheriting the session's) is a valid choice, not a default — make it deliberately. State the chosen model in each launch so the decision is visible in the transcript.
+
 ## Phase 0 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
