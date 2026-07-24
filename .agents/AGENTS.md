@@ -2,6 +2,12 @@
 
 **Stack:** TypeScript, React, Node.js, Ruby, Rails
 
+## Communication
+
+- When sending any message on my behalf (Slack, email, PR/issue comments, etc.) without me approving a draft first, always indicate that the message was written and sent by Claude, not me. Use this exact signoff at the end of the message so it's consistent:
+
+  > — 🤖 Claude (beep boop)
+
 ## Tooling
 
 - Node.js projects: use `pnpm`
