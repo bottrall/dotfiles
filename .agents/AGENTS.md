@@ -11,7 +11,7 @@
 ## Tooling
 
 - Node.js projects: use `pnpm`
-- Rails projects: use `bin/`
+- Rails projects: use `bin/` or `rake`
 
 ## Universal principles
 
