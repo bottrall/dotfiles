@@ -3,27 +3,11 @@
     "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"
   },
   "permissions": {
-    "allow": [
-      "Read",
-      "Bash(cat *)",
-      "Bash(echo *)",
-      "Bash(find *)",
-      "Bash(grep *)",
-      "Bash(head *)",
-      "Bash(less *)",
-      "Bash(ls *)",
-      "Bash(tail *)",
-      "Bash(tree *)",
-      "Bash(bin/*)",
-      "Bash(bundle exec *)",
-      "Bash(docker *)",
-      "Bash(pnpm *)"
-    ],
     "defaultMode": "bypassPermissions"
   },
   "model": "opus[1m]",
   "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": false,
     "code-review@claude-plugins-official": false
   },
   "effortLevel": "high",
