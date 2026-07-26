@@ -79,9 +79,15 @@ Never nest more than three levels deep. Two techniques to keep things flat:
 
 ```ts
 function process(user) {
-  if (!user) return;
-  if (!user.isActive) return;
-  if (!user.hasPermission) return;
+  if (!user) {
+    return;
+  }
+  if (!user.isActive) {
+    return;
+  }
+  if (!user.hasPermission) {
+    return;
+  }
   // happy path at the base indentation
 }
 ```
