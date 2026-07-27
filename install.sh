@@ -37,38 +37,6 @@ link_file() {
   echo "LINK    $1"
 }
 
-link_as() {
-  local src="$DOTFILES/$1"
-  local dst="$HOME/$2"
-
-  if [[ ! -e "$src" ]]; then
-    echo "SKIP    $2 (source $1 missing)"
-    return
-  fi
-
-  local parent
-  parent="$(dirname "$dst")"
-  mkdir -p "$parent"
-
-  if [[ -L "$dst" ]]; then
-    local current
-    current="$(readlink "$dst")"
-    if [[ "$current" == "$src" ]]; then
-      echo "OK      $2 -> $1"
-      return
-    fi
-    rm "$dst"
-  elif [[ -e "$dst" ]]; then
-    local backup_dst="$BACKUP/$2"
-    mkdir -p "$(dirname "$backup_dst")"
-    mv "$dst" "$backup_dst"
-    echo "BACKUP  $2 -> $backup_dst"
-  fi
-
-  ln -s "$src" "$dst"
-  echo "LINK    $2 -> $1"
-}
-
 link_dir() {
   local src="$DOTFILES/$1"
   local dst="$HOME/$1"
@@ -113,16 +81,10 @@ link_file ".config/starship.toml"
 link_dir  ".config/sh"
 link_dir  ".config/ghostty"
 link_dir  ".config/htop"
-# Portable agent config (harness-agnostic source of truth in .agents/) - disabled as I experiment with encapsulating rules in projects more.
-# link_as   ".agents/AGENTS.md" ".claude/CLAUDE.md"
-# link_as   ".agents/docs"      ".claude/docs"
-link_as   ".agents/skills"    ".claude/skills"
-# Claude-specific config
+# Claude Code
+link_file ".claude/CLAUDE.md"
 link_file ".claude/settings.json"
-# Riffer Code uses the AGENTS.md convention natively, so keep the name as-is - disabled as I experiment with encapsulating rules in projects more.
-# link_as   ".agents/AGENTS.md" ".riffer-code/AGENTS.md"
-# link_as   ".agents/docs"      ".riffer-code/docs"
-link_as   ".agents/skills"    ".riffer-code/skills"
+link_dir  ".claude/skills"
 
 # --- macOS only ---
 if [[ "$OS" == "Darwin" ]]; then
