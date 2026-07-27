@@ -10,6 +10,11 @@ Drive a task to a green, shipped PR autonomously. One cycle is: **build → revi
 
 This loop is **fully autonomous**. It never pauses between phases, and it pushes and opens a **draft** PR on its own. Run it only on a feature branch you're happy to ship from. It surfaces to me exactly twice: on success, or when it stops because the cycle cap was reached (or it's genuinely blocked).
 
+**Agent assumptions (applies to all agents and subagents):**
+
+- All tools are functional and will work without error. Do not test tools or make exploratory calls. Make sure this is clear to every subagent that is launched.
+- Only call a tool if it is required to complete the task. Every tool call should have a clear purpose.
+
 ## Inputs
 
 - **The task**: the text passed when invoking the skill. If none was passed, use the task established in the current conversation. If neither is clear, that's the one time to stop and ask me what to build.
@@ -28,9 +33,9 @@ Every subagent launch includes a deliberate model choice, picked from whatever t
 
 Generation and verification are asymmetric: checking work often demands more capability than producing it, because the checker must catch what the producer missed. Don't assume the reviewer can be weaker than the builder just because the diff is small.
 
-This applies to anything delegated, not just the phases that already prescribe subagents — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch.
-
 Omitting the model (inheriting the session's) is a valid choice, not a default — make it deliberately. State the chosen model in each launch so the decision is visible in the transcript.
+
+This applies to anything delegated, not just the phases that already prescribe subagents — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch.
 
 ## Phase 0 — Preflight (once)
 
@@ -40,7 +45,7 @@ Omitting the model (inheriting the session's) is a valid choice, not a default �
 
 ## Phase 1 — Build
 
-Launch a subagent to do the work for this cycle. It must read the project's own instructions and relevant language/rules docs before editing.
+Launch a subagent to do the work for this cycle. It must read the project's own rule files (`CLAUDE.md` + `.claude/rules`) before editing — the review in Phase 2 audits against exactly those.
 
 - **Cycle 1:** implement the task.
 - **Cycle > 1:** the subagent's sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
@@ -51,20 +56,41 @@ Leave the changes uncommitted — the review reads staged + unstaged work, and t
 
 A multi-agent review of the branch. Because **every surviving finding sends the loop back to Phase 1**, the bar is high signal only — a false positive burns a whole cycle. The validation pass exists to enforce that.
 
+This is the same review protocol as the `code-review` skill; the two are kept deliberately in sync. Only the disposition differs — `code-review` prints its findings, this phase gates on them. Change one, change both.
+
 ### Scope
 
-All changes since the branch diverged from the default branch, **including staged and unstaged work**. Never use three-dot (`main...HEAD`) — it drops uncommitted changes.
+All changes since the current branch diverged from the default branch, **including staged and unstaged work**. Never use three-dot (`main...HEAD`) — it drops uncommitted changes.
 
-- `BASE=$(git merge-base <default-branch> HEAD)` — recompute at the start of each review.
+- Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
+- `BASE=$(git merge-base <default-branch> HEAD)` — compute once at the start of the review.
 - Unified diff: `git diff $BASE`
 - File list: `git diff --name-only $BASE`
 - Stat: `git diff --stat $BASE`
 
 Pass these exact commands to every review subagent. Each reviewer must read the changes via `git diff $BASE` — not `git diff main...HEAD`.
 
-### 2a. Parallel review
+Recompute `BASE` at the start of every cycle's review.
 
-Launch these five reviewers in parallel. Each receives the branch summary from 2b and the rule-file paths from 2a, and returns a list of findings — each with a `path:line` reference, a reason tag, and a one-line description.
+### 2a. Discover rule files
+
+Launch a subagent to return a list of file paths (not contents) for all relevant rule files:
+
+- The repo root `CLAUDE.md`, if it exists.
+- Any `CLAUDE.md` in a directory containing a file modified on this branch (use `git diff --name-only $BASE`, which includes uncommitted changes).
+- Any file under `.claude/rules/`.
+
+### 2b. Summarize the changes
+
+Launch a subagent to summarize the branch. It should:
+
+- Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline <default-branch>..HEAD` (commits only).
+- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in 2c have that context.
+- Return a short summary of what the branch does.
+
+### 2c. Parallel review
+
+Launch these five reviewers in parallel. Each receives the rule-file paths from 2a and the branch summary from 2b, and returns a list of findings — each with a `path:line` reference, a reason tag, and a one-line description.
 
 1. **Rules compliance** — audit the changed code against the discovered rule files (`CLAUDE.md` + `.claude/rules`). For a `CLAUDE.md`, only apply it to files it shares a path with (the file or its parents). Files under `.claude/rules/` apply repo-wide unless the rule itself scopes them. Flag only clear, unambiguous violations where you can quote the exact rule and its source file path.
 
@@ -72,9 +98,9 @@ Launch these five reviewers in parallel. Each receives the branch summary from 2
 
 3. **Security review** — look for injection (SQL/command/template), broken authn/authz, secrets or credentials in code, unsafe deserialization, SSRF, path traversal, missing input validation, unsafe use of untrusted data, and similar — but only within the changed code.
 
-4. **Performance review** — look for N+1 queries, missing pagination or indexes, accidental O(n²) or repeated work in loops, unnecessary allocations, blocking I/O on hot paths, and similar — but only within the changed code. We're only looking for major perforomance issues, readability > than a small performance win.
+4. **Performance review** — look for N+1 queries, missing pagination or indexes, accidental O(n²) or repeated work in loops, unnecessary allocations, blocking I/O on hot paths, and similar — but only within the changed code. Only major performance issues; readability beats a small performance win.
 
-5. **Simplify / idiomatic review** — what the changed code could drop or collapse (dead code, redundant branches, needless abstraction, duplication) and where it diverges from the idioms of its language/framework (per the project's language docs and conventions). Every finding must name a concrete, mechanical change and the idiomatic replacement — never a vague "could be cleaner."
+5. **Simplify / idiomatic review** — what the changed code could drop or collapse (dead code, redundant branches, needless abstraction, duplication) and where it diverges from the idioms of its language/framework (per the project's conventions and rule files). Every finding must name a concrete, mechanical change and the idiomatic replacement — never a vague "could be cleaner."
 
 **HIGH SIGNAL only.** Flag a finding only when:
 
@@ -84,15 +110,15 @@ Launch these five reviewers in parallel. Each receives the branch summary from 2
 - It's an unambiguous rule violation you can quote, or
 - It's a concrete, clearly-beneficial simplification or idiom fix with a specific replacement.
 
-Do **not** flag: subjective style preferences, issues that only manifest for specific unstated inputs/state, speculative improvements, or anything you're not certain is real.
+Do **not** flag: subjective style preferences, issues that only manifest for specific unstated inputs/state, speculative improvements, or anything you're not certain is real. False positives erode trust and waste reviewer time.
 
-### 2b. Validate
+### 2d. Validate
 
 For each finding, launch a subagent to adversarially confirm it is real and worth fixing with high confidence — e.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated. Drop any finding that doesn't survive.
 
-### 2c. False-positive list
+### False-positive list
 
-Never flag these (use in 2a and 2b):
+Never flag these (use in 2c and 2d):
 
 - Pre-existing issues (outside the diff).
 - Something that looks like a bug but is actually correct.
@@ -101,9 +127,9 @@ Never flag these (use in 2a and 2b):
 - General code-quality gaps (e.g. lack of test coverage) unless a rule file explicitly requires otherwise.
 - Issues silenced deliberately in the code (e.g. a lint-ignore comment).
 
-### 2d. Gate
+### 2e. Gate
 
-The surviving findings after 2c are blockers.
+The findings surviving 2d, minus anything on the false-positive list, are blockers.
 
 - **If any survive** and the cycle counter is **below** the cap: increment the counter, pass the findings (grouped `path:line`, with reason and description) to Phase 1, and loop.
 - **If any survive** and the cycle counter is **at** the cap: stop. Hand back per the report format — do not ship.
