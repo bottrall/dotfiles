@@ -1,6 +1,7 @@
 ---
 name: code-review
 description: Multi-agent code review of changes on the current branch; reports findings inline in chat
+disable-model-invocation: true
 ---
 
 # Code Review
