@@ -25,7 +25,7 @@ The map is an **index**, not a store. It lists the decisions made and points at 
 **Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** The doctrine below is the same everywhere; only the mechanics differ. Load the matching tracker doc — each covers the same seven operations: create the map, create a ticket, wire a blocking edge, query the frontier, claim, resolve, update the map body.
 
 - **[GitHub Issues](trackers/github.md)** — the default for code projects. Use when the working directory is a repo with a GitHub remote.
-- **[Notion](trackers/notion.md)** — the default for non-code projects, and for code projects with no GitHub remote.
+- **[Local Markdown](trackers/local.md)** — the default for non-code projects, and for code projects with no GitHub remote. Issues live as markdown files in `.scratch/`.
 
 Pick by that rule without asking. Ask only when the rule is genuinely ambiguous — a repo with a GitHub remote whose effort is plainly not about the code. Whichever it is, record the choice in the map's **Notes** so later sessions don't re-derive it.
 
