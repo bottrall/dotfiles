@@ -61,7 +61,7 @@ window {
   margin: 0px;
   padding: 10px;
   border: 2px solid @lavender;
-  border-radius: 8px;
+  border-radius: 0;
   background-color: @base;
 }
 
@@ -94,7 +94,7 @@ window {
   margin: 5px 20px;
   padding: 10px;
   border: none;
-  border-radius: 0.1em;
+  border-radius: 0;
   color: @text;
   background-color: @base;
 }
@@ -127,6 +127,7 @@ window {
 /* Selected Entry */
 #entry:selected {
   border: 0.11em solid @lavender;
+  border-radius: 0;
 }
 
 #entry:selected #text {
