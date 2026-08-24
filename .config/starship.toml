@@ -80,13 +80,13 @@ truncation_symbol = "…/"
 
 [directory.substitutions]
 "Documents" = "󰈙 "
-"Downloads" = " "
+"Downloads" = " "
 "Music" = "󰝚 "
-"Pictures" = " "
+"Pictures" = " "
 "Developer" = "󰲋 "
 
 [git_branch]
-symbol = ""
+symbol = ""
 style = "bg:raise2 fg:dim"
 format = '[ $symbol $branch ]($style)'
 
@@ -95,17 +95,17 @@ style = "bg:raise2 fg:yellow"
 format = '[($all_status$ahead_behind )]($style)'
 
 [nodejs]
-symbol = ""
+symbol = ""
 style = "bg:raise3 fg:muted"
 format = '[ $symbol( $version) ]($style)'
 
 [ruby]
-symbol = ""
+symbol = ""
 style = "bg:raise3 fg:muted"
 format = '[ $symbol( $version) ]($style)'
 
 [docker_context]
-symbol = ""
+symbol = ""
 style = "bg:raise3 fg:muted"
 format = '[ $symbol( $context) ]($style)'
 
