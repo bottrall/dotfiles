@@ -74,7 +74,7 @@ style_root = "bg:raise1 fg:red"
 format = '[ $user ]($style)'
 
 [directory]
-style = "fg:text bg:accentdeep bold"
+style = "fg:text bg:accentdeep"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
