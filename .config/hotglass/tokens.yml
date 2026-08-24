@@ -6,8 +6,13 @@
 
 # "voltage" — the one accent. Selection, focus, active workspace, borders,
 # prompt identity. 7.1:1 on black.
+# "deep" is the same hue at low lightness (hsl 329·85·34) — a shade, not a
+# second accent — for filled blocks that carry light text: bright voltage is
+# too glaring a ground for any text color (black tops out at 7.0:1 and reads
+# worse than it measures), while white on deep is 7.8:1 and crisp.
 accent:
   hex: "FF52AB"
+  deep: "A00D59"
 
 # The "vivid" rail — luminance-matched siblings of the accent.
 # Status colors never do identity work: color appears only when

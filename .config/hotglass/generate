@@ -40,6 +40,7 @@ end
 
 tokens = YAML.load_file(File.join(HERE, "tokens.yml"))
 accent = tokens.fetch("accent").fetch("hex")
+accent_deep = tokens.fetch("accent").fetch("deep")
 status = tokens.fetch("status")
 alpha = tokens.fetch("alpha")
 glass = tokens.fetch("glass")
@@ -56,6 +57,7 @@ ink = alpha.merge(raise_tiers)
 # ---- GTK-CSS tokens: colors.css + spliced into wofi -------------------
 css = [
   "@define-color accent ##{accent};",
+  "@define-color accent-deep ##{accent_deep};",
   *status.map { |name, hex6| "@define-color #{name} ##{hex6};" },
   "@define-color edge-focus #{rgba_css(accent, alpha['edge_focus'])};",
   "@define-color edge-focus-dim #{rgba_css(accent, alpha['edge_focus_dim'])};",
@@ -85,6 +87,7 @@ conf = [
   "",
   "$accent = rgb(#{accent})",
   "$accentAlpha = #{accent}",
+  "$accentDeep = rgb(#{accent_deep})",
   *status.map { |name, hex6| "$#{name} = rgb(#{hex6})" },
   "$edgeFocus = rgba(#{accent}#{format('%02x', (255 * alpha['edge_focus']).round)})",
   "$edgeIdle = rgba(#{white}#{format('%02x', (255 * alpha['edge_idle']).round)})",
@@ -136,6 +139,7 @@ palette = [
   "# #{HEADER}",
   "[palettes.hotglass]",
   "accent = \"##{accent}\"",
+  "accentdeep = \"##{accent_deep}\"",
   *status.map { |name, hex6| "#{name} = \"##{hex6}\"" },
   "text = \"##{white}\"",
   "dim = \"##{ink['text_dim']}\"",
