@@ -1,0 +1,40 @@
+/* hotglass overrides on default Adwaita/libadwaita (dark) — see
+   ../hotglass/DESIGN.md. Colors-only override layer via libadwaita's named
+   colors. GTK surfaces are opaque (raise tiers on ink) — glass stays the
+   signature of shell chrome. */
+@import url("../hotglass/colors.css");
+
+@define-color accent_color @accent;
+@define-color accent_bg_color @accent;
+@define-color accent_fg_color @ink;
+
+@define-color window_bg_color @raise-3;
+@define-color window_fg_color @text;
+@define-color view_bg_color @ink;
+@define-color view_fg_color @text;
+@define-color headerbar_bg_color @raise-3;
+@define-color headerbar_fg_color @text;
+@define-color popover_bg_color @raise-2;
+@define-color popover_fg_color @text;
+@define-color dialog_bg_color @raise-3;
+@define-color dialog_fg_color @text;
+@define-color card_bg_color rgba(255, 255, 255, 0.05);
+@define-color card_fg_color @text;
+
+@define-color destructive_bg_color @red;
+@define-color destructive_fg_color @ink;
+@define-color success_color @green;
+@define-color warning_color @yellow;
+@define-color error_color @red;
+
+/* Sharp corners, per the system principle. Radios and switches keep their
+   semantic round shape. */
+window,
+dialog,
+.card,
+button,
+entry,
+popover > contents,
+tooltip {
+  border-radius: 0;
+}

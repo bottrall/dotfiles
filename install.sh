@@ -106,6 +106,12 @@ if [[ "$OS" == "Linux" ]]; then
   # Individual files only: the clipse dir also holds history and logs (data)
   link_file ".config/clipse/config.json"
   link_file ".config/clipse/custom_theme.json"
+  # GTK: hotglass override layer on Adwaita (nwg-look may replace the
+  # settings.ini symlinks with plain files if used — rerun to relink)
+  link_file ".config/gtk-3.0/settings.ini"
+  link_file ".config/gtk-3.0/gtk.css"
+  link_file ".config/gtk-4.0/settings.ini"
+  link_file ".config/gtk-4.0/gtk.css"
 fi
 
 echo ""

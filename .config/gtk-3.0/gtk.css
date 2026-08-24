@@ -1,0 +1,23 @@
+/* hotglass overrides on Adwaita-dark — see ../hotglass/DESIGN.md.
+   Colors-only override layer: Adwaita stays the base theme; this recolors
+   selection, focus, and chrome to hotglass tokens. GTK surfaces are opaque
+   (raise tiers on ink) — glass stays the signature of shell chrome. */
+@import url("../hotglass/colors.css");
+
+@define-color theme_bg_color @raise-3;
+@define-color theme_base_color @ink;
+@define-color theme_selected_bg_color @accent;
+@define-color theme_selected_fg_color @ink;
+
+/* Sharp corners, per the system principle. Radios and switches keep their
+   semantic round shape. */
+button,
+entry,
+menu,
+popover,
+tooltip,
+headerbar,
+.titlebar,
+frame border {
+  border-radius: 0;
+}
