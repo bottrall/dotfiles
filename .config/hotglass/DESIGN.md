@@ -17,7 +17,7 @@ Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`co
 | Token | Value | Role |
 |---|---|---|
 | `accent` | `#FF52AB` | selection, focus, active, identity |
-| `accent-deep` | `#A00D59` | same hue, low lightness — filled blocks carrying light text (e.g. the prompt directory); bright voltage is too glaring a ground for text |
+| `accent-deep` | `#C40869` | same hue, lower lightness — filled blocks carrying light text (e.g. the prompt directory); bright voltage is too glaring a ground for text |
 | `red` | `#FF5C6C` | error, critical, failed command |
 | `yellow` | `#FFC44D` | warning, dirty state, capslock |
 | `green` | `#3DE383` | success confirmation |
