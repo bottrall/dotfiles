@@ -1,0 +1,59 @@
+# hotglass
+
+A from-scratch design system for this desktop: pure-black glass, one electric pink, sharp edges. Every themed surface derives from the tokens in `tokens.toml`; this document is the contract for applying it to anything new.
+
+## Principles
+
+1. **Black glass foundation.** Backgrounds are pure neutral black at tokenized opacity — the wallpaper glows through shell chrome. The system is wallpaper-agnostic: nothing may depend on what's behind the glass.
+2. **One accent.** A single pink — *voltage* `#FF52AB` — does all identity work: selection, focus, active workspace, focused borders, prompt identity. Nothing else gets a signature color.
+3. **Alpha-based neutrals.** Every neutral is white at a tokenized alpha. Contexts that can't composite (TUIs, hyprlock, GTK chrome) use the same values flattened over black — the generated `-ink` fallbacks — never hand-picked grays.
+4. **Color means attention.** The status rail (red/yellow/green/blue) appears only when something needs attention: errors, warnings, dirty state, urgent notifications. Healthy state is neutral. Status colors never do identity work — no permanently-green anything.
+5. **Sharp and sparse.** `border-radius: 0` everywhere. Borders are 1px (subtle) or 3px (emphasis) — nothing in between. Chrome typography is CaskaydiaCove Nerd Font.
+
+## Tokens
+
+Colors live in `tokens.toml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, clipse theme, starship palette block) are committed but never hand-edited.
+
+| Token | Value | Role |
+|---|---|---|
+| `accent` | `#FF52AB` | selection, focus, active, identity |
+| `red` | `#FF5C6C` | error, critical, failed command |
+| `yellow` | `#FFC44D` | warning, dirty state, capslock |
+| `green` | `#3DE383` | success confirmation |
+| `blue` | `#4FA8FF` | info |
+| `text` | white @ 100% | primary text |
+| `text-dim` | white @ 65% | secondary text |
+| `text-muted` | white @ 40% | tertiary text, passive icons |
+| `edge-idle` | white @ 25% | inactive window border, quiet outlines |
+| `overlay-hover` | white @ 12% | hover surface |
+| `edge-subtle` | white @ 8% | hairline separators |
+| `edge-focus` | accent @ 90% | frames of focused chrome |
+| `edge-focus-dim` | accent @ 40% | quieter framed elements |
+| `glass` | black @ 75% | panels: bar, launcher, terminal |
+| `glass-thin` | black @ 55% | notification layer (stacks on translucent surfaces) |
+| `ink` | `#000000` | opaque ground |
+| `raise-1/2/3` | white @ 14/9/5% on ink | opaque raised surfaces: prompt segments, GTK chrome |
+
+Shape and type constants (no runtime carrier — apply by hand, cite this doc):
+
+| Constant | Value |
+|---|---|
+| radius | `0`, always |
+| border | `1px` subtle / `3px` emphasis |
+| gaps | `5` inner / `10` outer |
+| chrome font | CaskaydiaCove Nerd Font, 15px (bar/notifications) / 18px (launcher) |
+| GTK app font | Adwaita Sans 11 (proportional stays for app content) |
+
+## Scope
+
+**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, ghostty background/opacity, GTK 3/4 via Adwaita-dark + generated override CSS.
+
+**Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop, spf), wallpaper, cursor and icon themes.
+
+Boundary rule: *apps whose colors we configure get tokens; the ANSI palette and anything that merely inherits it stays stock.*
+
+Hooks for later: revisit GTK depth when a GUI file manager becomes daily-driven; btop can join by the boundary rule if its colors ever get configured.
+
+## Prompt (state-driven)
+
+The starship prompt keeps its powerline shape but sits on neutral raise tiers; the directory block is the one accent surface. Segment identity comes from icons and position. Color is reserved for state: `git_status` renders yellow only when the tree is dirty, and the prompt character flips red after a failed command. A color change in the prompt always means something changed.
