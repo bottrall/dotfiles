@@ -1,8 +1,10 @@
 {
   "position": "top",
+  "height": 32,
   "modules-left": ["hyprland/workspaces"],
   "modules-center": [],
   "modules-right": [
+    "mpris",
     "tray",
     "network",
     "pulseaudio",
@@ -10,40 +12,85 @@
     "memory",
     "temperature",
     "clock",
+    "idle_inhibitor",
+    "custom/power",
   ],
+  "mpris": {
+    "format": "{status_icon}  {title}",
+    "title-len": 30,
+    "status-icons": {
+      "playing": "󰐊",
+      "paused": "󰏤",
+      "stopped": "󰓛",
+    },
+    "tooltip-format": "{player}: {artist} — {title}",
+    "cursor": 68, // GDK_LEFT_PTR: keep the normal arrow on hover
+  },
   "tray": {
     "icon-size": 18,
-    "spacing": 10,
+    // Gaps between icons come from CSS padding on the items instead of
+    // "spacing", so the hover highlight covers the padded area too.
+    "spacing": 0,
   },
   "network": {
-    "format-wifi": "<span size='13000' foreground='#f5e0dc'>  </span>{signalStrength}%",
-    "format-ethernet": "<span size='13000' foreground='#f5e0dc'>󰤭  </span> Disconnected",
-    "format-linked": "{ifname} (No IP) ",
-    "format-disconnected": "<span size='13000' foreground='#f5e0dc'>  </span>Disconnected",
-    "tooltip-format-wifi": "Signal Strenght: {signalStrength}%",
+    "format-wifi": "{icon}  {signalStrength}%",
+    "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
+    "format-ethernet": "󰈀  {ipaddr}",
+    "format-linked": "󰈀  No IP",
+    "format-disconnected": "󰤭  Off",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%)\n{ipaddr}",
+    "tooltip-format-ethernet": "{ifname}: {ipaddr}",
+    "on-click": "networkmanager_dmenu",
+    "cursor": 68,
   },
   "pulseaudio": {
     "format": "{icon}  {volume}%",
-    "format-muted": "",
+    "format-muted": "󰝟  {volume}%",
     "format-icons": {
-      "default": ["", "", " "],
+      "default": ["󰕿", "󰖀", "󰕾"],
     },
-    "on-click": "pavucontrol",
+    "scroll-step": 5,
+    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "on-click-right": "pavucontrol",
+    "cursor": 68,
   },
   "cpu": {
     "format": "  {usage}%",
     "tooltip": false,
+    "on-click": "ghostty --class=dev.jake.btop -e btop",
+    "cursor": 68,
   },
   "memory": {
-    "format": "  {}%",
+    "format": "󰍛  {}%",
+    "tooltip-format": "{used:0.1f}GiB / {total:0.1f}GiB used",
+    "on-click": "ghostty --class=dev.jake.btop -e btop",
+    "cursor": 68,
   },
   "temperature": {
     "critical-threshold": 80,
+    "on-click": "ghostty --class=dev.jake.btop -e btop",
+    "cursor": 68,
     "format": "{icon}  {temperatureC}°C",
-    "format-icons": ["", "", ""],
+    "format-icons": ["", "", ""],
   },
   "clock": {
-    "format": "<span foreground='#f5c2e7'>   </span>{:%a %d %H:%M}",
+    "format": "  {:%a %d %H:%M}",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+  },
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {
+      "activated": "󰅶",
+      "deactivated": "󰾪",
+    },
+    "tooltip-format-activated": "Idle inhibitor: on — screen stays awake",
+    "tooltip-format-deactivated": "Idle inhibitor: off",
+    "cursor": 68,
+  },
+  "custom/power": {
+    "format": "󰐥",
+    "tooltip": false,
+    "on-click": "~/.config/waybar/scripts/power-menu.sh",
+    "cursor": 68,
   },
 }
