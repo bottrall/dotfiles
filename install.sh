@@ -103,6 +103,9 @@ if [[ "$OS" == "Linux" ]]; then
   link_dir  ".config/swaync"
   link_dir  ".config/networkmanager-dmenu"
   link_dir  ".config/backgrounds"
+  # Individual files only: the clipse dir also holds history and logs (data)
+  link_file ".config/clipse/config.json"
+  link_file ".config/clipse/custom_theme.json"
 fi
 
 echo ""
