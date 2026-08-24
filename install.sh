@@ -96,6 +96,7 @@ fi
 if [[ "$OS" == "Linux" ]]; then
   link_file ".bashrc"
   link_dir  ".config/bash"
+  link_dir  ".config/hotglass"
   link_dir  ".config/hypr"
   link_dir  ".config/waybar"
   link_dir  ".config/wofi"

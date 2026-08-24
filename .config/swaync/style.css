@@ -1,21 +1,12 @@
-/* Palette matched to clipse (ghostty window + default clipse theme).
+/* hotglass tokens — see ../hotglass/DESIGN.md. glass-thin (not glass) is the
+   surface here: notifications composite on top of whatever is beneath them
+   (often an already-translucent terminal), so stacked alpha reads
+   near-opaque unless this layer is dialed down.
    swaync replaces its default stylesheet with this one, so every node the
    default styled is covered here too. */
+@import url("../hotglass/colors.css");
 
 :root {
-  --border-active: rgba(203, 166, 247, 0.9); /* Hyprland col.active_border */
-  --border-dim: rgba(203, 166, 247, 0.4);
-  /* Lighter than ghostty's 0.75: notifications composite on top of whatever
-     is beneath them (often an already-translucent terminal), so stacked
-     alpha reads near-opaque unless this layer is dialed down. */
-  --bg: rgba(0, 0, 0, 0.55);
-  --bg-opaque: rgb(0, 0, 0);
-  --text: #ffffff;
-  --text-dim: #808080;
-  --selected: #ff69b4;
-  --accent: #3498db;
-  --hover: rgba(255, 255, 255, 0.12);
-
   --notification-icon-size: 48px;
   --notification-app-icon-size: 16px;
   --notification-group-icon-size: 24px;
@@ -44,7 +35,7 @@ blankwindow,
 }
 
 .notification-row:focus {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 .notification-row .notification-background {
@@ -66,18 +57,18 @@ blankwindow,
 }
 
 .notification {
-  border: 3px solid var(--border-active);
+  border: 3px solid @edge-focus;
   padding: 0;
-  background: var(--bg);
+  background: @glass-thin;
 }
 
 .notification.critical {
-  border-color: var(--selected);
+  border-color: @red;
 }
 
 .close-button {
   background: transparent;
-  color: var(--text-dim);
+  color: @text-dim;
   padding: 0;
   margin-top: 8px;
   margin-right: 8px;
@@ -87,8 +78,8 @@ blankwindow,
 }
 
 .close-button:hover {
-  background: var(--hover);
-  color: var(--text);
+  background: @overlay-hover;
+  color: @text;
   border: none;
 }
 
@@ -97,12 +88,12 @@ blankwindow,
   margin: 0;
   background: transparent;
   border: none;
-  color: var(--text);
+  color: @text;
 }
 
 .notification-default-action:hover {
   -gtk-icon-filter: none;
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 .notification-content {
@@ -130,19 +121,19 @@ blankwindow,
 .notification-content .text-box .summary {
   font-weight: bold;
   background: transparent;
-  color: var(--text);
+  color: @text;
   margin-bottom: 4px;
 }
 
 .notification-content .text-box .time {
   background: transparent;
-  color: var(--text-dim);
+  color: @text-dim;
   margin-right: 30px;
 }
 
 .notification-content .text-box .body {
   background: transparent;
-  color: var(--text);
+  color: @text;
 }
 
 .notification-content progressbar {
@@ -150,16 +141,16 @@ blankwindow,
 }
 
 .notification-content progressbar trough {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 .notification-content progressbar progress {
-  background: var(--accent);
+  background: @accent;
 }
 
 .notification-content .body-image {
   margin-top: 4px;
-  background-color: var(--bg-opaque);
+  background-color: @ink;
   -gtk-icon-filter: none;
 }
 
@@ -169,26 +160,26 @@ blankwindow,
 
 .notification-content .inline-reply .inline-reply-entry {
   background: transparent;
-  color: var(--text);
-  caret-color: var(--text);
-  border: 1px solid var(--accent);
+  color: @text;
+  caret-color: @text;
+  border: 1px solid @edge-idle;
 }
 
 .notification-content .inline-reply .inline-reply-button {
   margin-left: 4px;
   background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--text);
+  border: 1px solid @edge-idle;
+  color: @text;
 }
 
 .notification-content .inline-reply .inline-reply-button:disabled {
   background: transparent;
-  color: var(--text-dim);
+  color: @text-dim;
   border-color: transparent;
 }
 
 .notification-content .inline-reply .inline-reply-button:hover {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 /* Alternative action buttons below the default action */
@@ -204,12 +195,12 @@ blankwindow,
 
 .notification-action > button {
   background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--text);
+  border: 1px solid @edge-idle;
+  color: @text;
 }
 
 .notification-action > button:hover {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 /* --- Grouped notifications --- */
@@ -219,7 +210,7 @@ blankwindow,
 }
 
 .notification-group:focus {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 .notification-group .notification-group-close-button .close-button {
@@ -229,16 +220,16 @@ blankwindow,
 .notification-group .notification-group-buttons,
 .notification-group .notification-group-headers {
   margin: 0 16px;
-  color: var(--text);
+  color: @text;
 }
 
 .notification-group .notification-group-headers .notification-group-icon {
-  color: var(--text);
+  color: @text;
   -gtk-icon-size: var(--notification-group-icon-size);
 }
 
 .notification-group.collapsed .notification-row .notification {
-  background-color: var(--bg-opaque);
+  background-color: @ink;
 }
 
 .notification-group.collapsed.not-expanded {
@@ -251,19 +242,19 @@ blankwindow,
 }
 
 .notification-group.collapsed:hover .notification-row:not(:only-child) .notification {
-  background-color: var(--bg-opaque);
+  background-color: @ink;
 }
 
 /* --- Control center --- */
 
 .control-center {
-  background: var(--bg);
-  color: var(--text);
-  border: 3px solid var(--border-active);
+  background: @glass-thin;
+  color: @text;
+  border: 3px solid @edge-focus;
 }
 
 .control-center .control-center-list-placeholder {
-  color: var(--text-dim);
+  color: @text-dim;
   opacity: 1;
 }
 
@@ -274,16 +265,16 @@ blankwindow,
 /* Inside the control center the 3px frame belongs to the panel itself;
    individual notifications get a quieter 1px border. */
 .control-center .notification {
-  border: 1px solid var(--border-dim);
+  border: 1px solid @edge-focus-dim;
 }
 
 .control-center .notification.critical {
-  border-color: var(--selected);
+  border-color: @red;
 }
 
 .control-center .notification .notification-default-action:hover,
 .control-center .notification .notification-action:hover {
-  background-color: var(--hover);
+  background-color: @overlay-hover;
 }
 
 /* --- Widgets --- */
@@ -297,70 +288,70 @@ blankwindow,
 .widget-title > label {
   margin-right: 8px;
   font-size: 18px;
-  color: var(--text);
+  color: @text;
 }
 
 .widget-title > button,
 .widget-inhibitors > button {
   margin-left: 8px;
   background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--text);
+  border: 1px solid @edge-idle;
+  color: @text;
 }
 
 .widget-title > button:hover,
 .widget-inhibitors > button:hover {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 .widget-dnd label {
-  color: var(--text);
+  color: @text;
   margin-right: 8px;
 }
 
 .widget-dnd switch {
   margin-left: 8px;
   background: transparent;
-  border: 1px solid var(--text-dim);
+  border: 1px solid @text-dim;
 }
 
 .widget-dnd switch:checked {
-  border-color: var(--accent);
+  border-color: @accent;
 }
 
 .widget-dnd switch slider {
-  background: var(--text-dim);
+  background: @text-dim;
 }
 
 .widget-dnd switch:checked slider {
-  background: var(--accent);
+  background: @accent;
 }
 
 .widget-label > label {
-  color: var(--text);
+  color: @text;
 }
 
 .widget-inhibitors > label {
   margin-right: 8px;
   font-size: 18px;
-  color: var(--text);
+  color: @text;
 }
 
 /* Buttons-grid / menubar widgets (unused in config.json, styled anyway) */
 .widget-buttons-grid flowboxchild > button,
 .widget-menubar button {
   background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--text);
+  border: 1px solid @edge-idle;
+  color: @text;
 }
 
 .widget-buttons-grid flowboxchild > button:hover,
 .widget-menubar button:hover {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 .widget-buttons-grid flowboxchild > button.toggle:checked {
-  color: var(--selected);
+  color: @accent;
 }
 
 /* Mpris widget (unused in config.json, styled anyway) */
@@ -370,7 +361,7 @@ blankwindow,
 
 .widget-mpris .widget-mpris-player {
   margin: 16px 20px;
-  border: 1px solid var(--border-dim);
+  border: 1px solid @edge-focus-dim;
 }
 
 .widget-mpris .widget-mpris-player .mpris-background {
@@ -379,11 +370,11 @@ blankwindow,
 
 .widget-mpris .widget-mpris-player .mpris-overlay {
   padding: 16px;
-  background-color: rgba(0, 0, 0, 0.55);
+  background-color: @glass-thin;
 }
 
 .widget-mpris .widget-mpris-player .mpris-overlay button:hover {
-  background: var(--hover);
+  background: @overlay-hover;
 }
 
 .widget-mpris .widget-mpris-title {
@@ -391,5 +382,5 @@ blankwindow,
 }
 
 .widget-mpris .widget-mpris-subtitle {
-  color: var(--text-dim);
+  color: @text-dim;
 }

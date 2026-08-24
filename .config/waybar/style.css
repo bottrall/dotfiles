@@ -1,11 +1,5 @@
-/* Palette matched to clipse (ghostty window + default clipse theme) */
-@define-color border-active rgba(203, 166, 247, 0.9); /* Hyprland col.active_border */
-@define-color bg rgba(0, 0, 0, 0.75);                 /* ghostty background */
-@define-color text #ffffff;
-@define-color text-dim #808080;
-@define-color selected #FF69B4;
-@define-color accent #3498db;
-@define-color hover rgba(255, 255, 255, 0.12);
+/* hotglass tokens — see ../hotglass/DESIGN.md */
+@import url("../hotglass/colors.css");
 
 * {
   font-family: "CaskaydiaCove Nerd Font", monospace;
@@ -14,13 +8,13 @@
 }
 
 window#waybar {
-  background-color: @bg;
+  background-color: @glass;
   color: @text;
 }
 
 tooltip {
-  background-color: @bg;
-  border: 1px solid @border-active;
+  background-color: @glass;
+  border: 1px solid @edge-focus;
   border-radius: 0;
 }
 
@@ -37,12 +31,12 @@ button {
 
 #workspaces button {
   padding: 0 9px;
-  color: @text-dim;
-  border-bottom: 2px solid transparent;
+  color: @text-muted;
+  border-bottom: 3px solid transparent;
 }
 
 #workspaces button:hover {
-  background-color: @hover;
+  background-color: @overlay-hover;
   color: @text;
 }
 
@@ -71,16 +65,16 @@ button {
 #custom-power:hover,
 #tray > widget:hover,
 #tray > eventbox:hover {
-  background-color: @hover;
+  background-color: @overlay-hover;
 }
 
 #workspaces button.active {
-  color: @selected;
-  border-bottom: 2px solid @accent;
+  color: @accent;
+  border-bottom: 3px solid @accent;
 }
 
 #workspaces button.urgent {
-  color: @selected;
+  color: @red;
 }
 
 #mpris,
@@ -103,31 +97,37 @@ button {
 }
 
 #temperature.critical {
-  color: @selected;
+  color: @red;
 }
 
 #pulseaudio.muted {
-  color: @text-dim;
+  color: @text-muted;
 }
 
 #idle_inhibitor {
-  color: @text-dim;
+  color: @text-muted;
 }
 
+/* Screen pinned awake is a state worth noticing — status yellow, not accent */
 #idle_inhibitor.activated {
-  color: @accent;
+  color: @yellow;
 }
 
 #custom-notification {
-  color: @text-dim;
+  color: @text-muted;
 }
 
 #custom-notification.notification,
 #custom-notification.inhibited-notification {
-  color: @selected;
+  color: @accent;
 }
 
+/* Healthy state is neutral; the destructive affordance shows red on approach */
 #custom-power {
-  color: @selected;
+  color: @text-dim;
   padding-right: 14px;
+}
+
+#custom-power:hover {
+  color: @red;
 }

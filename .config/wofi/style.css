@@ -1,10 +1,5 @@
-/* Palette matched to clipse (ghostty window + default clipse theme) */
-@define-color border-active  rgba(203, 166, 247, 0.9); /* Hyprland col.active_border */
-@define-color bg  rgba(0, 0, 0, 0.75);                 /* ghostty background */
-@define-color text  #ffffff;
-@define-color text-dim  #808080;
-@define-color selected  #FF69B4;
-@define-color accent  #3498db;
+/* hotglass tokens — see ../hotglass/DESIGN.md */
+@import url("../hotglass/colors.css");
 
 * {
   font-family: "CaskaydiaCove Nerd Font", monospace;
@@ -15,9 +10,9 @@
 window {
   margin: 0px;
   padding: 0;
-  border: 3px solid @border-active;
+  border: 3px solid @edge-focus;
   border-radius: 0;
-  background-color: @bg;
+  background-color: @glass;
 }
 
 /* Inner Box */
@@ -56,11 +51,11 @@ window {
 
 #input image {
   border: none;
-  color: @accent;
+  color: @text-muted;
 }
 
 #input * {
-  outline: 1px solid @accent;
+  outline: 1px solid @edge-focus-dim;
 }
 
 /* Text */
@@ -73,19 +68,19 @@ window {
 #entry {
   margin: 3px 0;
   padding-left: 6px;
-  border-left: 1px solid transparent;
+  border-left: 3px solid transparent;
   background-color: transparent;
 }
 
 #entry arrow {
   border: none;
-  color: @accent;
+  color: @text-muted;
 }
 
 /* Selected Entry */
 #entry:selected {
   border: none;
-  border-left: 1px solid @accent;
+  border-left: 3px solid @accent;
   border-radius: 0;
   background-color: transparent;
   outline: none;
@@ -93,7 +88,7 @@ window {
 }
 
 #entry:selected #text {
-  color: @selected;
+  color: @accent;
 }
 
 #entry:drop(active) {
