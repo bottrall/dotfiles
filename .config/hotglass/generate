@@ -31,6 +31,16 @@ def rgba_css(hex6: str, alpha: float) -> str:
     return f"rgba({r}, {g}, {b}, {alpha:g})"
 
 
+def splice(path: Path, begin: str, end: str, block: str) -> None:
+    """Replace the marker-delimited block in `path` with `block` (markers kept)."""
+    src = path.read_text()
+    pattern = re.escape(begin) + r".*?" + re.escape(end)
+    new, n = re.subn(pattern, begin + "\n" + block + "\n" + end, src, flags=re.S)
+    if n != 1:
+        raise SystemExit(f"{path.name}: expected 1 marker block {begin!r}, found {n}")
+    path.write_text(new)
+
+
 def main() -> None:
     tokens = tomllib.loads((HERE / "tokens.toml").read_text())
     accent = tokens["accent"]["hex"]
@@ -46,9 +56,10 @@ def main() -> None:
     white_ladder = {k: v for k, v in {**alpha, **raise_}.items() if v < 1 and not k.startswith("edge_focus")}
     ink = {name: composite_on_black(a) for name, a in white_ladder.items()}
 
-    # ---- colors.css -------------------------------------------------------
-    css = [f"/* {HEADER} */", ""]
-    css += [f"@define-color accent #{accent};"]
+    # ---- GTK-CSS tokens: colors.css + spliced into wofi ------------------
+    # wofi loads its stylesheet as inline data (no base path for a relative
+    # @import), so it gets the tokens spliced in rather than imported.
+    css = [f"@define-color accent #{accent};"]
     css += [f"@define-color {name} #{hex6};" for name, hex6 in status.items()]
     css += [
         f"@define-color edge-focus {rgba_css(accent, alpha['edge_focus'])};",
@@ -72,7 +83,9 @@ def main() -> None:
         if not name.startswith("raise_")
     ]
     css += [f"@define-color raise-{n} #{ink[f'raise_{n}']};" for n in (1, 2, 3)]
-    (HERE / "colors.css").write_text("\n".join(css) + "\n")
+    (HERE / "colors.css").write_text(f"/* {HEADER} */\n\n" + "\n".join(css) + "\n")
+    splice(HERE / "../wofi/style.css", "/* hotglass:begin */", "/* hotglass:end */",
+           f"/* {HEADER} */\n" + "\n".join(css))
 
     # ---- hotglass.conf (hypr dialect) ------------------------------------
     conf = [f"# {HEADER}", ""]
@@ -125,9 +138,8 @@ def main() -> None:
     (HERE / "../clipse/custom_theme.json").write_text(json.dumps(clipse, indent=2) + "\n")
 
     # ---- starship palette block ------------------------------------------
-    starship_path = HERE / "../starship.toml"
     palette = [
-        "# hotglass:begin — " + HEADER,
+        f"# {HEADER}",
         "[palettes.hotglass]",
         f'accent = "#{accent}"',
     ]
@@ -140,16 +152,10 @@ def main() -> None:
         f'raise1 = "#{ink["raise_1"]}"',
         f'raise2 = "#{ink["raise_2"]}"',
         f'raise3 = "#{ink["raise_3"]}"',
-        "# hotglass:end",
     ]
-    src = starship_path.read_text()
-    block = "\n".join(palette)
-    new, n = re.subn(r"# hotglass:begin.*?# hotglass:end", block, src, flags=re.S)
-    if n != 1:
-        raise SystemExit(f"starship.toml: expected 1 hotglass marker block, found {n}")
-    starship_path.write_text(new)
+    splice(HERE / "../starship.toml", "# hotglass:begin", "# hotglass:end", "\n".join(palette))
 
-    print("hotglass: wrote colors.css, hotglass.conf, clipse/custom_theme.json, starship palette")
+    print("hotglass: wrote colors.css, hotglass.conf, clipse/custom_theme.json, wofi + starship blocks")
 
 
 if __name__ == "__main__":
