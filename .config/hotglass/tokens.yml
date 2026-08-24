@@ -4,43 +4,43 @@
 # Shape and type constants live in DESIGN.md — they are stable by principle
 # (radius 0, borders 1px/3px) and have no cross-format runtime carrier.
 
-[accent]
 # "voltage" — the one accent. Selection, focus, active workspace, borders,
 # prompt identity. 7.1:1 on black.
-hex = "FF52AB"
+accent:
+  hex: "FF52AB"
 
-[status]
 # The "vivid" rail — luminance-matched siblings of the accent.
 # Status colors never do identity work: color appears only when
 # something needs attention.
-red = "FF5C6C"    # error / critical / failed command
-yellow = "FFC44D" # warning / dirty state / capslock
-green = "3DE383"  # success confirmation
-blue = "4FA8FF"   # info
+status:
+  red: "FF5C6C"    # error / critical / failed command
+  yellow: "FFC44D" # warning / dirty state / capslock
+  green: "3DE383"  # success confirmation
+  blue: "4FA8FF"   # info
 
-[alpha]
 # White-alpha neutral ladder (over glass) and accent edge strengths.
 # The generator composites each over pure black to produce the opaque
 # "-ink" fallbacks for contexts that can't do transparency.
-text = 1.00
-text_dim = 0.65
-text_muted = 0.40
-edge_idle = 0.25       # inactive window border, quiet outlines
-overlay_hover = 0.12   # hover surface
-edge_subtle = 0.08     # hairline separators
-edge_focus = 0.90      # accent @ — frames of focused chrome
-edge_focus_dim = 0.40  # accent @ — quieter framed elements
+alpha:
+  text: 1.00
+  text_dim: 0.65
+  text_muted: 0.40
+  edge_idle: 0.25       # inactive window border, quiet outlines
+  overlay_hover: 0.12   # hover surface
+  edge_subtle: 0.08     # hairline separators
+  edge_focus: 0.90      # accent @ — frames of focused chrome
+  edge_focus_dim: 0.40  # accent @ — quieter framed elements
 
-[glass]
 # Black at tokenized opacity — the foundation.
-glass = 0.75      # panels: bar, launcher, terminal
-glass_thin = 0.55 # notification layer: composites on already-translucent
-                  # surfaces, so stacked alpha reads near-opaque unless
-                  # this layer is dialed down
+glass:
+  glass: 0.75      # panels: bar, launcher, terminal
+  glass_thin: 0.55 # notification layer: composites on already-translucent
+                   # surfaces, so stacked alpha reads near-opaque unless
+                   # this layer is dialed down
 
-[raise]
 # Opaque raised surfaces on ink (white @ alpha, composited on black).
 # Used where translucency isn't available: prompt segments, GTK chrome.
-raise_1 = 0.14
-raise_2 = 0.09
-raise_3 = 0.05
+raise:
+  raise_1: 0.14
+  raise_2: 0.09
+  raise_3: 0.05

@@ -1,6 +1,6 @@
 # hotglass
 
-A from-scratch design system for this desktop: pure-black glass, one electric pink, sharp edges. Every themed surface derives from the tokens in `tokens.toml`; this document is the contract for applying it to anything new.
+A from-scratch design system for this desktop: pure-black glass, one electric pink, sharp edges. Every themed surface derives from the tokens in `tokens.yml`; this document is the contract for applying it to anything new.
 
 ## Principles
 
@@ -12,7 +12,7 @@ A from-scratch design system for this desktop: pure-black glass, one electric pi
 
 ## Tokens
 
-Colors live in `tokens.toml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, clipse theme, starship palette block) are committed but never hand-edited.
+Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, clipse theme, starship palette block) are committed but never hand-edited.
 
 | Token | Value | Role |
 |---|---|---|
