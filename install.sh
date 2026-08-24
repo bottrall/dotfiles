@@ -80,7 +80,6 @@ link_file ".config/git/hooks/post-checkout"
 link_file ".config/starship.toml"
 link_dir  ".config/sh"
 link_dir  ".config/ghostty"
-link_dir  ".config/htop"
 # Claude Code
 link_file ".claude/CLAUDE.md"
 link_file ".claude/settings.json"

@@ -8,11 +8,13 @@ Personal dotfiles for macOS and Arch Linux.
 
 **Git** — `.gitconfig`, global ignore, post-checkout hook
 
-**Terminal** — Ghostty, htop
+**Terminal** — Ghostty
 
 **Prompt** — Starship
 
-**Hyprland** (Linux) — Hyprland, Hyprpaper, Hypridle, Hyprlock, Waybar, Wofi
+**Hyprland** (Linux) — Hyprland, Hyprpaper, Hypridle, Hyprlock, Waybar, Wofi, swaync, clipse, GTK 3/4
+
+**hotglass** (Linux) — the desktop's design system: black glass, one electric pink, sharp edges. `.config/hotglass/tokens.toml` is the single source of truth; `.config/hotglass/generate` rewrites every derived color file (GTK CSS, hypr conf, starship palette, clipse theme). See `.config/hotglass/DESIGN.md` for principles, tokens, and scope.
 
 **Claude Code** — everything under `.claude/`, symlinked into `~/.claude/`: global instructions (`CLAUDE.md`), `settings.json`, and `skills/`.
 
