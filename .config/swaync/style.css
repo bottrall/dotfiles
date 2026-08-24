@@ -1,0 +1,395 @@
+/* Palette matched to clipse (ghostty window + default clipse theme).
+   swaync replaces its default stylesheet with this one, so every node the
+   default styled is covered here too. */
+
+:root {
+  --border-active: rgba(203, 166, 247, 0.9); /* Hyprland col.active_border */
+  --border-dim: rgba(203, 166, 247, 0.4);
+  /* Lighter than ghostty's 0.75: notifications composite on top of whatever
+     is beneath them (often an already-translucent terminal), so stacked
+     alpha reads near-opaque unless this layer is dialed down. */
+  --bg: rgba(0, 0, 0, 0.55);
+  --bg-opaque: rgb(0, 0, 0);
+  --text: #ffffff;
+  --text-dim: #808080;
+  --selected: #ff69b4;
+  --accent: #3498db;
+  --hover: rgba(255, 255, 255, 0.12);
+
+  --notification-icon-size: 48px;
+  --notification-app-icon-size: 16px;
+  --notification-group-icon-size: 24px;
+}
+
+* {
+  font-family: "CaskaydiaCove Nerd Font", monospace;
+  font-size: 15px;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+notificationwindow,
+blankwindow,
+.blank-window,
+.floating-notifications {
+  background: transparent;
+}
+
+/* --- Notification toasts / rows --- */
+
+.notification-row {
+  background: none;
+  outline: none;
+}
+
+.notification-row:focus {
+  background: var(--hover);
+}
+
+.notification-row .notification-background {
+  padding: 5px 10px;
+}
+
+/* Floating toasts: offset 20px from the bar and screen edge — deliberately
+   larger than gaps_out = 10 so toasts read as an overlay layer, not a tile.
+   Each row's padding-top is the gap above that toast (8px between stacked
+   toasts); the remaining bar offset lives on the scroll container since
+   :first-child can't single out the top toast here (the AnimatedList wraps
+   every row in its own container, so each row is a :first-child). */
+.floating-notifications .notification-row .notification-background {
+  padding: 8px 20px 0;
+}
+
+.floating-notifications scrolledwindow {
+  padding-top: 12px;
+}
+
+.notification {
+  border: 3px solid var(--border-active);
+  padding: 0;
+  background: var(--bg);
+}
+
+.notification.critical {
+  border-color: var(--selected);
+}
+
+.close-button {
+  background: transparent;
+  color: var(--text-dim);
+  padding: 0;
+  margin-top: 8px;
+  margin-right: 8px;
+  border: none;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.close-button:hover {
+  background: var(--hover);
+  color: var(--text);
+  border: none;
+}
+
+.notification-default-action {
+  padding: 12px 14px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: var(--text);
+}
+
+.notification-default-action:hover {
+  -gtk-icon-filter: none;
+  background: var(--hover);
+}
+
+.notification-content {
+  background: transparent;
+  padding: 0;
+}
+
+.notification-content .image {
+  -gtk-icon-filter: none;
+  -gtk-icon-size: var(--notification-icon-size);
+  margin: 4px;
+}
+
+.notification-content .app-icon {
+  -gtk-icon-filter: none;
+  -gtk-icon-size: var(--notification-app-icon-size);
+  margin: 6px;
+}
+
+/* Fixes base GTK 4 CSS setting a filter of opacity 50% */
+.notification-content .text-box label {
+  filter: none;
+}
+
+.notification-content .text-box .summary {
+  font-weight: bold;
+  background: transparent;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.notification-content .text-box .time {
+  background: transparent;
+  color: var(--text-dim);
+  margin-right: 30px;
+}
+
+.notification-content .text-box .body {
+  background: transparent;
+  color: var(--text);
+}
+
+.notification-content progressbar {
+  margin-top: 4px;
+}
+
+.notification-content progressbar trough {
+  background: var(--hover);
+}
+
+.notification-content progressbar progress {
+  background: var(--accent);
+}
+
+.notification-content .body-image {
+  margin-top: 4px;
+  background-color: var(--bg-opaque);
+  -gtk-icon-filter: none;
+}
+
+.notification-content .inline-reply {
+  margin-top: 4px;
+}
+
+.notification-content .inline-reply .inline-reply-entry {
+  background: transparent;
+  color: var(--text);
+  caret-color: var(--text);
+  border: 1px solid var(--accent);
+}
+
+.notification-content .inline-reply .inline-reply-button {
+  margin-left: 4px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+
+.notification-content .inline-reply .inline-reply-button:disabled {
+  background: transparent;
+  color: var(--text-dim);
+  border-color: transparent;
+}
+
+.notification-content .inline-reply .inline-reply-button:hover {
+  background: var(--hover);
+}
+
+/* Alternative action buttons below the default action */
+.notification-alt-actions {
+  background: none;
+  padding: 4px;
+}
+
+.notification-action {
+  margin: 4px;
+  padding: 0;
+}
+
+.notification-action > button {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+
+.notification-action > button:hover {
+  background: var(--hover);
+}
+
+/* --- Grouped notifications --- */
+
+.notification-group {
+  transition: opacity 200ms ease-in-out;
+}
+
+.notification-group:focus {
+  background: var(--hover);
+}
+
+.notification-group .notification-group-close-button .close-button {
+  margin: 12px 20px;
+}
+
+.notification-group .notification-group-buttons,
+.notification-group .notification-group-headers {
+  margin: 0 16px;
+  color: var(--text);
+}
+
+.notification-group .notification-group-headers .notification-group-icon {
+  color: var(--text);
+  -gtk-icon-size: var(--notification-group-icon-size);
+}
+
+.notification-group.collapsed .notification-row .notification {
+  background-color: var(--bg-opaque);
+}
+
+.notification-group.collapsed.not-expanded {
+  opacity: 0.4;
+}
+
+.notification-group.collapsed .notification-row:not(:last-child) .notification-action,
+.notification-group.collapsed .notification-row:not(:last-child) .notification-default-action {
+  opacity: 0;
+}
+
+.notification-group.collapsed:hover .notification-row:not(:only-child) .notification {
+  background-color: var(--bg-opaque);
+}
+
+/* --- Control center --- */
+
+.control-center {
+  background: var(--bg);
+  color: var(--text);
+  border: 3px solid var(--border-active);
+}
+
+.control-center .control-center-list-placeholder {
+  color: var(--text-dim);
+  opacity: 1;
+}
+
+.control-center .control-center-list {
+  background: transparent;
+}
+
+/* Inside the control center the 3px frame belongs to the panel itself;
+   individual notifications get a quieter 1px border. */
+.control-center .notification {
+  border: 1px solid var(--border-dim);
+}
+
+.control-center .notification.critical {
+  border-color: var(--selected);
+}
+
+.control-center .notification .notification-default-action:hover,
+.control-center .notification .notification-action:hover {
+  background-color: var(--hover);
+}
+
+/* --- Widgets --- */
+
+.widget {
+  margin: 8px;
+  padding: 8px;
+  background: transparent;
+}
+
+.widget-title > label {
+  margin-right: 8px;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.widget-title > button,
+.widget-inhibitors > button {
+  margin-left: 8px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+
+.widget-title > button:hover,
+.widget-inhibitors > button:hover {
+  background: var(--hover);
+}
+
+.widget-dnd label {
+  color: var(--text);
+  margin-right: 8px;
+}
+
+.widget-dnd switch {
+  margin-left: 8px;
+  background: transparent;
+  border: 1px solid var(--text-dim);
+}
+
+.widget-dnd switch:checked {
+  border-color: var(--accent);
+}
+
+.widget-dnd switch slider {
+  background: var(--text-dim);
+}
+
+.widget-dnd switch:checked slider {
+  background: var(--accent);
+}
+
+.widget-label > label {
+  color: var(--text);
+}
+
+.widget-inhibitors > label {
+  margin-right: 8px;
+  font-size: 18px;
+  color: var(--text);
+}
+
+/* Buttons-grid / menubar widgets (unused in config.json, styled anyway) */
+.widget-buttons-grid flowboxchild > button,
+.widget-menubar button {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+
+.widget-buttons-grid flowboxchild > button:hover,
+.widget-menubar button:hover {
+  background: var(--hover);
+}
+
+.widget-buttons-grid flowboxchild > button.toggle:checked {
+  color: var(--selected);
+}
+
+/* Mpris widget (unused in config.json, styled anyway) */
+.widget-mpris {
+  padding: 0;
+}
+
+.widget-mpris .widget-mpris-player {
+  margin: 16px 20px;
+  border: 1px solid var(--border-dim);
+}
+
+.widget-mpris .widget-mpris-player .mpris-background {
+  filter: blur(10px);
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay {
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay button:hover {
+  background: var(--hover);
+}
+
+.widget-mpris .widget-mpris-title {
+  font-weight: bold;
+}
+
+.widget-mpris .widget-mpris-subtitle {
+  color: var(--text-dim);
+}

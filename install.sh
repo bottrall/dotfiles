@@ -99,6 +99,7 @@ if [[ "$OS" == "Linux" ]]; then
   link_dir  ".config/hypr"
   link_dir  ".config/waybar"
   link_dir  ".config/wofi"
+  link_dir  ".config/swaync"
   link_dir  ".config/networkmanager-dmenu"
   link_dir  ".config/backgrounds"
 fi
