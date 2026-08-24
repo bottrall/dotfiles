@@ -67,6 +67,7 @@ button {
 #memory:hover,
 #temperature:hover,
 #idle_inhibitor:hover,
+#custom-notification:hover,
 #custom-power:hover,
 #tray > widget:hover,
 #tray > eventbox:hover {
@@ -90,6 +91,7 @@ button {
 #temperature,
 #clock,
 #idle_inhibitor,
+#custom-notification,
 #custom-power {
   margin: 0;
   padding: 0 10px;
@@ -114,6 +116,15 @@ button {
 
 #idle_inhibitor.activated {
   color: @accent;
+}
+
+#custom-notification {
+  color: @text-dim;
+}
+
+#custom-notification.notification,
+#custom-notification.inhibited-notification {
+  color: @selected;
 }
 
 #custom-power {
