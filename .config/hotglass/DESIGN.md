@@ -30,10 +30,10 @@ Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`co
 | `edge-subtle` | white @ 8% | hairline separators |
 | `edge-focus` | accent @ 90% | frames of focused chrome |
 | `edge-focus-dim` | accent @ 40% | quieter framed elements |
-| `glass` | black @ 75% | panels: bar, launcher, terminal |
+| `glass` | black @ 75% | panels: bar, launcher, terminal, GTK4 app windows |
 | `glass-thin` | black @ 55% | notification layer (stacks on translucent surfaces) |
 | `ink` | `#000000` | opaque ground |
-| `raise-1/2/3` | white @ 14/9/5% on ink | opaque raised surfaces: prompt segments, GTK chrome |
+| `raise-1/2/3` | white @ 14/9/5% on ink | opaque raised surfaces: prompt segments, GTK floating chrome (popovers, dialogs) |
 
 Shape and type constants (no runtime carrier — apply by hand, cite this doc):
 
