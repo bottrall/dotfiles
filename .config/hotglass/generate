@@ -167,10 +167,13 @@ mark = rgba_css(white, alpha["text_dim"])
 
 svg = ->(inner) { "<!-- #{HEADER} -->\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\">\n#{inner}</svg>\n" }
 
-folder_svg = svg.call(<<~INNER)
-  <rect x="6.5" y="13" width="19" height="7.5" fill="##{accent}"/>
-  <rect x="8" y="22" width="48" height="28" fill="#{body_fill}" stroke="#{outline}" stroke-width="3"/>
+folder_svg = lambda do |glyph|
+  svg.call(<<~INNER)
+    <rect x="6.5" y="13" width="19" height="7.5" fill="##{accent}"/>
+    <rect x="8" y="22" width="48" height="28" fill="#{body_fill}" stroke="#{outline}" stroke-width="3"/>
+  #{glyph.empty? ? '' : "  #{glyph}\n"}
 INNER
+end
 
 page_svg = lambda do |marks|
   svg.call(<<~INNER)
@@ -183,11 +186,22 @@ end
 text_lines = %(<path d="M23 32 h18 M23 39 h18 M23 46 h11" stroke="#{mark}" stroke-width="3"/>)
 exec_prompt = %(<path d="M22 33 l7 6.5 l-7 6.5" fill="none" stroke="#{mark}" stroke-width="3"/><path d="M33 46 h9" stroke="#{mark}" stroke-width="3"/>)
 
-places = %w[
-  folder folder-open inode-directory user-desktop folder-documents
-  folder-download folder-music folder-pictures folder-publicshare
-  folder-templates folder-videos folder-remote
-]
+# XDG special folders carry a dim glyph inside the body; the plain
+# folder stays empty.
+places = {
+  "folder" => "",
+  "folder-open" => "",
+  "inode-directory" => "",
+  "folder-remote" => "",
+  "folder-documents" => %(<path d="M24 29 h16 M24 35 h16 M24 41 h10" stroke="#{mark}" stroke-width="3"/>),
+  "folder-download" => %(<path d="M32 27 v13 M26 35 l6 6 l6 -6" fill="none" stroke="#{mark}" stroke-width="3"/>),
+  "folder-music" => %(<path d="M25 43 v-7 M32 43 v-11 M39 43 v-9" stroke="#{mark}" stroke-width="4"/>),
+  "folder-pictures" => %(<rect x="24" y="27" width="4.5" height="4.5" fill="#{mark}"/><path d="M22 43 l8 -11 l5 7 l3 -4 l6 8 z" fill="#{mark}"/>),
+  "folder-videos" => %(<path d="M28 29 l11 7 l-11 7 z" fill="#{mark}"/>),
+  "folder-templates" => %(<path d="M26 28 h12 v14 h-12 z" fill="none" stroke="#{mark}" stroke-width="2.5"/>),
+  "folder-publicshare" => %(<path d="M26 43 l11 -10 M37 33 h-6.5 M37 33 v6.5" fill="none" stroke="#{mark}" stroke-width="3"/>),
+  "user-desktop" => %(<path d="M24 28 h16 v10 h-16 z M32 38 v5" fill="none" stroke="#{mark}" stroke-width="2.5"/>),
+}
 # Marks per family. Every name Adwaita ships is shadowed here so no
 # foreign icon leaks into a hotglass view via the inheritance chain.
 image_mark = %(<rect x="23" y="25" width="5" height="5" fill="#{mark}"/><path d="M20 46 l9 -13 l6 8 l4 -5 l7 10 z" fill="#{mark}"/>)
@@ -255,7 +269,7 @@ THEME
 
 FileUtils.mkdir_p(["#{icons_root}/scalable/places", "#{icons_root}/scalable/mimetypes"])
 File.write("#{icons_root}/index.theme", index_theme)
-places.each { |name| File.write("#{icons_root}/scalable/places/#{name}.svg", folder_svg) }
+places.each { |name, glyph| File.write("#{icons_root}/scalable/places/#{name}.svg", folder_svg.call(glyph)) }
 mimetypes.each { |name, marks| File.write("#{icons_root}/scalable/mimetypes/#{name}.svg", page_svg.call(marks)) }
 
 puts "hotglass: wrote colors.css, hotglass.conf, clipse/custom_theme.json, wofi + starship blocks, icon theme"
