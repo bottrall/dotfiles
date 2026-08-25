@@ -12,7 +12,7 @@ A from-scratch design system for this desktop: pure-black glass, one electric pi
 
 ## Tokens
 
-Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, clipse theme, starship palette block) are committed but never hand-edited.
+Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, clipse theme, starship palette block, icon theme) are committed but never hand-edited.
 
 | Token | Value | Role |
 |---|---|---|
@@ -47,9 +47,9 @@ Shape and type constants (no runtime carrier — apply by hand, cite this doc):
 
 ## Scope
 
-**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, ghostty background/opacity, GTK 3/4 via Adwaita-dark + generated override CSS.
+**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, ghostty background/opacity, GTK 3/4 via Adwaita-dark + generated override CSS, icon theme (generated folder + file glyphs; everything else inherits Adwaita).
 
-**Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop), wallpaper, cursor and icon themes.
+**Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop), wallpaper, cursor theme.
 
 Boundary rule: *apps whose colors we configure get tokens; the ANSI palette and anything that merely inherits it stays stock.*
 

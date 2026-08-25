@@ -11,9 +11,13 @@
 #                                  stylesheet as inline data, so @import can't resolve)
 #   ../clipse/custom_theme.json    clipse TUI theme (opaque fallbacks)
 #   ../starship.toml               [palettes.hotglass] block between marker comments
+#   ../../.local/share/icons/hotglass/
+#                                  icon theme: folder + generic file glyphs
+#                                  (inherits Adwaita for everything else)
 #
 # Stdlib only. Run from anywhere: paths resolve relative to this script.
 
+require "fileutils"
 require "json"
 require "yaml"
 
@@ -151,4 +155,107 @@ palette = [
 ]
 splice(File.join(HERE, "../starship.toml"), "# hotglass:begin", "# hotglass:end", palette.join("\n"))
 
-puts "hotglass: wrote colors.css, hotglass.conf, clipse/custom_theme.json, wofi + starship blocks"
+# ---- icon theme (folders + generic file glyphs) -----------------------
+# Sharp geometry from the token palette: folders are a raised-glass tile
+# with a voltage tab (the prompt's directory block, iconified); files are
+# a notched page with a dim mark per family. Color means attention, so
+# marks stay neutral. Everything not drawn here inherits from Adwaita.
+icons_root = File.expand_path("../../.local/share/icons/hotglass", HERE)
+body_fill = rgba_css(white, alpha["overlay_hover"])
+outline = rgba_css(white, alpha["text_muted"])
+mark = rgba_css(white, alpha["text_dim"])
+
+svg = ->(inner) { "<!-- #{HEADER} -->\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\">\n#{inner}</svg>\n" }
+
+folder_svg = svg.call(<<~INNER)
+  <rect x="6.5" y="13" width="19" height="7.5" fill="##{accent}"/>
+  <rect x="8" y="22" width="48" height="28" fill="#{body_fill}" stroke="#{outline}" stroke-width="3"/>
+INNER
+
+page_svg = lambda do |marks|
+  svg.call(<<~INNER)
+    <path d="M15.5 9.5 h24 l9 9 v36 h-33 z" fill="#{body_fill}" stroke="#{outline}" stroke-width="3"/>
+    <path d="M39.5 9.5 l9 9 h-9 z" fill="#{outline}"/>
+  #{marks.empty? ? '' : "  #{marks}\n"}
+INNER
+end
+
+text_lines = %(<path d="M23 32 h18 M23 39 h18 M23 46 h11" stroke="#{mark}" stroke-width="3"/>)
+exec_prompt = %(<path d="M22 33 l7 6.5 l-7 6.5" fill="none" stroke="#{mark}" stroke-width="3"/><path d="M33 46 h9" stroke="#{mark}" stroke-width="3"/>)
+
+places = %w[
+  folder folder-open inode-directory user-desktop folder-documents
+  folder-download folder-music folder-pictures folder-publicshare
+  folder-templates folder-videos folder-remote
+]
+# Marks per family. Every name Adwaita ships is shadowed here so no
+# foreign icon leaks into a hotglass view via the inheritance chain.
+image_mark = %(<rect x="23" y="25" width="5" height="5" fill="#{mark}"/><path d="M20 46 l9 -13 l6 8 l4 -5 l7 10 z" fill="#{mark}"/>)
+audio_mark = %(<path d="M24 46 v-9 M32 46 v-15 M40 46 v-11" stroke="#{mark}" stroke-width="4"/>)
+video_mark = %(<path d="M27 31 l13 8.5 l-13 8.5 z" fill="#{mark}"/>)
+package_mark = %(<path d="M32 24 v5 M32 33 v5 M32 42 v5" stroke="#{mark}" stroke-width="4"/>)
+grid_mark = %(<path d="M23 30 h18 v16 h-18 z M23 38 h18 M32 30 v16" fill="none" stroke="#{mark}" stroke-width="2.5"/>)
+screen_mark = %(<path d="M22 30 h20 v12 h-20 z M32 42 v5" fill="none" stroke="#{mark}" stroke-width="2.5"/>)
+angle_mark = %(<path d="M26 33 l-6 6.5 l6 6.5 M38 33 l6 6.5 l-6 6.5" fill="none" stroke="#{mark}" stroke-width="3"/>)
+arrow_mark = %(<path d="M24 46 l14 -12 M38 34 h-7 M38 34 v7" fill="none" stroke="#{mark}" stroke-width="3"/>)
+
+mimetypes = {
+  "text-x-generic" => text_lines,
+  "text-x-preview" => text_lines,
+  "application-pdf" => text_lines,
+  "x-office-document" => text_lines,
+  "x-office-document-template" => text_lines,
+  "x-office-addressbook" => text_lines,
+  "text-x-script" => exec_prompt,
+  "application-x-executable" => exec_prompt,
+  "text-html" => angle_mark,
+  "image-x-generic" => image_mark,
+  "x-office-drawing" => image_mark,
+  "audio-x-generic" => audio_mark,
+  "video-x-generic" => video_mark,
+  "package-x-generic" => package_mark,
+  "x-package-repository" => package_mark,
+  "x-office-spreadsheet" => grid_mark,
+  "x-office-spreadsheet-template" => grid_mark,
+  "x-office-presentation" => screen_mark,
+  "x-office-presentation-template" => screen_mark,
+  "inode-symlink" => arrow_mark,
+  "application-octet-stream" => "",
+  "application-x-generic" => "",
+  "application-x-addon" => "",
+  "application-x-firmware" => "",
+  "application-x-sharedlib" => "",
+  "application-certificate" => "",
+  "font-x-generic" => "",
+  "model" => "",
+}
+
+index_theme = <<~THEME
+  # #{HEADER}
+  [Icon Theme]
+  Name=hotglass
+  Comment=hotglass generated icon theme
+  Inherits=Adwaita
+  Directories=scalable/places,scalable/mimetypes
+
+  [scalable/places]
+  Context=Places
+  Size=64
+  MinSize=8
+  MaxSize=512
+  Type=Scalable
+
+  [scalable/mimetypes]
+  Context=MimeTypes
+  Size=64
+  MinSize=8
+  MaxSize=512
+  Type=Scalable
+THEME
+
+FileUtils.mkdir_p(["#{icons_root}/scalable/places", "#{icons_root}/scalable/mimetypes"])
+File.write("#{icons_root}/index.theme", index_theme)
+places.each { |name| File.write("#{icons_root}/scalable/places/#{name}.svg", folder_svg) }
+mimetypes.each { |name, marks| File.write("#{icons_root}/scalable/mimetypes/#{name}.svg", page_svg.call(marks)) }
+
+puts "hotglass: wrote colors.css, hotglass.conf, clipse/custom_theme.json, wofi + starship blocks, icon theme"
