@@ -49,11 +49,11 @@ Shape and type constants (no runtime carrier — apply by hand, cite this doc):
 
 **In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, ghostty background/opacity, GTK 3/4 via Adwaita-dark + generated override CSS.
 
-**Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop, spf), wallpaper, cursor and icon themes.
+**Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop), wallpaper, cursor and icon themes.
 
 Boundary rule: *apps whose colors we configure get tokens; the ANSI palette and anything that merely inherits it stays stock.*
 
-Hooks for later: revisit GTK depth when a GUI file manager becomes daily-driven; btop can join by the boundary rule if its colors ever get configured.
+Hooks for later: Nautilus is now the daily-driven GUI file manager — revisit GTK depth (does the Adwaita-dark override layer hold up under heavy content views?); btop can join by the boundary rule if its colors ever get configured.
 
 ## Prompt (state-driven)
 

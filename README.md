@@ -12,7 +12,7 @@ Personal dotfiles for macOS and Arch Linux.
 
 **Prompt** — Starship
 
-**Hyprland** (Linux) — Hyprland, Hyprpaper, Hypridle, Hyprlock, Waybar, Wofi, swaync, clipse, GTK 3/4
+**Hyprland** (Linux) — Hyprland, Hyprpaper, Hypridle, Hyprlock, Waybar, Wofi, swaync, clipse, btop, swappy, GTK 3/4
 
 **hotglass** (Linux) — the desktop's design system: black glass, one electric pink, sharp edges. `.config/hotglass/tokens.yml` is the single source of truth; `.config/hotglass/generate` (Ruby) rewrites every derived color file (GTK CSS, hypr conf, wofi tokens, starship palette, clipse theme). See `.config/hotglass/DESIGN.md` for principles, tokens, and scope.
 
