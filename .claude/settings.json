@@ -19,5 +19,6 @@
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "inputNeededNotifEnabled": false
 }
