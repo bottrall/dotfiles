@@ -6,7 +6,8 @@
 # Reads tokens.yml and rewrites every derived color file:
 #
 #   colors.css                     GTK @define-color tokens (waybar, swaync, gtk.css)
-#   hotglass.conf                  Hyprland/hyprlock $variables
+#   hotglass.conf                  hyprlock $variables (hyprlang)
+#   hotglass.lua                   Hyprland lua config token table
 #   ../wofi/style.css              tokens spliced between markers (wofi loads its
 #                                  stylesheet as inline data, so @import can't resolve)
 #   ../clipse/custom_theme.json    clipse TUI theme (opaque fallbacks)
@@ -105,6 +106,28 @@ conf = [
   "$raise3 = rgb(#{ink['raise_3']})",
 ]
 File.write(File.join(HERE, "hotglass.conf"), "#{conf.join("\n")}\n")
+
+# ---- hotglass.lua (hyprland lua config dialect) -----------------------
+lua = [
+  "-- #{HEADER}",
+  "return {",
+  "  accent = \"rgb(#{accent})\",",
+  "  accentAlpha = \"#{accent}\",",
+  "  accentDeep = \"rgb(#{accent_deep})\",",
+  *status.map { |name, hex6| "  #{name} = \"rgb(#{hex6})\"," },
+  "  edgeFocus = \"rgba(#{accent}#{format('%02x', (255 * alpha['edge_focus']).round)})\",",
+  "  edgeIdle = \"rgba(#{white}#{format('%02x', (255 * alpha['edge_idle']).round)})\",",
+  "  text = \"rgb(#{white})\",",
+  "  ink = \"rgb(#{black})\",",
+  "  textDimInk = \"rgb(#{ink['text_dim']})\",",
+  "  textMutedInk = \"rgb(#{ink['text_muted']})\",",
+  "  overlayHoverInk = \"rgb(#{ink['overlay_hover']})\",",
+  "  raise1 = \"rgb(#{ink['raise_1']})\",",
+  "  raise2 = \"rgb(#{ink['raise_2']})\",",
+  "  raise3 = \"rgb(#{ink['raise_3']})\",",
+  "}",
+]
+File.write(File.join(HERE, "hotglass.lua"), "#{lua.join("\n")}\n")
 
 # ---- clipse (opaque truecolor TUI over terminal glass) ----------------
 clipse = {
@@ -272,4 +295,4 @@ File.write("#{icons_root}/index.theme", index_theme)
 places.each { |name, glyph| File.write("#{icons_root}/scalable/places/#{name}.svg", folder_svg.call(glyph)) }
 mimetypes.each { |name, marks| File.write("#{icons_root}/scalable/mimetypes/#{name}.svg", page_svg.call(marks)) }
 
-puts "hotglass: wrote colors.css, hotglass.conf, clipse/custom_theme.json, wofi + starship blocks, icon theme"
+puts "hotglass: wrote colors.css, hotglass.conf, hotglass.lua, clipse/custom_theme.json, wofi + starship blocks, icon theme"
