@@ -1,19 +1,26 @@
 ---
 name: code-review
-description: Multi-agent code review of changes on the current branch; reports findings inline in chat
-disable-model-invocation: true
+description: Multi-agent code review of the current branch against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build-loop skill. Never run it speculatively.
 ---
 
 # Code Review
 
 Code review all changes on the current branch and report findings inline in chat. Do not post to GitHub.
 
-This is the same review protocol as Phase 2 of the `build-loop` skill; the two are kept deliberately in sync. Only the disposition differs — this skill prints its findings, build-loop gates on them. Change one, change both.
+The `build-loop` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
 
 **Agent assumptions (applies to all agents and subagents):**
 
 - All tools are functional and will work without error. Do not test tools or make exploratory calls. Make sure this is clear to every subagent that is launched.
 - Only call a tool if it is required to complete the task. Every tool call should have a clear purpose.
+
+## Criteria
+
+Every reviewer and validator is graded against [criteria.md](criteria.md) — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. It is inlined below so it can be passed **verbatim** to every subagent. Do not paraphrase it.
+
+<criteria>
+!`cat ~/.claude/skills/code-review/criteria.md`
+</criteria>
 
 ## Review scope
 
@@ -71,35 +78,22 @@ Launch a subagent to summarize the branch. It should:
 
 ### 4. Parallel review
 
-Launch these five reviewers in parallel. Each receives the rule-file paths from step 2 and the branch summary from step 3, and returns a list of findings — each with a `path:line` reference, a reason tag, and a one-line description.
+Launch **one reviewer per lens** in the criteria — five in parallel: Correctness, Security, Rules compliance, Performance, Simplicity / idiom. Each receives:
 
-1. **Rules compliance** — audit the changed code against the discovered rule files (`CLAUDE.md` + `.claude/rules`). For a `CLAUDE.md`, only apply it to files it shares a path with (the file or its parents). Files under `.claude/rules/` apply repo-wide unless the rule itself scopes them. Flag only clear, unambiguous violations where you can quote the exact rule and its source file path.
+- The full criteria text, verbatim.
+- Which single lens it owns. It reviews through that lens only, at the stated bar, and honours the false-positive list.
+- The rule-file paths from step 2 and the branch summary from step 3.
+- The exact scope commands from the Review scope section.
 
-2. **Bug scan** — obvious, significant bugs in the diff itself, without reading outside context — but only within the changed code.
-
-3. **Security review** — look for injection (SQL/command/template), broken authn/authz, secrets or credentials in code, unsafe deserialization, SSRF, path traversal, missing input validation, unsafe use of untrusted data, and similar — but only within the changed code.
-
-4. **Performance review** — look for N+1 queries, missing pagination or indexes, accidental O(n²) or repeated work in loops, unnecessary allocations, blocking I/O on hot paths, and similar — but only within the changed code. Only major performance issues; readability beats a small performance win.
-
-5. **Simplify / idiomatic review** — what the changed code could drop or collapse (dead code, redundant branches, needless abstraction, duplication) and where it diverges from the idioms of its language/framework (per the project's conventions and rule files). Every finding must name a concrete, mechanical change and the idiomatic replacement — never a vague "could be cleaner."
-
-**HIGH SIGNAL only.** Flag a finding only when:
-
-- The code will fail to compile/parse (syntax, type errors, missing imports, unresolved references), or
-- It will definitely produce wrong results regardless of input (clear logic errors), or
-- It's a clear security or performance defect in the changed code, or
-- It's an unambiguous rule violation you can quote, or
-- It's a concrete, clearly-beneficial simplification or idiom fix with a specific replacement.
-
-Do **not** flag: subjective style preferences, issues that only manifest for specific unstated inputs/state, speculative improvements, or anything you're not certain is real. False positives erode trust and waste reviewer time.
+Each returns a list of findings — `path:line`, a reason tag naming the lens, and a one-line description. A finding that fails the bar is not returned.
 
 ### 5. Validate
 
-For each finding, launch a subagent to adversarially confirm it is real and worth fixing with high confidence — e.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated. Drop any finding that doesn't survive.
+For each finding, launch a subagent to adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive.
 
 ### 6. Filter
 
-Drop every finding that failed validation in step 5, plus anything on the false-positive list below. What remains is the final high-signal set.
+Drop every finding that failed validation in step 5, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final high-signal set.
 
 ### 7. Report findings inline in chat
 
@@ -124,17 +118,6 @@ Drop every finding that failed validation in step 5, plus anything on the false-
 - Group by file, then ascending line. Use `path:line` refs (clickable) — never GitHub blob URLs.
 - Small self-contained fix: include a fenced block with the replacement, but only if applying it fully resolves the finding. Larger fixes (6+ lines, structural, or spanning multiple locations): describe in prose.
 - One finding per unique issue; no duplicates. Quote the rule and its file path for any rule finding.
-
-## False-positive list
-
-Never flag these (use in steps 4 and 5):
-
-- Pre-existing issues (outside the diff).
-- Something that looks like a bug but is actually correct.
-- Pedantic nitpicks a senior engineer would not raise.
-- Issues a linter will catch (do not run the linter to verify).
-- General code-quality gaps (e.g. lack of test coverage) unless a rule file explicitly requires otherwise.
-- Issues silenced deliberately in the code (e.g. a lint-ignore comment).
 
 ## Notes
 

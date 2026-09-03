@@ -22,20 +22,26 @@ This loop is **fully autonomous**. It never pauses between phases, and it pushes
 
 Create a todo list before starting. Track a single **cycle counter** starting at 1. Every return to Phase 1 — whether triggered by review findings or CI failure — increments it. When the counter would exceed the cap, stop and hand back instead of looping.
 
+## Criteria
+
+The builder is graded by the `code-review` skill against its [criteria.md](../code-review/criteria.md) — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewers see, so it can self-review before handing back. It is inlined here so it can be passed **verbatim** into the build subagent's prompt. Do not paraphrase it.
+
+<criteria>
+!`cat ~/.claude/skills/code-review/criteria.md`
+</criteria>
+
 ## Model selection
 
 Every subagent launch includes a deliberate model choice, picked from whatever tiers the Agent tool currently exposes. No phase is mapped to a model — decide per launch, per cycle, by weighing:
 
-- **Judgment density.** How much of the task is reasoning versus mechanical execution? Following explicit instructions (commit, push, fill a template, watch checks, verify a single quoted claim) needs far less capability than open-ended design, debugging, or spotting what _isn't_ written in the diff.
-- **Cost of a miss.** What happens if this subagent gets it wrong? A weak build gets caught by review; a weak review ships the bug. Work that gates the loop deserves more capability than work the loop double-checks.
+- **Judgment density.** How much of the task is reasoning versus mechanical execution? Following explicit instructions (commit, push, fill a template, watch checks) needs far less capability than open-ended design or debugging.
+- **Cost of a miss.** What happens if this subagent gets it wrong? A weak build gets caught by review; a weak ship step wastes a CI round. Work the loop double-checks can afford less capability than work it doesn't.
 - **Ambiguity of the input.** A cycle-1 "implement the task" prompt is open-ended; a cycle-2 "fix exactly these quoted findings" prompt is nearly mechanical. The same phase can warrant different models on different cycles.
 - **Recovery cost.** A cheap model that fails burns a subagent; a cheap model that _plausibly_ succeeds burns a whole cycle. When wrong-but-confident output is hard to detect downstream, pay for capability up front.
 
-Generation and verification are asymmetric: checking work often demands more capability than producing it, because the checker must catch what the producer missed. Don't assume the reviewer can be weaker than the builder just because the diff is small.
-
 Omitting the model (inheriting the session's) is a valid choice, not a default — make it deliberately. State the chosen model in each launch so the decision is visible in the transcript.
 
-This applies to anything delegated, not just the phases that already prescribe subagents — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch.
+This applies to anything delegated — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch. The review phase makes its own model choices per the `code-review` skill.
 
 ## Phase 0 — Preflight (once)
 
@@ -45,95 +51,30 @@ This applies to anything delegated, not just the phases that already prescribe s
 
 ## Phase 1 — Build
 
-Launch a subagent to do the work for this cycle. It must read the project's own rule files (`CLAUDE.md` + `.claude/rules`) before editing — the review in Phase 2 audits against exactly those.
+Launch a subagent to do the work for this cycle. Its prompt must include, in this order:
 
-- **Cycle 1:** implement the task.
-- **Cycle > 1:** the subagent's sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
+1. **The criteria, verbatim** (the `<criteria>` block above), with the instruction that this is exactly what its work will be reviewed against, and that it must self-review its diff against every lens at the stated bar before handing back — see "For the builder" in the criteria.
+2. **The rule files.** It must read the project's own rule files (`CLAUDE.md` + `.claude/rules`) before editing — the Rules compliance lens audits against exactly those.
+3. **The work for this cycle:**
+   - **Cycle 1:** implement the task.
+   - **Cycle > 1:** its sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
+4. **Verify locally before handing back.** Run the tests that exercise the files it changed (the touched spec/test files and anything obviously covering them). A failing test is the builder's to fix in this cycle, not CI's to discover — a CI round is the most expensive way to find it.
 
 Leave the changes uncommitted — the review reads staged + unstaged work, and the ship phase handles committing.
 
-## Phase 2 — Review (encoded, gates the loop)
+## Phase 2 — Review (gates the loop)
 
-A multi-agent review of the branch. Because **every surviving finding sends the loop back to Phase 1**, the bar is high signal only — a false positive burns a whole cycle. The validation pass exists to enforce that.
+Invoke the `code-review` skill via the Skill tool and run it exactly as written. It performs the multi-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 0 guarantees its preflight will not stop on the default branch.
 
-This is the same review protocol as the `code-review` skill; the two are kept deliberately in sync. Only the disposition differs — `code-review` prints its findings, this phase gates on them. Change one, change both.
+Because **every surviving finding sends the loop back to Phase 1**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle.
 
-### Scope
+### Gate
 
-All changes since the current branch diverged from the default branch, **including staged and unstaged work**. Never use three-dot (`main...HEAD`) — it drops uncommitted changes.
+Read the report the `code-review` skill printed.
 
-- Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- `BASE=$(git merge-base <default-branch> HEAD)` — compute once at the start of the review.
-- Unified diff: `git diff $BASE`
-- File list: `git diff --name-only $BASE`
-- Stat: `git diff --stat $BASE`
-
-Pass these exact commands to every review subagent. Each reviewer must read the changes via `git diff $BASE` — not `git diff main...HEAD`.
-
-Recompute `BASE` at the start of every cycle's review.
-
-### 2a. Discover rule files
-
-Launch a subagent to return a list of file paths (not contents) for all relevant rule files:
-
-- The repo root `CLAUDE.md`, if it exists.
-- Any `CLAUDE.md` in a directory containing a file modified on this branch (use `git diff --name-only $BASE`, which includes uncommitted changes).
-- Any file under `.claude/rules/`.
-
-### 2b. Summarize the changes
-
-Launch a subagent to summarize the branch. It should:
-
-- Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline <default-branch>..HEAD` (commits only).
-- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in 2c have that context.
-- Return a short summary of what the branch does.
-
-### 2c. Parallel review
-
-Launch these five reviewers in parallel. Each receives the rule-file paths from 2a and the branch summary from 2b, and returns a list of findings — each with a `path:line` reference, a reason tag, and a one-line description.
-
-1. **Rules compliance** — audit the changed code against the discovered rule files (`CLAUDE.md` + `.claude/rules`). For a `CLAUDE.md`, only apply it to files it shares a path with (the file or its parents). Files under `.claude/rules/` apply repo-wide unless the rule itself scopes them. Flag only clear, unambiguous violations where you can quote the exact rule and its source file path.
-
-2. **Bug scan** — obvious, significant bugs in the diff itself, without reading outside context — but only within the changed code.
-
-3. **Security review** — look for injection (SQL/command/template), broken authn/authz, secrets or credentials in code, unsafe deserialization, SSRF, path traversal, missing input validation, unsafe use of untrusted data, and similar — but only within the changed code.
-
-4. **Performance review** — look for N+1 queries, missing pagination or indexes, accidental O(n²) or repeated work in loops, unnecessary allocations, blocking I/O on hot paths, and similar — but only within the changed code. Only major performance issues; readability beats a small performance win.
-
-5. **Simplify / idiomatic review** — what the changed code could drop or collapse (dead code, redundant branches, needless abstraction, duplication) and where it diverges from the idioms of its language/framework (per the project's conventions and rule files). Every finding must name a concrete, mechanical change and the idiomatic replacement — never a vague "could be cleaner."
-
-**HIGH SIGNAL only.** Flag a finding only when:
-
-- The code will fail to compile/parse (syntax, type errors, missing imports, unresolved references), or
-- It will definitely produce wrong results regardless of input (clear logic errors), or
-- It's a clear security or performance defect in the changed code, or
-- It's an unambiguous rule violation you can quote, or
-- It's a concrete, clearly-beneficial simplification or idiom fix with a specific replacement.
-
-Do **not** flag: subjective style preferences, issues that only manifest for specific unstated inputs/state, speculative improvements, or anything you're not certain is real. False positives erode trust and waste reviewer time.
-
-### 2d. Validate
-
-For each finding, launch a subagent to adversarially confirm it is real and worth fixing with high confidence — e.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated. Drop any finding that doesn't survive.
-
-### False-positive list
-
-Never flag these (use in 2c and 2d):
-
-- Pre-existing issues (outside the diff).
-- Something that looks like a bug but is actually correct.
-- Pedantic nitpicks a senior engineer would not raise.
-- Issues a linter will catch (do not run the linter to verify).
-- General code-quality gaps (e.g. lack of test coverage) unless a rule file explicitly requires otherwise.
-- Issues silenced deliberately in the code (e.g. a lint-ignore comment).
-
-### 2e. Gate
-
-The findings surviving 2d, minus anything on the false-positive list, are blockers.
-
-- **If any survive** and the cycle counter is **below** the cap: increment the counter, pass the findings (grouped `path:line`, with reason and description) to Phase 1, and loop.
-- **If any survive** and the cycle counter is **at** the cap: stop. Hand back per the report format — do not ship.
-- **If none survive:** proceed to Phase 3.
+- **"No issues found":** proceed to Phase 3.
+- **Findings, and the cycle counter is below the cap:** increment the counter, pass the findings (grouped `path:line`, with reason tag and description, exactly as printed) to Phase 1, and loop.
+- **Findings, and the cycle counter is at the cap:** stop. Hand back per the report format — do not ship.
 
 ## Phase 3 — Ship + CI (encoded)
 
@@ -162,7 +103,7 @@ Use the **first** match, in order:
 ### 3d. Title & body
 
 - PR title < 70 chars, derived from the branch commits.
-- **Template found:** fill it from the diff (`git diff $BASE`) and commit history; leave a section empty rather than guessing.
+- **Template found:** fill it from the diff (`git diff $(git merge-base <default-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
 - **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
 
 ```
@@ -206,7 +147,7 @@ State that the loop finished clean: cycles used, review clean, CI green, and the
 
 ### Hand-back (cap reached or blocked)
 
-Say plainly why it stopped and what's left for me. If it stopped on **review findings**, print them in this format:
+Say plainly why it stopped and what's left for me. If it stopped on **review findings**, print them in the `code-review` skill's report format under this heading:
 
 > ## Build loop — stopped at cycle cap
 >
