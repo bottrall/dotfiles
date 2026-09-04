@@ -15,5 +15,6 @@ For each question:
 - Use `multiSelect` only when the choices genuinely aren't exclusive.
 
 If a _fact_ can be found by exploring the environment (filesystem, tools, etc.), look it up rather than asking me. The _decisions_, though, are mine — put each one to me and wait for my answer.
+Never ask how the resulting work should be completed. I will give the appropirate direction once the shared understanding has been reached.
 
-Do not act on it until I confirm we have reached a shared understanding. Provide the shared understanding as a html plan outlining what will be done. Include visuals when appropriate and use simple language.
+Do not act on it until I confirm we have reached a shared understanding. Provide the shared understanding as a html plan outlining what will be done and open the document in the browser. Include visuals when appropriate and use simple language.
