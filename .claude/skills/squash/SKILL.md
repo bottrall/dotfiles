@@ -34,7 +34,7 @@ Squash all commits on the current branch into a single commit and force push to 
   - **Blank line.**
   - **Commit history:** list each original commit as `- <hash> <message>` (from the log captured in step 3).
   - **Blank line.**
-  - `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` trailer.
+  - `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
 
 ### 5. Force push
 

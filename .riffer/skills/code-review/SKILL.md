@@ -9,8 +9,6 @@ Code review all changes on the current branch and report findings inline in chat
 
 The `build-loop` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
 
-**This is the single-agent variant.** riffer-rig has no subagents, so every step below that the Claude Code version delegated — preflight, rule discovery, summary, one reviewer per lens, one validator per finding — is done by you, sequentially, in this session. Walk the lenses in order, record every finding before validating, then validate each finding adversarially as if you had not written it.
-
 **Agent assumptions:**
 
 - All tools are functional and will work without error. Do not test tools or make exploratory calls.

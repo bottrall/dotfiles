@@ -34,7 +34,7 @@ Squash all commits on the current branch into a single commit and force push to 
   - **Blank line.**
   - **Commit history:** list each original commit as `- <hash> <message>` (from the log captured in step 3).
   - **Blank line.**
-  - A `Co-Authored-By:` trailer naming the agent that wrote the work — `Co-Authored-By: Claude <noreply@anthropic.com>` inside Claude Code, or `Co-Authored-By: Riffer <noreply@riffer.dev>` inside riffer-rig. Don't sign your own commits as a different agent.
+  - `Co-Authored-By: Riffer <noreply@riffer.dev>` trailer.
 
 ### 5. Force push
 
