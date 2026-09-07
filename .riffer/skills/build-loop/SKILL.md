@@ -67,8 +67,7 @@ Read the report the review printed.
 
 - Run `git status` (never `-uall`) and `git diff` to see uncommitted work.
 - Stage relevant files by name (never `git add -A` / `git add .`), then commit — **staging and committing are separate commands, never chained.**
-<!-- TODO: should the trailer say "riffer" (or the model name) when riffer-rig is the author? -->
-- Commit message: **Conventional Commits** (`feat:`, `fix:`, `chore:`…), written via HEREDOC, with the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
+- Commit message: **Conventional Commits** (`feat:`, `fix:`, `chore:`…), written via HEREDOC, with a `Co-Authored-By:` trailer naming the agent that wrote the work — `Co-Authored-By: Claude <noreply@anthropic.com>` inside Claude Code, or `Co-Authored-By: Riffer <noreply@riffer.dev>` inside riffer-rig. Don't sign your own commits as a different agent.
 - Run `git status` after to verify.
 
 ### 3b. Push
@@ -103,11 +102,14 @@ Use the **first** match, in order:
 <Evidence it works. If CI covers it, say so. If visual/UX, instruct: "Attach a screenshot of X". If it needs manual verification in a specific environment/dataset/integration, instruct the author to confirm and paste results.>
 ```
 
-If you genuinely can't determine the problem or solution, leave a `<TODO: …>` placeholder rather than inventing intent. Always append:
+If you genuinely can't determine the problem or solution, leave a `<TODO: …>` placeholder rather than inventing intent. Always append the footer that names the agent doing the work — the Claude Code footer inside Claude Code, the riffer-rig footer inside riffer-rig:
 
-<!-- TODO: should this footer name riffer-rig when it is the author? -->
 ```
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+```
+🤖 Generated with [riffer-rig](https://github.com/bottrall/riffer-rig)
 ```
 
 ### 3e. Create or update the PR
