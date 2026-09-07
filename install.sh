@@ -84,6 +84,11 @@ link_dir  ".config/ghostty"
 link_file ".claude/CLAUDE.md"
 link_file ".claude/settings.json"
 link_dir  ".claude/skills"
+# riffer-rig (~/.riffer/auth.json holds API keys and is never linked or created
+# here; an existing ~/.riffer/skills dir is moved to the backup dir first)
+link_file ".riffer/AGENTS.md"
+link_file ".riffer/settings.json"
+link_dir  ".riffer/skills"
 
 # --- macOS only ---
 if [[ "$OS" == "Darwin" ]]; then
