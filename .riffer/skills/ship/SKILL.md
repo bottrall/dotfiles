@@ -16,8 +16,7 @@ Prepare and open a pull request for the current branch.
 - If there are changes, stage and commit them. **Run staging and committing as separate commands — never combine them into a single chained command.**
   - Stage relevant files by name (never use `git add -A` or `git add .`).
   - Write a commit message using **Conventional Commits** (`feat:`, `fix:`, `chore:`, etc.).
-  <!-- TODO: should the trailer say "riffer" (or the model name) when riffer-rig is the author? -->
-  - Commit using a HEREDOC for the message and include the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
+  - Commit using a HEREDOC for the message and include a `Co-Authored-By:` trailer naming the agent that wrote the work — `Co-Authored-By: Claude <noreply@anthropic.com>` when this skill runs inside Claude Code, or `Co-Authored-By: Riffer <noreply@riffer.dev>` when it runs inside riffer-rig. Don't sign your own commits as a different agent.
   - Run `git status` after committing to verify success.
 - Run `git log --oneline main..HEAD` (or the repo's default branch) to confirm there are commits to ship. If the branch **is** the default branch, stop and tell me to create a feature branch first.
 
@@ -61,11 +60,14 @@ Search for a pull request template in the repo. Check these paths **in order** a
 
 Infer the content from the branch's diff, commit messages, and any linked issue. If you genuinely can't determine the problem or solution from the available context, leave a placeholder like `<TODO: describe the problem>` rather than inventing one — better to flag the gap than fabricate intent. For **Proof**, always include explicit instructions to the author for any evidence you can't produce yourself (screenshots, videos, manual test output).
 
-- Always append the following footer to the body:
+- Always append the following footer to the body, using the one that names the agent doing the work: the Claude Code footer inside Claude Code, the riffer-rig footer inside riffer-rig.
 
-<!-- TODO: should this footer name riffer-rig when it is the author? -->
 ```
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+```
+🤖 Generated with [riffer-rig](https://github.com/bottrall/riffer-rig)
 ```
 
 ### 5. Create or update the PR
