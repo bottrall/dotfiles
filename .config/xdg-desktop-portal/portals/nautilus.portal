@@ -1,0 +1,9 @@
+# Nautilus implements org.freedesktop.impl.portal.FileChooser itself (on its
+# own bus name; DBus-activated). xdg-desktop-portal-gnome only proxies to
+# it, and refuses to do even that outside a GNOME session ("Non-compatible
+# display server, exposing settings only"), so point the portal daemon at
+# Nautilus directly. Loaded via XDG_DESKTOP_PORTAL_DIR — see
+# ../../systemd/user/xdg-desktop-portal.service.d/override.conf.
+[portal]
+DBusName=org.gnome.Nautilus
+Interfaces=org.freedesktop.impl.portal.FileChooser;

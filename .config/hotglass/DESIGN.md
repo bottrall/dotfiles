@@ -47,13 +47,13 @@ Shape and type constants (no runtime carrier — apply by hand, cite this doc):
 
 ## Scope
 
-**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, ghostty background/opacity, GTK 3/4 via Adwaita-dark + generated override CSS, icon theme (generated folder + file glyphs; everything else inherits Adwaita).
+**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, ghostty background/opacity, GTK4 via a libadwaita named-color override on Adwaita (this includes file pickers: `xdg-desktop-portal/` routes the portal's FileChooser to Nautilus itself, which Electron/Chromium apps like VS Code go through), GTK 3 via Adwaita-dark + the same named colors (GTK3 Adwaita bakes its colors to literals, so this is nominal — GTK3 is off the daily path now), icon theme (generated folder + file glyphs; everything else inherits Adwaita).
 
 **Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop), wallpaper, cursor theme.
 
 Boundary rule: *apps whose colors we configure get tokens; the ANSI palette and anything that merely inherits it stays stock.*
 
-Hooks for later: Nautilus is now the daily-driven GUI file manager — revisit GTK depth (does the Adwaita-dark override layer hold up under heavy content views?); btop can join by the boundary rule if its colors ever get configured.
+Hooks for later: Nautilus is now the daily-driven GUI file manager — revisit GTK depth (does the override layer hold up under heavy content views?); GTK3's theme name must stay the built-in `Adwaita` + prefer-dark (`Adwaita-dark` is a gnome-themes-extra directory, and GTK3 falls back to *light* Adwaita when it's missing); a GTK3 surface that matters again would need selector-based CSS, not named colors; btop can join by the boundary rule if its colors ever get configured.
 
 ## Prompt (state-driven)
 

@@ -121,10 +121,29 @@ if [[ "$OS" == "Linux" ]]; then
   link_file ".config/gtk-3.0/gtk.css"
   link_file ".config/gtk-4.0/settings.ini"
   link_file ".config/gtk-4.0/gtk.css"
+  # Portal routing: FileChooser -> Nautilus via xdg-desktop-portal-gnome
+  link_file ".config/xdg-desktop-portal/hyprland-portals.conf"
+  link_file ".config/xdg-desktop-portal/portals/nautilus.portal"
+  # with XDG_DESKTOP_PORTAL_DIR set, the daemon reads portals.conf from there too
+  link_file ".config/xdg-desktop-portal/portals/portals.conf"
+  # XDG_DESKTOP_PORTAL_DIR replaces the system portal dir, so mirror it
+  # (and drop links to definitions whose package has since been removed)
+  for portal in /usr/share/xdg-desktop-portal/portals/*.portal; do
+    [[ -e "$portal" ]] && ln -sfn "$portal" "$HOME/.config/xdg-desktop-portal/portals/"
+  done
+  find "$HOME/.config/xdg-desktop-portal/portals" -xtype l -delete
+  link_file ".config/systemd/user/xdg-desktop-portal.service.d/override.conf"
+  systemctl --user daemon-reload 2>/dev/null || true
   # GTK4 apps on Wayland read the icon theme via the settings portal
-  # (gsettings), not settings.ini
+  # (gsettings), not settings.ini. GTK3 on Wayland also lets gsettings
+  # override settings.ini for the theme name: it must be the built-in
+  # "Adwaita" (dark variant comes from prefer-dark). "Adwaita-dark" is a
+  # theme *directory* from gnome-themes-extra, which isn't installed, so
+  # GTK3 silently falls back to *light* Adwaita when asked for it.
   if command -v gsettings >/dev/null; then
     gsettings set org.gnome.desktop.interface icon-theme "hotglass"
+    gsettings set org.gnome.desktop.interface gtk-theme "Adwaita"
+    gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
   fi
 fi
 
