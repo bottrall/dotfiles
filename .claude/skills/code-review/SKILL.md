@@ -103,21 +103,53 @@ Drop every finding that failed validation in step 5, plus anything on the false-
 >
 > No issues found.
 
-**If findings survived**, print a single markdown block:
+**If findings survived**, print a single markdown block. Every file is a section, every finding is a numbered sub-heading inside its file's section, and a horizontal rule closes every finding:
 
 > ## Code review
 >
 > Found N issue(s) across M file(s).
 >
-> ### `<path>:<line>` (or `<path>:<start>-<end>`)
+> ---
 >
-> **<reason tag>** — <one-line description>
+> ### `<path>`
 >
-> <optional suggested fix>
+> #### 1. <Reason tag> — <one-line description>
+>
+> **Where:** `<path>:<line>` (or `<path>:<start>-<end>`)
+>
+> **Why:** <one or two sentences on what goes wrong and when>
+>
+> **Fix:** <prose on the same line, or a fenced replacement block on the next line>
+>
+> ---
+>
+> #### 2. <Reason tag> — <one-line description>
+>
+> **Where:** `<path>:<line>`
+>
+> **Why:** …
+>
+> **Fix:** …
+>
+> ---
+>
+> ### `<next path>`
+>
+> #### 3. <Reason tag> — <one-line description>
+>
+> …
+>
+> ---
 
-- Group by file, then ascending line. Use `path:line` refs (clickable) — never GitHub blob URLs.
-- Small self-contained fix: include a fenced block with the replacement, but only if applying it fully resolves the finding. Larger fixes (6+ lines, structural, or spanning multiple locations): describe in prose.
-- One finding per unique issue; no duplicates. Quote the rule and its file path for any rule finding.
+Layout rules:
+
+- **Sections.** One `###` heading per file, files ordered by path, findings within a file in ascending line order. A `---` rule follows the summary line and closes every finding, so every boundary — finding to finding, file to file — is a horizontal rule.
+- **Numbering.** Sequential across the whole report (1…N), not per file, so any finding can be referred to as "finding 3".
+- **Heading.** The reason tag is the lens name (Correctness, Security, Rules, Performance, Simplicity), then the one-line description.
+- **Where.** `path:line` refs (clickable) — never GitHub blob URLs.
+- **Why.** What goes wrong and when. For a rule finding, quote the rule and its file path here.
+- **Fix.** Small self-contained fix: a fenced block with the replacement, only if applying it fully resolves the finding. Larger fixes (6+ lines, structural, or spanning multiple locations): describe in prose. If there is no concrete fix to suggest, omit the line.
+- One finding per unique issue; no duplicates.
 
 ## Notes
 
