@@ -1,11 +1,12 @@
 {
+  "syncClaudeAiSkills": false,
   "env": {
     "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"
   },
   "permissions": {
     "defaultMode": "bypassPermissions"
   },
-  "model": "fable[1m]",
+  "model": "opus[1m]",
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": false,
     "code-review@claude-plugins-official": false
@@ -20,6 +21,5 @@
   "skipDangerousModePermissionPrompt": true,
   "inputNeededNotifEnabled": false,
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true,
-  "syncClaudeAiSkills": false
+  "voiceEnabled": true
 }
