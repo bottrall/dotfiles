@@ -10,17 +10,12 @@ Drive a task to a green, shipped PR autonomously. One cycle is: **build → revi
 
 This loop is **fully autonomous**. It never pauses between phases, and it pushes and opens a **draft** PR on its own. Run it only on a feature branch you're happy to ship from. It surfaces to me exactly twice: on success, or when it stops because the cycle cap was reached (or it's genuinely blocked).
 
-**Agent assumptions (applies to all agents and subagents):**
-
-- All tools are functional and will work without error. Do not test tools or make exploratory calls. Make sure this is clear to every subagent that is launched.
-- Only call a tool if it is required to complete the task. Every tool call should have a clear purpose.
-
 ## Inputs
 
 - **The task**: the text passed when invoking the skill. If none was passed, use the task established in the current conversation. If neither is clear, that's the one time to stop and ask me what to build.
 - **Cycle cap**: max number of build cycles before handing back. Default **3**. Honor an explicit override if I gave one.
 
-Create a todo list before starting. Track a single **cycle counter** starting at 1. Every return to Phase 1 — whether triggered by review findings or CI failure — increments it. When the counter would exceed the cap, stop and hand back instead of looping.
+Create a todo list before starting. Track a single **cycle counter** starting at 1. Every return to Phase 2 — whether triggered by review findings or CI failure — increments it. When the counter would exceed the cap, stop and hand back instead of looping.
 
 ## Criteria
 
@@ -43,18 +38,20 @@ Omitting the model (inheriting the session's) is a valid choice, not a default �
 
 This applies to anything delegated — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch. The review phase makes its own model choices per the `code-review` skill.
 
-## Phase 0 — Preflight (once)
+## Phase 1 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch.
-- **If already on a feature branch:** use it.
+- **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch. Its base branch is the default branch.
+- **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the `code-review` skill's [Review scope](../code-review/SKILL.md) section defines, and report it.
 
-## Phase 1 — Build
+The base branch is what the review diffs against and what the PR targets.
+
+## Phase 2 — Build
 
 Launch a subagent to do the work for this cycle. Its prompt must include, in this order:
 
 1. **The criteria, verbatim** (the `<criteria>` block above), with the instruction that this is exactly what its work will be reviewed against, and that it must self-review its diff against every lens at the stated bar before handing back — see "For the builder" in the criteria.
-2. **The rule files.** It must read the project's own rule files (`CLAUDE.md` + `.claude/rules`) before editing — the Rules compliance lens audits against exactly those.
+2. **The rule files.** Before editing a file, it must read every rule file that governs it — `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at the repo root **and in every directory between the root and that file**, as the `code-review` skill's "Discover rule files" step defines. Nested ones are easy to miss and just as binding — the Rules compliance lens audits against exactly those.
 3. **The work for this cycle:**
    - **Cycle 1:** implement the task.
    - **Cycle > 1:** its sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
@@ -62,35 +59,35 @@ Launch a subagent to do the work for this cycle. Its prompt must include, in thi
 
 Leave the changes uncommitted — the review reads staged + unstaged work, and the ship phase handles committing.
 
-## Phase 2 — Review (gates the loop)
+## Phase 3 — Review (gates the loop)
 
-Invoke the `code-review` skill via the Skill tool and run it exactly as written. It performs the multi-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 0 guarantees its preflight will not stop on the default branch.
+Invoke the `code-review` skill via the Skill tool and run it exactly as written. It performs the multi-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 1 guarantees its preflight will not stop on the default branch.
 
-Because **every surviving finding sends the loop back to Phase 1**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle.
+Because **every surviving finding sends the loop back to Phase 2**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle.
 
 ### Gate
 
 Read the report the `code-review` skill printed.
 
-- **"No issues found":** proceed to Phase 3.
-- **Findings, and the cycle counter is below the cap:** increment the counter, pass the findings (grouped `path:line`, with reason tag and description, exactly as printed) to Phase 1, and loop.
+- **"No issues found":** proceed to Phase 4.
+- **Findings, and the cycle counter is below the cap:** increment the counter, pass the findings (grouped `path:line`, with reason tag and description, exactly as printed) to Phase 2, and loop.
 - **Findings, and the cycle counter is at the cap:** stop. Hand back per the report format — do not ship.
 
-## Phase 3 — Ship + CI (encoded)
+## Phase 4 — Ship + CI (encoded)
 
-### 3a. Commit
+### 4a. Commit
 
 - Run `git status` (never `-uall`) and `git diff` to see uncommitted work.
 - Stage relevant files by name (never `git add -A` / `git add .`), then commit — **staging and committing are separate commands, never chained.**
 - Commit message: **Conventional Commits** (`feat:`, `fix:`, `chore:`…), written via HEREDOC, with the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
 - Run `git status` after to verify.
 
-### 3b. Push
+### 4b. Push
 
 - Determine the current branch. Run `git fetch origin`, then `git log origin/<branch>..HEAD`.
 - **Unpushed commits:** `git push -u origin <branch>`. **Already up to date:** skip.
 
-### 3c. Detect PR template
+### 4c. Detect PR template
 
 Use the **first** match, in order:
 
@@ -100,10 +97,10 @@ Use the **first** match, in order:
 4. `pull_request_template.md`
 5. `.github/PULL_REQUEST_TEMPLATE/` (first `.md` file)
 
-### 3d. Title & body
+### 4d. Title & body
 
 - PR title < 70 chars, derived from the branch commits.
-- **Template found:** fill it from the diff (`git diff $(git merge-base <default-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
+- **Template found:** fill it from the diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
 - **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
 
 ```
@@ -123,20 +120,21 @@ If you genuinely can't determine the problem or solution, leave a `<TODO: …>` 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
-### 3e. Create or update the PR
+### 4e. Create or update the PR
 
 - `gh pr view --json url,body` to check for an existing PR on this branch.
-- **None:** `gh pr create --draft --assignee @me --title "<title>" --body "$(cat <<'EOF'` … `EOF` … `)"`.
+- **None:** `gh pr create --draft --base <base-branch> --assignee @me --title "<title>" --body "$(cat <<'EOF'` … `EOF` … `)"`.
 - **Exists:** if the generated body differs, `gh pr edit --body`; otherwise skip.
+- `<base-branch>` is the bare branch name from Phase 1 (no `origin/` prefix), so a stacked PR targets its parent rather than the default branch.
 - Print the PR URL.
 
-### 3f. Monitor CI
+### 4f. Monitor CI
 
 - Watch the checks to completion: `gh pr checks <number> --watch` (fall back to polling `gh pr checks <number>` every ~30s if `--watch` is unavailable). Allow a short retry for checks to register after the push.
 - **No checks configured:** note it — there's nothing gating — and treat CI as passed.
 - **All pass:** done → success report.
 - **Any fail:** gather concrete failure detail — `gh pr checks <number>` plus the failing job's logs (`gh run view <run-id> --log-failed`).
-  - Cycle counter **below** the cap: increment it, pass the CI failure detail to Phase 1, and loop (the next cycle re-runs the full review before re-shipping).
+  - Cycle counter **below** the cap: increment it, pass the CI failure detail to Phase 2, and loop (the next cycle re-runs the full review before re-shipping).
   - Cycle counter **at** the cap: stop and hand back.
 
 ## Reporting
@@ -199,5 +197,5 @@ If it stopped on **CI failure**, report which checks failed, the key log excerpt
 
 ## Notes
 
-- This skill never posts review findings to GitHub — the only GitHub writes are the push and the draft PR in Phase 3.
+- This skill never posts review findings to GitHub — the only GitHub writes are the push and the draft PR in Phase 4.
 - The review scope always covers the full branch diff each cycle, so fixes can't silently regress previously-clean code.

@@ -10,34 +10,31 @@ Drive a task to a green, shipped PR autonomously. One cycle is: **build → revi
 
 This loop is **fully autonomous**. It never pauses between phases, and it pushes and opens a **draft** PR on its own. Run it only on a feature branch you're happy to ship from. It surfaces to me exactly twice: on success, or when it stops because the cycle cap was reached (or it's genuinely blocked).
 
-**Agent assumptions:**
-
-- All tools are functional and will work without error. Do not test tools or make exploratory calls.
-- Only call a tool if it is required to complete the task. Every tool call should have a clear purpose.
-
 ## Inputs
 
 - **The task**: the text passed when invoking the skill. If none was passed, use the task established in the current conversation. If neither is clear, that's the one time to stop and ask me what to build.
 - **Cycle cap**: max number of build cycles before handing back. Default **3**. Honor an explicit override if I gave one.
 
-Before starting, write a numbered checklist of the phases below in your reply and tick each one off as you go. Track a single **cycle counter** starting at 1. Every return to Phase 1 — whether triggered by review findings or CI failure — increments it. When the counter would exceed the cap, stop and hand back instead of looping.
+Before starting, write a numbered checklist of the phases below in your reply and tick each one off as you go. Track a single **cycle counter** starting at 1. Every return to Phase 2 — whether triggered by review findings or CI failure — increments it. When the counter would exceed the cap, stop and hand back instead of looping.
 
 ## Criteria
 
-The build is graded by the `code-review` skill against the shared criteria — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewer sees, so it can self-review before handing back. Before Phase 1, read the file `~/.riffer/skills/code-review/criteria.md` with the read tool and hold it **verbatim** for the rest of the loop. Do not paraphrase it.
+The build is graded by the `code-review` skill against the shared criteria — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewer sees, so it can self-review before handing back. Before Phase 2, read the file `~/.riffer/skills/code-review/criteria.md` with the read tool and hold it **verbatim** for the rest of the loop. Do not paraphrase it.
 
-## Phase 0 — Preflight (once)
+## Phase 1 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch.
-- **If already on a feature branch:** use it.
+- **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch. Its base branch is the default branch.
+- **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the Review scope section of `~/.riffer/skills/code-review/SKILL.md` (read it with the read tool) defines, and report it.
 
-## Phase 1 — Build
+The base branch is what the review diffs against and what the PR targets.
+
+## Phase 2 — Build
 
 Do the work for this cycle yourself, in this order:
 
 1. **The criteria, verbatim.** This is exactly what the work will be reviewed against; you must self-review your diff against every lens at the stated bar before moving on — see "For the builder" in the criteria.
-2. **The rule files.** Read the project's own rule files (`AGENTS.md`) before editing — the Rules compliance lens audits against exactly those.
+2. **The rule files.** Before editing a file, read every rule file that governs it — `AGENTS.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at the repo root **and in every directory between the root and that file**, as step 2 of `~/.riffer/skills/code-review/SKILL.md` defines. Nested ones are easy to miss and just as binding — the Rules compliance lens audits against exactly those.
 3. **The work for this cycle:**
    - **Cycle 1:** implement the task.
    - **Cycle > 1:** the sole job is to resolve the exact blockers carried over from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
@@ -45,35 +42,35 @@ Do the work for this cycle yourself, in this order:
 
 Leave the changes uncommitted — the review reads staged + unstaged work, and the ship phase handles committing.
 
-## Phase 2 — Review (gates the loop)
+## Phase 3 — Review (gates the loop)
 
-A skill cannot activate another skill mid-turn, so run the review in place: read the file `~/.riffer/skills/code-review/SKILL.md` with the read tool and follow its **Steps** section exactly as written — preflight, rule discovery, summary, one pass per lens, validate every finding, filter, report. It performs the single-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 0 guarantees its preflight will not stop on the default branch.
+A skill cannot activate another skill mid-turn, so run the review in place: read the file `~/.riffer/skills/code-review/SKILL.md` with the read tool and follow its **Steps** section exactly as written — preflight, rule discovery, summary, one pass per lens, validate every finding, filter, report. It performs the single-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 1 guarantees its preflight will not stop on the default branch.
 
-Because **every surviving finding sends the loop back to Phase 1**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle. Review the diff as if someone else wrote it.
+Because **every surviving finding sends the loop back to Phase 2**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle. Review the diff as if someone else wrote it.
 
 ### Gate
 
 Read the report the review printed.
 
-- **"No issues found":** proceed to Phase 3.
-- **Findings, and the cycle counter is below the cap:** increment the counter, carry the findings (grouped `path:line`, with reason tag and description, exactly as printed) into Phase 1, and loop.
+- **"No issues found":** proceed to Phase 4.
+- **Findings, and the cycle counter is below the cap:** increment the counter, carry the findings (grouped `path:line`, with reason tag and description, exactly as printed) into Phase 2, and loop.
 - **Findings, and the cycle counter is at the cap:** stop. Hand back per the report format — do not ship.
 
-## Phase 3 — Ship + CI (encoded)
+## Phase 4 — Ship + CI (encoded)
 
-### 3a. Commit
+### 4a. Commit
 
 - Run `git status` (never `-uall`) and `git diff` to see uncommitted work.
 - Stage relevant files by name (never `git add -A` / `git add .`), then commit — **staging and committing are separate commands, never chained.**
 - Commit message: **Conventional Commits** (`feat:`, `fix:`, `chore:`…), written via HEREDOC, with the `Co-Authored-By: Riffer <noreply@riffer.dev>` trailer.
 - Run `git status` after to verify.
 
-### 3b. Push
+### 4b. Push
 
 - Determine the current branch. Run `git fetch origin`, then `git log origin/<branch>..HEAD`.
 - **Unpushed commits:** `git push -u origin <branch>`. **Already up to date:** skip.
 
-### 3c. Detect PR template
+### 4c. Detect PR template
 
 Use the **first** match, in order:
 
@@ -83,10 +80,10 @@ Use the **first** match, in order:
 4. `pull_request_template.md`
 5. `.github/PULL_REQUEST_TEMPLATE/` (first `.md` file)
 
-### 3d. Title & body
+### 4d. Title & body
 
 - PR title < 70 chars, derived from the branch commits.
-- **Template found:** fill it from the diff (`git diff $(git merge-base <default-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
+- **Template found:** fill it from the diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
 - **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
 
 ```
@@ -106,20 +103,21 @@ If you genuinely can't determine the problem or solution, leave a `<TODO: …>` 
 🤖 Generated with [Riffer Rig](https://github.com/bottrall/riffer-rig)
 ```
 
-### 3e. Create or update the PR
+### 4e. Create or update the PR
 
 - `gh pr view --json url,body` to check for an existing PR on this branch.
-- **None:** `gh pr create --draft --assignee @me --title "<title>" --body "$(cat <<'EOF'` … `EOF` … `)"`.
+- **None:** `gh pr create --draft --base <base-branch> --assignee @me --title "<title>" --body "$(cat <<'EOF'` … `EOF` … `)"`.
 - **Exists:** if the generated body differs, `gh pr edit --body`; otherwise skip.
+- `<base-branch>` is the bare branch name from Phase 1 (no `origin/` prefix), so a stacked PR targets its parent rather than the default branch.
 - Print the PR URL.
 
-### 3f. Monitor CI
+### 4f. Monitor CI
 
 - Watch the checks to completion: `gh pr checks <number> --watch` (fall back to polling `gh pr checks <number>` every ~30s via `sleep 30` if `--watch` is unavailable). Allow a short retry for checks to register after the push.
 - **No checks configured:** note it — there's nothing gating — and treat CI as passed.
 - **All pass:** done → success report.
 - **Any fail:** gather concrete failure detail — `gh pr checks <number>` plus the failing job's logs (`gh run view <run-id> --log-failed`).
-  - Cycle counter **below** the cap: increment it, carry the CI failure detail into Phase 1, and loop (the next cycle re-runs the full review before re-shipping).
+  - Cycle counter **below** the cap: increment it, carry the CI failure detail into Phase 2, and loop (the next cycle re-runs the full review before re-shipping).
   - Cycle counter **at** the cap: stop and hand back.
 
 ## Reporting
@@ -182,5 +180,5 @@ If it stopped on **CI failure**, report which checks failed, the key log excerpt
 
 ## Notes
 
-- This skill never posts review findings to GitHub — the only GitHub writes are the push and the draft PR in Phase 3.
+- This skill never posts review findings to GitHub — the only GitHub writes are the push and the draft PR in Phase 4.
 - The review scope always covers the full branch diff each cycle, so fixes can't silently regress previously-clean code.

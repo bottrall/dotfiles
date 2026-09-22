@@ -9,11 +9,6 @@ Code review all changes on the current branch and report findings inline in chat
 
 The `build-loop` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
 
-**Agent assumptions (applies to all agents and subagents):**
-
-- All tools are functional and will work without error. Do not test tools or make exploratory calls. Make sure this is clear to every subagent that is launched.
-- Only call a tool if it is required to complete the task. Every tool call should have a clear purpose.
-
 ## Criteria
 
 Every reviewer and validator is graded against [criteria.md](criteria.md) — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. It is inlined below so it can be passed **verbatim** to every subagent. Do not paraphrase it.
@@ -24,15 +19,19 @@ Every reviewer and validator is graded against [criteria.md](criteria.md) — th
 
 ## Review scope
 
-All changes since the current branch diverged from the default branch, **including staged and unstaged work**. Never use three-dot (`main...HEAD`) — it drops uncommitted changes.
+All changes since the current branch diverged from its **base branch** — the branch this work is stacked on, which is not necessarily the default branch — **including staged and unstaged work**. Never use a three-dot diff (`<base-branch>...HEAD`) — it drops uncommitted changes.
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- `BASE=$(git merge-base <default-branch> HEAD)` — compute once at the start of the review.
+- Determine the base branch — first match wins:
+  1. **Open PR:** `gh pr view --json baseRefName -q .baseRefName`. The PR's target is authoritative.
+  2. **Nearest parent:** among the local branches plus the default branch, excluding the current branch, drop any branch stacked _on top of_ this one (`git rev-list --count <candidate>..HEAD` is 0 while `git rev-list --count HEAD..<candidate>` is not). The base is the remaining branch with the smallest `git rev-list --count <candidate>..HEAD`; on a tie, prefer the default branch.
+- Run `git fetch origin`. Of `<base>` and `origin/<base>` (whichever exist), use the one with the smaller `git rev-list --count <ref>..HEAD` — it's the fresher view of where this branch forked. This is `<base-branch>`.
+- `BASE=$(git merge-base <base-branch> HEAD)` — compute once at the start of the review.
 - Unified diff: `git diff $BASE`
 - File list: `git diff --name-only $BASE`
 - Stat: `git diff --stat $BASE`
 
-Pass these exact commands to every review subagent. Each reviewer must read the changes via `git diff $BASE` — not `git diff main...HEAD`.
+Pass the resolved `BASE` commit and these exact commands to every review subagent. Each reviewer must read the changes via `git diff $BASE` — never a three-dot diff.
 
 ## Model selection
 
@@ -55,24 +54,25 @@ Create a todo list before starting.
 
 Launch a subagent to verify there is something to review:
 
-- Compute `BASE` as defined in the Review scope section.
+- Determine `<base-branch>` and compute `BASE` as defined in the Review scope section. Say which base was chosen and why (open PR or nearest parent).
 - Run `git diff --stat $BASE`.
 - If there are no changes (committed, staged, or unstaged), stop and tell me there's nothing to review.
 - If the current branch **is** the default branch, stop and tell me to switch to a feature branch first (even if there are uncommitted changes).
 
 ### 2. Discover rule files
 
-Launch a subagent to return a list of file paths (not contents) for all relevant rule files:
+Launch a subagent to return a list of file paths (not contents) for **every** rule file that applies to a changed file. Rule files live at any depth, not just the repo root: a subdirectory can carry its own `CLAUDE.md` or its own `.claude/` directory with a `CLAUDE.md` and `rules/`, and those are just as binding. Search the whole repo for them — never stop at the root.
 
-- The repo root `CLAUDE.md`, if it exists.
-- Any `CLAUDE.md` in a directory containing a file modified on this branch (use `git diff --name-only $BASE`, which includes uncommitted changes).
-- Any file under `.claude/rules/`.
+- Find every candidate: `git ls-files -co --exclude-standard | grep -E '(^|/)(CLAUDE\.md|\.claude/rules/.+)$'`. This covers `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at every level.
+- Each candidate is owned by a directory `X`: `X/CLAUDE.md`, `X/.claude/CLAUDE.md`, and `X/.claude/rules/**` are all owned by `X`.
+- Keep a candidate when `X` contains at least one changed file at any depth (`git diff --name-only $BASE`, which includes uncommitted changes). The repo root always qualifies. If a `.claude/rules/` file has `paths:` frontmatter, also require at least one changed file to match those globs.
+- Return the kept paths grouped by owning directory, so reviewers can see which rules govern which files.
 
 ### 3. Summarize the changes
 
 Launch a subagent to summarize the branch. It should:
 
-- Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline <default-branch>..HEAD` (commits only).
+- Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline $BASE..HEAD` (commits only).
 - Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in step 4 have that context.
 - Return a short summary of what the branch does.
 
@@ -83,7 +83,7 @@ Launch **one reviewer per lens** in the criteria — five in parallel: Correctne
 - The full criteria text, verbatim.
 - Which single lens it owns. It reviews through that lens only, at the stated bar, and honours the false-positive list.
 - The rule-file paths from step 2 and the branch summary from step 3.
-- The exact scope commands from the Review scope section.
+- The resolved `BASE` commit and the exact scope commands from the Review scope section.
 
 Each returns a list of findings — `path:line`, a reason tag naming the lens, and a one-line description. A finding that fails the bar is not returned.
 
