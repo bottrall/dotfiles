@@ -134,6 +134,9 @@ if [[ "$OS" == "Linux" ]]; then
   find "$HOME/.config/xdg-desktop-portal/portals" -xtype l -delete
   link_file ".config/systemd/user/xdg-desktop-portal.service.d/override.conf"
   systemctl --user daemon-reload 2>/dev/null || true
+  # The portal DBus-activates Nautilus at startup; keep that Nautilus from
+  # calling back into the half-started portal (25s deadlock at every boot)
+  link_file ".local/share/dbus-1/services/org.gnome.Nautilus.service"
   # GTK4 apps on Wayland read the icon theme via the settings portal
   # (gsettings), not settings.ini. GTK3 on Wayland also lets gsettings
   # override settings.ini for the theme name: it must be the built-in

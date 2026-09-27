@@ -1,0 +1,17 @@
+# Overrides /usr/share/dbus-1/services/org.gnome.Nautilus.service (the
+# session bus reads ~/.local/share/dbus-1/services first).
+#
+# xdg-desktop-portal routes FileChooser to Nautilus (see
+# ../../../../.config/xdg-desktop-portal/portals/nautilus.portal) and, while
+# starting up, synchronously activates it before owning its own bus name.
+# Nautilus in turn synchronously calls back into the portal during its own
+# startup — each blocks on the other until the 25s D-Bus timeout, stalling
+# every portal client at boot (waybar gives up and exits). Two env vars stop
+# this DBus-activated Nautilus from calling back; a Nautilus launched directly
+# is unaffected:
+#   GDK_DEBUG=no-portals  GTK's host Registry call
+#   ADW_DISABLE_PORTAL=1  libadwaita's appearance settings (falls back to
+#                         gsettings, which install.sh sets to prefer-dark)
+[D-BUS Service]
+Name=org.gnome.Nautilus
+Exec=/usr/bin/env GDK_DEBUG=no-portals ADW_DISABLE_PORTAL=1 /usr/bin/nautilus --gapplication-service
