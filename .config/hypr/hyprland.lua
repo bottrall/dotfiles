@@ -37,7 +37,9 @@ hl.monitor({
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
 
 hl.on("hyprland.start", function()
-    hl.exec_cmd("waybar")
+    -- TEMP: exec_cmd sends output to /dev/null, which hid why waybar died at
+    -- boot. Capture it (with timestamps and exit code) until that's diagnosed.
+    hl.exec_cmd("{ date +%T.%N; waybar -l debug; echo \"waybar exited: $?\"; date +%T.%N; } > ~/.local/state/waybar-boot.log 2>&1")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("clipse -listen")
