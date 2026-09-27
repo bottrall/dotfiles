@@ -12,7 +12,7 @@ choice="$(printf '%s\n' \
 case "$choice" in
   *Lock) hyprlock ;;
   *Suspend) systemctl suspend ;;
-  *Logout) hyprctl eval "hl.dsp.exit()" ;;
+  *Logout) hyprctl eval "hl.dispatch(hl.dsp.exit())" ;;
   *Reboot) systemctl reboot ;;
   *Shutdown) systemctl poweroff ;;
 esac
