@@ -68,7 +68,11 @@
     "cursor": 68,
   },
   "temperature": {
-    "critical-threshold": 80,
+    // k10temp Tctl (CPU). Default thermal_zone0 is the Wi-Fi card; hwmonN
+    // numbering isn't stable across boots, so resolve via the PCI device.
+    "hwmon-path-abs": "/sys/devices/pci0000:00/0000:00:18.3/hwmon",
+    "input-filename": "temp1_input",
+    "critical-threshold": 90,
     "on-click": "ghostty --class=dev.jake.btop -e btop",
     "cursor": 68,
     "format": "{icon}  {temperatureC}°C",
