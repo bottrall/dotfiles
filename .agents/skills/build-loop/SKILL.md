@@ -19,13 +19,13 @@ Before starting, write a numbered checklist of the phases below in your reply an
 
 ## Criteria
 
-The build is graded by the `code-review` skill against the shared criteria — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewer sees, so it can self-review before handing back. Before Phase 2, read the file `~/.riffer/skills/code-review/criteria.md` with the read tool and hold it **verbatim** for the rest of the loop. Do not paraphrase it.
+The build is graded by the `code-review` skill against the shared criteria — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewer sees, so it can self-review before handing back. Before Phase 2, read the file `~/.agents/skills/code-review/criteria.md` with the read tool and hold it **verbatim** for the rest of the loop. Do not paraphrase it.
 
 ## Phase 1 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
 - **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch. Its base branch is the default branch.
-- **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the Review scope section of `~/.riffer/skills/code-review/SKILL.md` (read it with the read tool) defines, and report it.
+- **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the Review scope section of `~/.agents/skills/code-review/SKILL.md` (read it with the read tool) defines, and report it.
 
 The base branch is what the review diffs against and what the PR targets.
 
@@ -34,7 +34,7 @@ The base branch is what the review diffs against and what the PR targets.
 Do the work for this cycle yourself, in this order:
 
 1. **The criteria, verbatim.** This is exactly what the work will be reviewed against; you must self-review your diff against every lens at the stated bar before moving on — see "For the builder" in the criteria.
-2. **The rule files.** Before editing a file, read every rule file that governs it — `AGENTS.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at the repo root **and in every directory between the root and that file**, as step 2 of `~/.riffer/skills/code-review/SKILL.md` defines. Nested ones are easy to miss and just as binding — the Rules compliance lens audits against exactly those.
+2. **The rule files.** Before editing a file, read every rule file that governs it — `AGENTS.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at the repo root **and in every directory between the root and that file**, as step 2 of `~/.agents/skills/code-review/SKILL.md` defines. Nested ones are easy to miss and just as binding — the Rules compliance lens audits against exactly those.
 3. **The work for this cycle:**
    - **Cycle 1:** implement the task.
    - **Cycle > 1:** the sole job is to resolve the exact blockers carried over from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
@@ -44,7 +44,7 @@ Leave the changes uncommitted — the review reads staged + unstaged work, and t
 
 ## Phase 3 — Review (gates the loop)
 
-A skill cannot activate another skill mid-turn, so run the review in place: read the file `~/.riffer/skills/code-review/SKILL.md` with the read tool and follow its **Steps** section exactly as written — preflight, rule discovery, summary, one pass per lens, validate every finding, filter, report. It performs the single-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 1 guarantees its preflight will not stop on the default branch.
+A skill cannot activate another skill mid-turn, so run the review in place: read the file `~/.agents/skills/code-review/SKILL.md` with the read tool and follow its **Steps** section exactly as written — preflight, rule discovery, summary, one pass per lens, validate every finding, filter, report. It performs the single-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 1 guarantees its preflight will not stop on the default branch.
 
 Because **every surviving finding sends the loop back to Phase 2**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle. Review the diff as if someone else wrote it.
 

@@ -24,8 +24,8 @@ The map is an **index**, not a store. It lists the decisions made and points at 
 
 **Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** The doctrine below is the same everywhere; only the mechanics differ. Load the matching tracker doc by reading it with the read tool at its absolute path — each covers the same seven operations: create the map, create a ticket, wire a blocking edge, query the frontier, claim, resolve, update the map body.
 
-- **GitHub Issues** — read `~/.riffer/skills/wayfinder/trackers/github.md`. The default for code projects. Use when the working directory is a repo with a GitHub remote.
-- **Local Markdown** — read `~/.riffer/skills/wayfinder/trackers/local.md`. The default for non-code projects, and for code projects with no GitHub remote. Issues live as markdown files in `.scratch/`.
+- **GitHub Issues** — read `~/.agents/skills/wayfinder/trackers/github.md`. The default for code projects. Use when the working directory is a repo with a GitHub remote.
+- **Local Markdown** — read `~/.agents/skills/wayfinder/trackers/local.md`. The default for non-code projects, and for code projects with no GitHub remote. Issues live as markdown files in `.scratch/`.
 
 Pick by that rule without asking. Ask only when the rule is genuinely ambiguous — a repo with a GitHub remote whose effort is plainly not about the code; ask in plain prose, one question, the two trackers listed with the recommended one first, then stop and wait for the answer. Whichever it is, record the choice in the map's **Notes** so later sessions don't re-derive it.
 
@@ -142,7 +142,7 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 
 1. Load the **map** — the low-res view, not every ticket body.
 2. Choose the ticket. If the user named one, use it. Otherwise take the first frontier ticket in order. **Claim it**: assign it to yourself before any work.
-3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; read the skills the `## Notes` block names (`~/.riffer/skills/<name>/SKILL.md`) with the read tool and follow them in place, since a skill cannot activate another skill mid-turn. If in doubt, grill in place: one question per reply, options listed, recommended first, then stop and wait.
+3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; read the skills the `## Notes` block names (`~/.agents/skills/<name>/SKILL.md`) with the read tool and follow them in place, since a skill cannot activate another skill mid-turn. If in doubt, grill in place: one question per reply, options listed, recommended first, then stop and wait.
 4. Record the resolution: post the answer as a **resolution comment**, **close** the issue, and **append a context pointer** to the map's Decisions-so-far.
 5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
 

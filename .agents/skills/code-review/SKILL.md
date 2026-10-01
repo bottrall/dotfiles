@@ -11,7 +11,7 @@ The `build-loop` skill invokes this skill for its review phase and gates on the 
 
 ## Criteria
 
-Every lens and every validation is graded against the shared criteria — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. Before starting, read the file `~/.riffer/skills/code-review/criteria.md` with the read tool. Apply it **verbatim**; do not paraphrase it.
+Every lens and every validation is graded against the shared criteria — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. Before starting, read the file `~/.agents/skills/code-review/criteria.md` with the read tool. Apply it **verbatim**; do not paraphrase it.
 
 ## Review scope
 

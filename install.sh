@@ -85,10 +85,13 @@ link_file ".claude/CLAUDE.md"
 link_file ".claude/settings.json"
 link_dir  ".claude/skills"
 # riffer-rig (~/.riffer/auth.json holds API keys and is never linked or created
-# here; an existing ~/.riffer/skills dir is moved to the backup dir first)
+# here). AGENTS.md and settings.json live under .riffer/; riffer-rig 0.7.0
+# reads skills from ~/.agents/skills/ (shared with other .agents-skill tools),
+# so the skills mirror of .claude/skills is linked there instead. An existing
+# ~/.agents/skills is moved to the backup dir first.
 link_file ".riffer/AGENTS.md"
 link_file ".riffer/settings.json"
-link_dir  ".riffer/skills"
+link_dir  ".agents/skills"
 
 # --- macOS only ---
 if [[ "$OS" == "Darwin" ]]; then
