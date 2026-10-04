@@ -115,7 +115,7 @@ If you genuinely can't determine the problem or solution, leave a `<TODO: …>` 
 
 - Watch the checks to completion: `gh pr checks <number> --watch` (fall back to polling `gh pr checks <number>` every ~30s via `sleep 30` if `--watch` is unavailable). Allow a short retry for checks to register after the push.
 - **No checks configured:** note it — there's nothing gating — and treat CI as passed.
-- **All pass:** done → success report.
+- **All pass:** mark the PR ready for review — `gh pr ready <number>` — then done → success report. (Only applies when the loop created the draft PR in 4e; if the PR already existed and wasn't a draft, this is a no-op.)
 - **Any fail:** gather concrete failure detail — `gh pr checks <number>` plus the failing job's logs (`gh run view <run-id> --log-failed`).
   - Cycle counter **below** the cap: increment it, carry the CI failure detail into Phase 2, and loop (the next cycle re-runs the full review before re-shipping).
   - Cycle counter **at** the cap: stop and hand back.
@@ -124,7 +124,7 @@ If you genuinely can't determine the problem or solution, leave a `<TODO: …>` 
 
 ### Success
 
-State that the loop finished clean: cycles used, review clean, CI green, and the PR URL.
+State that the loop finished clean: cycles used, review clean, CI green, the PR URL, and that the PR is marked ready for review.
 
 ### Hand-back (cap reached or blocked)
 
@@ -180,5 +180,5 @@ If it stopped on **CI failure**, report which checks failed, the key log excerpt
 
 ## Notes
 
-- This skill never posts review findings to GitHub — the only GitHub writes are the push and the draft PR in Phase 4.
+- This skill never posts review findings to GitHub — the only GitHub writes are the push, the draft PR, and the `gh pr ready` flip in Phase 4.
 - The review scope always covers the full branch diff each cycle, so fixes can't silently regress previously-clean code.
