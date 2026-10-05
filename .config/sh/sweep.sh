@@ -4,6 +4,8 @@
 # helper functions, and nvm sourcing don't leak into the interactive shell.
 #
 # Iterates the repos listed by repos() (see repos.sh / ~/.repos.local).
+# First checks the C toolchain can build a test program; if it can't (e.g.
+# Xcode lagging a macOS upgrade), brew upgrade and bundle install are skipped.
 # For each repo:
 #   - git fetch --prune + git worktree prune
 #   - switch to the default branch and pull (skipped if the tree is dirty)
@@ -16,6 +18,7 @@
 #   - uninstall nvm node versions and rbenv rubies no repo needs
 #   - pnpm store prune, nvm cache clear, gem cleanup on kept rubies
 #   - docker system prune (volumes and tagged images untouched)
+# Failed or skipped steps are listed in the summary, and sweep exits non-zero.
 #
 # Usage: sweep [-n|--dry-run]
 #   --dry-run: fetch and report, but make no changes.
@@ -33,6 +36,10 @@ sweep() (
   say()  { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
   note() { printf '    %s\n' "$*"; }
   warn() { printf '    \033[33m%s\033[0m\n' "$*"; }
+
+  # like warn, but also listed in the summary and makes sweep exit non-zero
+  FAILURES=()
+  fail() { warn "$*"; FAILURES+=("$*"); }
 
   run() {
     if (( DRY_RUN )); then
@@ -71,14 +78,51 @@ sweep() (
   disk_free_kb() { df -k "$HOME" | awk 'NR==2 {print $4}'; }
   FREE_BEFORE=$(disk_free_kb)
 
+  # --- toolchain -----------------------------------------------------------------
+
+  # Building from source (brew, native gems) fails when the compiler can't link,
+  # e.g. an Xcode older than the macOS SDK. Check up front instead of failing
+  # halfway through an upgrade.
+  cc_works() {
+    local tmp rc
+    # on macOS, invoking the /usr/bin/cc shim without developer tools pops an
+    # install dialog
+    if [[ "$(uname)" == "Darwin" ]]; then
+      xcode-select -p >/dev/null 2>&1 || return 1
+    fi
+    command -v cc >/dev/null || return 1
+    tmp=$(mktemp -d) || return 1
+    printf 'int main(void) { return 0; }\n' | cc -x c - -o "$tmp/a.out" >/dev/null 2>&1
+    rc=$?
+    rm -rf "$tmp"
+    return $rc
+  }
+
+  say "toolchain"
+  if cc_works; then
+    TOOLCHAIN_OK=1
+    note "cc ok"
+  else
+    TOOLCHAIN_OK=0
+    fail "cc can't build a test program — skipping brew upgrade and bundle install"
+    if [[ "$(uname)" == "Darwin" ]]; then
+      note "developer dir: $(xcode-select -p 2>/dev/null || echo none)"
+      note "update Xcode to match macOS, or: sudo xcode-select -s /Library/Developer/CommandLineTools"
+    fi
+  fi
+
   # --- homebrew ----------------------------------------------------------------
 
   if command -v brew >/dev/null; then
     say "homebrew"
-    run brew update
-    run brew upgrade
-    run brew autoremove
-    run brew cleanup --prune=all
+    run brew update || fail "brew update failed"
+    if (( TOOLCHAIN_OK )); then
+      run brew upgrade || fail "brew upgrade failed"
+    else
+      note "brew upgrade skipped (toolchain)"
+    fi
+    run brew autoremove || fail "brew autoremove failed"
+    run brew cleanup --prune=all || fail "brew cleanup failed"
   fi
 
   # --- per-repo version pins -----------------------------------------------------
@@ -110,7 +154,7 @@ sweep() (
       return 1
     fi
 
-    git -C "$repo" fetch --prune --quiet origin || warn "fetch failed"
+    git -C "$repo" fetch --prune --quiet origin || fail "$repo: fetch failed"
     run git -C "$repo" worktree prune
 
     local default
@@ -142,9 +186,9 @@ sweep() (
     fi
 
     if [[ "$(git -C "$repo" branch --show-current)" != "$default" ]]; then
-      run git -C "$repo" switch --quiet "$default" || { warn "could not switch to $default"; return 1; }
+      run git -C "$repo" switch --quiet "$default" || { fail "$repo: could not switch to $default"; return 1; }
     fi
-    run git -C "$repo" pull --ff-only --quiet origin "$default" || warn "pull failed"
+    run git -C "$repo" pull --ff-only --quiet origin "$default" || fail "$repo: pull failed"
 
     local deleted=0 ahead
     while IFS= read -r b; do
@@ -156,13 +200,19 @@ sweep() (
     done < <(git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads)
 
     if [[ -f "$repo/Gemfile.lock" || -f "$repo/Gemfile" ]] && command -v bundle >/dev/null; then
-      run bash -c "cd '$repo' && (bundle check >/dev/null 2>&1 || bundle install)" || warn "bundle install failed"
+      if (cd "$repo" && bundle check >/dev/null 2>&1); then
+        :
+      elif (( TOOLCHAIN_OK )); then
+        run bash -c "cd '$repo' && bundle install" || fail "$repo: bundle install failed"
+      else
+        fail "$repo: bundle install skipped (toolchain)"
+      fi
     fi
     if [[ -f "$repo/pnpm-lock.yaml" ]] && command -v pnpm >/dev/null; then
-      run bash -c "cd '$repo' && pnpm install --frozen-lockfile --prefer-offline" || warn "pnpm install failed"
+      run bash -c "cd '$repo' && pnpm install --frozen-lockfile --prefer-offline" || fail "$repo: pnpm install failed"
     fi
 
-    run git -C "$repo" maintenance run --quiet || warn "git maintenance failed"
+    run git -C "$repo" maintenance run --quiet || fail "$repo: git maintenance failed"
 
     SUMMARY+=("$repo: on $default, $deleted branch(es) deleted")
   }
@@ -268,6 +318,19 @@ sweep() (
   for line in "${SUMMARY[@]}"; do
     note "$line"
   done
-  FREE_AFTER=$(disk_free_kb)
-  note "disk freed: $(( (FREE_AFTER - FREE_BEFORE) / 1024 )) MB"
+  # whole-volume free space, so anything else writing during the run counts too
+  FREED_MB=$(( ($(disk_free_kb) - FREE_BEFORE) / 1024 ))
+  if (( FREED_MB >= 0 )); then
+    note "disk freed: $FREED_MB MB"
+  else
+    note "disk freed: none (free space fell $(( -FREED_MB )) MB during the run)"
+  fi
+
+  if (( ${#FAILURES[@]} )); then
+    say "failures"
+    for line in "${FAILURES[@]}"; do
+      warn "$line"
+    done
+    exit 1
+  fi
 )
