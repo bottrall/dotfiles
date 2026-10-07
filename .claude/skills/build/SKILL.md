@@ -1,5 +1,5 @@
 ---
-name: build-loop
+name: build
 description: Autonomous build loop
 disable-model-invocation: true
 ---
@@ -19,11 +19,23 @@ Create a todo list before starting. Track a single **cycle counter** starting at
 
 ## Criteria
 
-The builder is graded by the `code-review` skill against its [criteria.md](../code-review/criteria.md) — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewers see, so it can self-review before handing back. It is inlined here so it can be passed **verbatim** into the build subagent's prompt. Do not paraphrase it.
+The builder is graded by the `inspect` skill against its [criteria.md](../inspect/criteria.md) — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewers see, so it can self-review before handing back. It is inlined here so it can be passed **verbatim** into the build subagent's prompt. Do not paraphrase it.
 
 <criteria>
-!`cat ~/.claude/skills/code-review/criteria.md`
+!`cat ~/.claude/skills/inspect/criteria.md`
 </criteria>
+
+## Tracker and worktree
+
+Shared operations, used by Phase 1 when the task is a ticket reference. They're inlined from `_lib/` — the same definitions `/finish`, `/triage` and `/track` use, so the branch naming convention has a single owner.
+
+<tracker>
+!`cat ~/.claude/skills/_lib/tracker.md`
+</tracker>
+
+<worktree>
+!`cat ~/.claude/skills/_lib/worktree.md`
+</worktree>
 
 ## Model selection
 
@@ -36,13 +48,14 @@ Every subagent launch includes a deliberate model choice, picked from whatever t
 
 Omitting the model (inheriting the session's) is a valid choice, not a default — make it deliberately. State the chosen model in each launch so the decision is visible in the transcript.
 
-This applies to anything delegated — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch. The review phase makes its own model choices per the `code-review` skill.
+This applies to anything delegated — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch. The review phase makes its own model choices per the `inspect` skill.
 
 ## Phase 1 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
+- **If the task is a ticket reference** (as defined under Tracker above): `resolve` it, pick the repo with `repoFor`, then `enter` a worktree on `branchFor(ticket)` and `transition` the ticket to In Progress. The ticket's summary, description and acceptance criteria are the task. Its base branch is the default branch; skip the next two bullets.
 - **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch. Its base branch is the default branch.
-- **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the `code-review` skill's [Review scope](../code-review/SKILL.md) section defines, and report it.
+- **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the `inspect` skill's [Review scope](../inspect/SKILL.md) section defines, and report it.
 
 The base branch is what the review diffs against and what the PR targets.
 
@@ -51,7 +64,7 @@ The base branch is what the review diffs against and what the PR targets.
 Launch a subagent to do the work for this cycle. Its prompt must include, in this order:
 
 1. **The criteria, verbatim** (the `<criteria>` block above), with the instruction that this is exactly what its work will be reviewed against, and that it must self-review its diff against every lens at the stated bar before handing back — see "For the builder" in the criteria.
-2. **The rule files.** Before editing a file, it must read every rule file that governs it — `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at the repo root **and in every directory between the root and that file**, as the `code-review` skill's "Discover rule files" step defines. Nested ones are easy to miss and just as binding — the Rules compliance lens audits against exactly those.
+2. **The rule files.** Before editing a file, it must read every rule file that governs it — `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at the repo root **and in every directory between the root and that file**, as the `inspect` skill's "Discover rule files" step defines. Nested ones are easy to miss and just as binding — the Rules compliance lens audits against exactly those.
 3. **The work for this cycle:**
    - **Cycle 1:** implement the task.
    - **Cycle > 1:** its sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
@@ -61,13 +74,13 @@ Leave the changes uncommitted — the review reads staged + unstaged work, and t
 
 ## Phase 3 — Review (gates the loop)
 
-Invoke the `code-review` skill via the Skill tool and run it exactly as written. It performs the multi-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 1 guarantees its preflight will not stop on the default branch.
+Invoke the `inspect` skill via the Skill tool and run it exactly as written. It performs the multi-agent review against the criteria and prints its report; that report is the sole input to the gate below. Phase 1 guarantees its preflight will not stop on the default branch.
 
 Because **every surviving finding sends the loop back to Phase 2**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle.
 
 ### Gate
 
-Read the report the `code-review` skill printed.
+Read the report the `inspect` skill printed.
 
 - **"No issues found":** proceed to Phase 4.
 - **Findings, and the cycle counter is below the cap:** increment the counter, pass the findings (grouped `path:line`, with reason tag and description, exactly as printed) to Phase 2, and loop.
@@ -145,7 +158,7 @@ State that the loop finished clean: cycles used, review clean, CI green, and the
 
 ### Hand-back (cap reached or blocked)
 
-Say plainly why it stopped and what's left for me. If it stopped on **review findings**, print them in the `code-review` skill's report format under this heading:
+Say plainly why it stopped and what's left for me. If it stopped on **review findings**, print them in the `inspect` skill's report format under this heading:
 
 > ## Build loop — stopped at cycle cap
 >

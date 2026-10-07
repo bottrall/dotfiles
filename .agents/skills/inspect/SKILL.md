@@ -1,17 +1,17 @@
 ---
-name: code-review
-description: Single-agent code review of the current branch against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build-loop skill. Never run it speculatively.
+name: inspect
+description: Single-agent code review of the current branch, or of a PR URL in its own worktree, against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build skill. Never run it speculatively.
 ---
 
 # Code Review
 
 Code review all changes on the current branch and report findings inline in chat. Do not post to GitHub.
 
-The `build-loop` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
+The `build` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
 
 ## Criteria
 
-Every lens and every validation is graded against the shared criteria — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. Before starting, read the file `~/.agents/skills/code-review/criteria.md` with the read tool. Apply it **verbatim**; do not paraphrase it.
+Every lens and every validation is graded against the shared criteria — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. Before starting, read the file `~/.agents/skills/inspect/criteria.md` with the read tool. Apply it **verbatim**; do not paraphrase it.
 
 ## Review scope
 
@@ -32,6 +32,10 @@ Use the resolved `BASE` commit and these exact commands for every lens. Read the
 ## Steps
 
 Before starting, write a numbered checklist of the steps below in your reply and tick each one off as you go.
+
+### 0. Check out the PR (only if one was passed)
+
+If I passed a PR reference (URL, `#<n>`, or `<n>`): read the file `~/.agents/skills/_lib/worktree.md` with the read tool and follow its operations exactly as written — pick the repo with `repoFor`, then `enter` a worktree on `branchForPR`, which hands off to a new session if this one isn't already in it. With no argument (including when `build` runs this review in place), skip this step and review the current branch as is.
 
 ### 1. Preflight
 
@@ -136,4 +140,4 @@ Layout rules:
 
 ## Notes
 
-- This skill never touches GitHub. No `gh pr` commands.
+- This skill never writes to GitHub. Read-only `gh` lookups (base branch, checking out a PR) are fine; no reviews or comments.

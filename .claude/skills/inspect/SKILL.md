@@ -1,20 +1,20 @@
 ---
-name: code-review
-description: Multi-agent code review of the current branch against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build-loop skill. Never run it speculatively.
+name: inspect
+description: Multi-agent code review of the current branch, or of a PR URL in its own worktree, against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build skill. Never run it speculatively.
 ---
 
 # Code Review
 
 Code review all changes on the current branch and report findings inline in chat. Do not post to GitHub.
 
-The `build-loop` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
+The `build` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
 
 ## Criteria
 
 Every reviewer and validator is graded against [criteria.md](criteria.md) — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. It is inlined below so it can be passed **verbatim** to every subagent. Do not paraphrase it.
 
 <criteria>
-!`cat ~/.claude/skills/code-review/criteria.md`
+!`cat ~/.claude/skills/inspect/criteria.md`
 </criteria>
 
 ## Review scope
@@ -49,6 +49,14 @@ Omitting the model (inheriting the session's) is a valid choice, not a default �
 ## Steps
 
 Create a todo list before starting.
+
+### 0. Check out the PR (only if one was passed)
+
+If I passed a PR reference (URL, `#<n>`, or `<n>`), do this in the main session — not a subagent — so every step below runs on the PR's branch: pick the repo with `repoFor`, then `enter` a worktree on `branchForPR`, using the Worktree operations below. With no argument (including when `build` invokes this skill), skip this step and review the current branch as is.
+
+<worktree>
+!`cat ~/.claude/skills/_lib/worktree.md`
+</worktree>
 
 ### 1. Preflight
 
@@ -153,4 +161,4 @@ Layout rules:
 
 ## Notes
 
-- This skill never touches GitHub. No `gh pr` commands, no inline-comment MCP calls.
+- This skill never writes to GitHub. Read-only `gh` lookups (base branch, checking out a PR) are fine; no reviews, comments, or inline-comment MCP calls.
