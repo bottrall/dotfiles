@@ -22,7 +22,7 @@ Personal dotfiles for macOS and Arch Linux.
 
 **Claude Code** — everything under `.claude/`, symlinked into `~/.claude/`: global instructions (`CLAUDE.md`), `settings.json`, and `skills/`.
 
-The work-tracking skills — `/build <ticket url>`, `/inspect [<pr url>]`, `/triage`, `/finish`, `/track "…"` — share two partials in `skills/_lib/` (`tracker.md`, `worktree.md`), inlined with `!`cat`` so each convention has one owner. `_lib/` has no `SKILL.md`, so Claude Code doesn't load it as a skill. Everything machine- or employer-specific (Jira site and projects, issue repos, PR scope, routing rules) lives in an untracked `~/.work.local.md`, the same convention as `~/.repos.local`. It's optional: without it the skills are GitHub-only with no repo scoping, which is all a personal machine needs.
+The work-tracking skills — `/build <ticket url>`, `/inspect [<pr url>]`, `/finish`, `/track "…"` — share two partials in `skills/_lib/` (`tracker.md`, `worktree.md`), inlined with `!`cat`` so each convention has one owner. `_lib/` has no `SKILL.md`, so Claude Code doesn't load it as a skill. Everything machine- or employer-specific (Jira site and projects, issue repos, path mappings, routing rules) lives in an untracked `~/.work.local.md`, the same convention as `~/.repos.local`. It's optional: without it the skills are GitHub-only with no repo scoping, which is all a personal machine needs.
 
 `CLAUDE.md` is deliberately project- and language-agnostic — only what's worth loading into *every* session. Language conventions, testing rules, and lint-enforceable style belong in each project's own `CLAUDE.md`.
 

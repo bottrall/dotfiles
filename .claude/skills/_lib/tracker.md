@@ -1,11 +1,9 @@
 ### Tracker
 
-My work lives in GitHub Issues, and on some machines also in Jira; they stay the source of truth. Anything machine-specific — Jira site and cloudId, projects, issue repos, PR search scope, path mappings, routing rules — comes from `~/.work.local.md` if it exists. Read it before any tracker operation. Whatever it doesn't set falls back to these defaults, so no config at all means GitHub only:
+My work lives in GitHub Issues, and on some machines also in Jira; they stay the source of truth. Anything machine-specific — Jira site and cloudId, projects, issue repos, path mappings, routing rules — comes from `~/.work.local.md` if it exists. Read it before any tracker operation. Whatever it doesn't set falls back to these defaults, so no config at all means GitHub only:
 
 - **Jira:** none. A Jira reference is an error — say Jira isn't configured on this machine.
-- **Issue repos:** any repo. `listMine` searches all of GitHub, and `ticketFor` reads `<n>-` branches as issues in the PR's own repo.
-- **PR scope:** none — PR searches cover every repo I can see.
-- **Review requests:** `is:pr is:open user-review-requested:@me`.
+- **Issue repos:** any repo. `ticketFor` reads `<n>-` branches as issues in the PR's own repo.
 - **Paths:** none — no part of the codebase maps to a project.
 - **Routing:** a GitHub issue in the current repo.
 
@@ -25,11 +23,6 @@ Jira goes through the Atlassian MCP tools, passing the config's cloudId. GitHub 
 
 - Jira: workflows differ per project, so never hardcode a transition ID. Skip if the status is already in that category. Otherwise fetch the issue's available transitions and pick the one whose target status is in the category, preferring one named exactly "In Progress" / "Done". If none fits, or several fit and none has the exact name, ask which to use. Moving to In Progress also assigns it to me if it's unassigned.
 - GitHub: In Progress → `gh issue edit <n> -R <repo> --add-assignee @me` if I'm not assigned. Done → if still open, `gh issue close <n> -R <repo> --reason completed` (no comment).
-
-**listMine()** — open tickets assigned to me.
-
-- Jira (only if configured): `assignee = currentUser() AND project in (<projects>) AND statusCategory != Done AND issuetype != Epic ORDER BY status, updated DESC`.
-- GitHub: `gh issue list -R <repo> --assignee @me --state open --json number,title,url,labels` per configured issue repo; with the default, `gh search issues --assignee @me --state open --json repository,number,title,url,labels`.
 
 **route(description, conversation)** → destination. Apply the config's routing rules; where they defer to Paths, use `projectFor` on the directory the work is about — the conversation's, or else the current one. Where a rule says to ask unless the context is obvious, only skip asking when this conversation makes the answer unambiguous; otherwise ask with `AskUserQuestion`, one option per destination.
 

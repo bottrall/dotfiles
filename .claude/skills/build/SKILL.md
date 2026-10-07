@@ -27,7 +27,7 @@ The builder is graded by the `inspect` skill against its [criteria.md](../inspec
 
 ## Tracker and worktree
 
-Shared operations, used by Phase 1 when the task is a ticket reference. They're inlined from `_lib/` — the same definitions `/finish`, `/triage` and `/track` use, so the branch naming convention has a single owner.
+Shared operations, used by Phase 1 when the task is a ticket reference. They're inlined from `_lib/` — the same definitions `/finish` and `/track` use, so the branch naming convention has a single owner.
 
 <tracker>
 !`cat ~/.claude/skills/_lib/tracker.md`
