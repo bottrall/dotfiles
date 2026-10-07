@@ -52,11 +52,7 @@ Create a todo list before starting.
 
 ### 0. Check out the PR (only if one was passed)
 
-If I passed a PR reference (URL, `#<n>`, or `<n>`), do this in the main session — not a subagent — so every step below runs on the PR's branch: pick the repo with `repoFor`, then `enter` a worktree on `branchForPR`, using the Worktree operations below. With no argument (including when `build` invokes this skill), skip this step and review the current branch as is.
-
-<worktree>
-!`cat ~/.claude/skills/_lib/worktree.md`
-</worktree>
+If I passed a PR reference (URL, `#<n>`, or `<n>`), run `gh pr checkout <n>` in the main session — not a subagent — so every step below runs on the PR's branch. With no argument (including when `build` invokes this skill), skip this step and review the current branch as is.
 
 ### 1. Preflight
 

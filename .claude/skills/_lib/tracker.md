@@ -17,7 +17,7 @@ Jira goes through the Atlassian MCP tools, passing the config's cloudId. GitHub 
 
 **ticketFor(branch, pr)** — the inverse, so it must stay in step with branchFor. A leading `<KEY>-<n>` whose KEY is one of the config's Jira projects (case-insensitive) is that Jira ticket. A leading `<n>-` is that GitHub issue when the PR's repo is one of the issue repos (with the default, always). Also count any `closingIssuesReferences` on the PR. Nothing matched: no ticket.
 
-**projectFor(path)** and **pathsFor(ticket)** — the config's Paths mapping, read in both directions, so it has one owner. `projectFor` returns the destination of the longest mapped path containing `path`, reading a worktree path `~/<repo>.worktrees/<branch>/<rest>` as `~/<repo>/<rest>`; no match, none. `pathsFor` returns every mapped path whose destination is the ticket's Jira project (or, for a GitHub issue, its repo), each as `{ repo: the git root containing it, subdir: the rest }`.
+**projectFor(path)** and **pathsFor(ticket)** — the config's Paths mapping, read in both directions, so it has one owner. `projectFor` returns the destination of the longest mapped path containing `path`, matching on the path relative to the repo root, so a worktree path maps the same as the main checkout; no match, none. `pathsFor` returns every mapped path whose destination is the ticket's Jira project (or, for a GitHub issue, its repo), each as `{ repo: the git root containing it, subdir: the rest }`.
 
 **transition(ticket, category)** — category is To Do, In Progress, or Done.
 
