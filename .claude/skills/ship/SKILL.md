@@ -8,6 +8,10 @@ disable-model-invocation: true
 
 Prepare and open a pull request for the current branch.
 
+<tracker>
+!`cat ~/.claude/skills/_lib/tracker.md`
+</tracker>
+
 ## Steps
 
 ### 1. Preflight checks
@@ -40,6 +44,7 @@ Search for a pull request template in the repo. Check these paths **in order** a
 ### 4. Build PR title & body
 
 - Derive a short PR title (< 70 chars) from the branch commits.
+- **Public repo** (see Tracker): never mention a Jira ticket, in the title, body, or commit messages. Any reference to a linked ticket below means a GitHub issue only.
 - **If a template was found:** fill it in using the branch's diff (`git diff main...HEAD`) and commit history. Leave any section empty rather than guessing.
 - **If no template was found:** write a human-friendly description using the format below. Prefer prose over bullet lists — a reviewer should be able to read it top-to-bottom and understand the change without scanning the diff. Don't restate what the diff already shows; explain the intent.
 
@@ -81,6 +86,7 @@ EOF
 - **If a PR already exists:** compare the generated body against the existing body.
   - **If the body has changed:** update it with `gh pr edit --body`.
   - **If the body is the same:** skip.
+- **Public repo:** if `ticketFor(branch, pr)` finds a Jira ticket, or this conversation is about one, `link(ticket, pr)`. If it came from the conversation and the branch has no `branch.<name>.ticket`, record it there too.
 
 ### 6. Done
 

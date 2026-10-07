@@ -27,7 +27,7 @@ The builder is graded by the `inspect` skill against its [criteria.md](../inspec
 
 ## Tracker
 
-Shared operations, used by Phase 1 when the task is a ticket reference. They're inlined from `_lib/` — the same definitions `/finish` and `/track` use, so the branch naming convention has a single owner.
+Shared operations, used by Phase 1 when the task is a ticket reference and by Phase 4 to keep Jira out of public PRs. They're inlined from `_lib/` — the same definitions `/finish` and `/track` use, so the branch naming convention has a single owner.
 
 <tracker>
 !`cat ~/.claude/skills/_lib/tracker.md`
@@ -111,6 +111,7 @@ Use the **first** match, in order:
 ### 4d. Title & body
 
 - PR title < 70 chars, derived from the branch commits.
+- **Public repo** (see Tracker): never mention the Jira ticket, in the title, body, or commit messages.
 - **Template found:** fill it from the diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
 - **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
 
@@ -137,6 +138,7 @@ If you genuinely can't determine the problem or solution, leave a `<TODO: …>` 
 - **None:** `gh pr create --draft --base <base-branch> --assignee @me --title "<title>" --body "$(cat <<'EOF'` … `EOF` … `)"`.
 - **Exists:** if the generated body differs, `gh pr edit --body`; otherwise skip.
 - `<base-branch>` is the bare branch name from Phase 1 (no `origin/` prefix), so a stacked PR targets its parent rather than the default branch.
+- **Public repo with a Jira ticket** (`ticketFor`): `link(ticket, pr)`.
 - Print the PR URL.
 
 ### 4f. Monitor CI
