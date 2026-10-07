@@ -24,7 +24,7 @@ The build is graded by the `inspect` skill against the shared criteria — ranke
 ## Phase 1 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- **If the task is a ticket reference:** read the files `~/.agents/skills/_lib/tracker.md` and `~/.agents/skills/_lib/worktree.md` with the read tool and follow their operations exactly as written. `resolve` the ticket, pick the repo with `repoFor`, then `enter` a worktree on `branchFor(ticket)` — which hands off to a new session if this one isn't already in it — and `transition` the ticket to In Progress. The ticket's summary, description and acceptance criteria are the task. Its base branch is the default branch; skip the next two bullets.
+- **If the task is a GitHub issue** (URL, `#<n>`, or `<n>`) in this repo: `gh issue view <n> --json title,body,assignees` — its title and body are the task. Assign it to me (`gh issue edit <n> --add-assignee @me`) if I'm not assigned, and put `Closes #<n>` in the PR body in 4d. I've already made the worktree, so carry on with the branch bullets below.
 - **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch. Its base branch is the default branch.
 - **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the Review scope section of `~/.agents/skills/inspect/SKILL.md` (read it with the read tool) defines, and report it.
 

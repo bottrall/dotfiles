@@ -35,7 +35,7 @@ Before starting, write a numbered checklist of the steps below in your reply and
 
 ### 0. Check out the PR (only if one was passed)
 
-If I passed a PR reference (URL, `#<n>`, or `<n>`): read the file `~/.agents/skills/_lib/worktree.md` with the read tool and follow its operations exactly as written — pick the repo with `repoFor`, then `enter` a worktree on `branchForPR`, which hands off to a new session if this one isn't already in it. With no argument (including when `build` runs this review in place), skip this step and review the current branch as is.
+If I passed a PR reference (URL, `#<n>`, or `<n>`) and the current branch isn't already its head: `gh pr checkout <n>`. With no argument (including when `build` runs this review in place), skip this step and review the current branch as is.
 
 ### 1. Preflight
 
