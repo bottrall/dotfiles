@@ -2,9 +2,10 @@
 
 My worktrees live at `~/<repo>.worktrees/<branch>`, made by my `wta` shell helper (which also copies env files and starts dependency installs). Run these operations in the main session, never a subagent — the point is to move _this_ session.
 
-**repoFor(ref)** — the local clone to work in.
+**repoFor(ref, candidates)** — the local clone to work in. `candidates` is optional: a list of `{ repo, subdir }` the caller already knows the work belongs to (from `pathsFor`).
 
 - GitHub URL with `<owner>/<repo>`: the clone whose `origin` matches — the current repo first, then each path from `zsh -ic repos` (`git -C <path> remote get-url origin`). None match: stop and say so.
+- With candidates: the current repo if it's one of them; otherwise the only one if there's one; otherwise the one the ticket names (a repo, engine, or remote in its summary or description). Still ambiguous: ask, offering the candidates as options. Return the chosen candidate's `subdir` too — if several candidates share the chosen repo, the one the ticket names, else none.
 - Anything else: the current repo. Not in a git repo: ask which, offering the `zsh -ic repos` list as options.
 
 Work from the repo's **main worktree** (`git -C <repo> worktree list --porcelain | head -1`). If the session is already in a linked worktree on the target branch, there's nothing to do. If it's in a linked worktree on a different branch, stop and tell me to start from the main checkout.

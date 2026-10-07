@@ -53,7 +53,7 @@ This applies to anything delegated — a fully-encoded phase (like ship + CI) ma
 ## Phase 1 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- **If the task is a ticket reference** (as defined under Tracker above): `resolve` it, pick the repo with `repoFor`, then `enter` a worktree on `branchFor(ticket)` and `transition` the ticket to In Progress. The ticket's summary, description and acceptance criteria are the task. Its base branch is the default branch; skip the next two bullets.
+- **If the task is a ticket reference** (as defined under Tracker above): `resolve` it, pick the repo with `repoFor(ref, pathsFor(ticket))`, then `enter` a worktree on `branchFor(ticket)` and `transition` the ticket to In Progress. The ticket's summary, description and acceptance criteria are the task; if `repoFor` returned a `subdir`, tell the builder that's where the work lives. Its base branch is the default branch; skip the next two bullets.
 - **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch. Its base branch is the default branch.
 - **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the `inspect` skill's [Review scope](../inspect/SKILL.md) section defines, and report it.
 
