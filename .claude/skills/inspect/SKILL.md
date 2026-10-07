@@ -50,9 +50,11 @@ Omitting the model (inheriting the session's) is a valid choice, not a default �
 
 Create a todo list before starting.
 
-### 0. Check out the PR (only if one was passed)
+### 0. Check out the PR and name the session
 
-If I passed a PR reference (URL, `#<n>`, or `<n>`), run `gh pr checkout <n>` in the main session — not a subagent — so every step below runs on the PR's branch. With no argument (including when `build` invokes this skill), skip this step and review the current branch as is.
+If I passed a PR reference (URL, `#<n>`, or `<n>`), run `gh pr checkout <n>` in the main session — not a subagent — so every step below runs on the PR's branch. With no argument (including when `build` invokes this skill), skip the checkout and review the current branch as is.
+
+Then name the session so its tab says what's under review: `Inspect: #<n> <a few words of the PR title>` when there's a PR (the one passed, or `gh pr view --json number,title` for the current branch), else `Inspect: <branch>`. Keep the whole title under ~40 characters. Set it from the main session (a subagent can't rename the session it runs in) with `mcp__ccd_session_mgmt__set_session_title`, `session_id: "self"`, loading it via ToolSearch if it's deferred. Skip this when `build` invoked the review, since that session is already named for the build, or when the tool isn't available (not in Claude Code Desktop).
 
 ### 1. Preflight
 
