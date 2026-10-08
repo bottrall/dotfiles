@@ -1,6 +1,6 @@
 ---
 name: inspect
-description: Single-agent code review of the current branch, or of a PR URL in its own worktree, against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build skill. Never run it speculatively.
+description: Multi-agent code review of the current branch, or of a PR URL in its own worktree, against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build skill. Never run it speculatively.
 ---
 
 # Code Review
@@ -9,9 +9,13 @@ Code review all changes on the current branch and report findings inline in chat
 
 The `build` skill invokes this skill for its review phase and gates on the report below, so the report format is a contract: keep the "No issues found" sentinel and the findings block stable.
 
+## Subagents
+
+Every step below except Filter and Report runs as a headless subagent. Before spawning anything, activate the `riffer-subagent` skill and follow it for mechanics and prompt shape.
+
 ## Criteria
 
-Every lens and every validation is graded against the shared criteria — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list. Before starting, read the file `~/.agents/skills/inspect/criteria.md` with the read tool. Apply it **verbatim**; do not paraphrase it.
+Every reviewer and validator is graded against the shared criteria — the ranked lenses, the HIGH SIGNAL bar, and the false-positive list — at `~/.agents/skills/inspect/criteria.md`. Read it once in this session so you can merge and filter, and pass its path to every subagent with the instruction to read it and hold it **verbatim**. Do not paraphrase it.
 
 ## Review scope
 
@@ -27,7 +31,7 @@ All changes since the current branch diverged from its **base branch** — the b
 - File list: `git diff --name-only $BASE`
 - Stat: `git diff --stat $BASE`
 
-Use the resolved `BASE` commit and these exact commands for every lens. Read the changes via `git diff $BASE` — never a three-dot diff.
+Pass the resolved `BASE` commit and these exact commands to every subagent. Each reviewer must read the changes via `git diff $BASE` — never a three-dot diff.
 
 ## Steps
 
@@ -39,7 +43,7 @@ If I passed a PR reference (URL, `#<n>`, or `<n>`) and the current branch isn't 
 
 ### 1. Preflight
 
-Verify there is something to review:
+Spawn a subagent to verify there is something to review:
 
 - Determine `<base-branch>` and compute `BASE` as defined in the Review scope section. Say which base was chosen and why (open PR or nearest parent).
 - Run `git diff --stat $BASE`.
@@ -48,39 +52,41 @@ Verify there is something to review:
 
 ### 2. Discover rule files
 
-Collect a list of file paths (not contents) for **every** rule file that applies to a changed file. Rule files live at any depth, not just the repo root: a subdirectory can carry its own `AGENTS.md`, `CLAUDE.md`, or `.claude/` directory with a `CLAUDE.md` and `rules/`, and those are just as binding. Search the whole repo for them — never stop at the root.
+Spawn a subagent to return a list of file paths (not contents) for **every** rule file that applies to a changed file. Rule files live at any depth, not just the repo root: a subdirectory can carry its own `AGENTS.md`, `CLAUDE.md`, or `.claude/` directory with a `CLAUDE.md` and `rules/`, and those are just as binding. Search the whole repo for them — never stop at the root.
 
 - Find every candidate: `git ls-files -co --exclude-standard | grep -E '(^|/)((AGENTS|CLAUDE)\.md|\.claude/rules/.+)$'`. This covers `AGENTS.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at every level.
 - Each candidate is owned by a directory `X`: `X/AGENTS.md`, `X/CLAUDE.md`, `X/.claude/CLAUDE.md`, and `X/.claude/rules/**` are all owned by `X`.
 - Keep a candidate when `X` contains at least one changed file at any depth (`git diff --name-only $BASE`, which includes uncommitted changes). The repo root always qualifies. If a `.claude/rules/` file has `paths:` frontmatter, also require at least one changed file to match those globs.
-- Group the kept paths by owning directory, so each lens pass can see which rules govern which files.
+- Return the kept paths grouped by owning directory, so reviewers can see which rules govern which files.
 
 ### 3. Summarize the changes
 
-Summarize the branch:
+Spawn a subagent to summarize the branch. It should:
 
 - Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline $BASE..HEAD` (commits only).
-- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the lens passes in step 4 have that context.
-- Write a short summary of what the branch does.
+- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in step 4 have that context.
+- Return a short summary of what the branch does.
 
-### 4. Review, one lens at a time
+Steps 2 and 3 depend only on `BASE`, not on each other — spawn them in one fan-out.
 
-Walk the five lenses in the criteria **in order, one pass each**: Correctness, Security, Rules compliance, Performance, Simplicity / idiom. For each pass:
+### 4. Parallel review
 
-- Hold the full criteria text in mind, verbatim.
-- Review through that single lens only, at the stated bar, and honour the false-positive list.
-- Use the rule-file paths from step 2, the branch summary from step 3, and the exact scope commands from the Review scope section.
-- Record the pass's findings before moving to the next lens — `path:line`, a reason tag naming the lens, and a one-line description. A finding that fails the bar is not recorded.
+Spawn **one reviewer per lens** in the criteria — five in parallel, in one fan-out. Each receives:
 
-Do not validate while reviewing; finish all five passes first so each lens gets a clean look.
+- The criteria path, with the instruction to read it and hold it **verbatim**.
+- Which single lens it owns. It reviews through that lens only, at the stated bar, and honours the false-positive list.
+- The rule-file paths from step 2 and the branch summary from step 3.
+- The resolved `BASE` commit and the exact scope commands from the Review scope section.
+
+Each returns a list of findings — `path:line`, a reason tag naming the lens, and a one-line description. A finding that fails the bar is not returned.
 
 ### 5. Validate
 
-For each recorded finding, adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive.
+For each finding, spawn a subagent to adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim — all validators in one fan-out. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive.
 
 ### 6. Filter
 
-Drop every finding that failed validation in step 5, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final high-signal set.
+In this session, not a subagent: drop every finding that failed validation in step 5, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final high-signal set.
 
 ### 7. Report findings inline in chat
 
@@ -119,14 +125,6 @@ Drop every finding that failed validation in step 5, plus anything on the false-
 > **Fix:** …
 >
 > ---
->
-> ### `<next path>`
->
-> #### 3. <Reason tag> — <one-line description>
->
-> …
->
-> ---
 
 Layout rules:
 
@@ -140,4 +138,5 @@ Layout rules:
 
 ## Notes
 
-- This skill never writes to GitHub. Read-only `gh` lookups (base branch, checking out a PR) are fine; no reviews or comments.
+- This skill never writes to GitHub, and neither do its subagents — the review is read-only end to end. Read-only `gh` lookups (base branch, checking out a PR) are fine; no reviews, comments, or inline comments.
+- The review scope always covers the full branch diff each cycle, so fixes can't silently regress previously-clean code.

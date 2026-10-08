@@ -79,18 +79,18 @@ The answer isn't part of the body — it's recorded on resolution (see [Work thr
 
 Every ticket is either **HITL** — human in the loop, worked _with_ a human who speaks for themselves — or **AFK**, driven by the agent alone. A HITL ticket only resolves through that live exchange; the agent never stands in for the human's side of it (a grilling agent that answers its own questions has broken this).
 
-- **Research** (AFK): Reading documentation, third-party APIs, or local resources like knowledge bases to surface a fact a decision waits on. Use when knowledge outside the current working directory is required. Resolved by you, in this session, without the human — see [Running a research ticket](#running-a-research-ticket).
+- **Research** (AFK): Reading documentation, third-party APIs, or local resources like knowledge bases to surface a fact a decision waits on. Use when knowledge outside the current working directory is required. Resolved without the human — delegated to a headless subagent — see [Running a research ticket](#running-a-research-ticket).
 - **Prototype** (HITL): Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to — an outline, a rough take, a stub, throwaway UI or logic code. Use when "how should it look" or "how should it behave" is the key question. See [Running a prototype ticket](#running-a-prototype-ticket).
-- **Grilling** (HITL): Conversation in the manner of the `grilling` skill, one question at a time. The default case. A skill cannot activate another skill mid-turn, so run the interview in place: ask one question per reply in plain prose, options listed with the recommended one first, then stop and wait for the answer. If the user wants the full skill, they can run `/skill:grilling` next.
+- **Grilling** (HITL): Conversation in the manner of the `grilling` skill, one question at a time. The default case. Activate `grilling` and run the interview: ask one question per reply in plain prose, options listed with the recommended one first, then stop and wait for the answer.
 - **Task** (HITL or AFK): Manual work that must happen before a _decision_ can be made — nothing to decide, prototype, or research, but the discussion is blocked until it's done. Signing up for a service so its API can be judged, provisioning access, moving data so its shape can be seen. This is the one type that _does_ rather than decides — and it earns its place by unblocking a decision, not by delivering the destination. The agent drives it alone where it can (AFK); otherwise it hands the human a precise checklist (HITL). Resolved when the work is done; the answer records what was done and any resulting facts (credentials location, new URLs, row counts) later tickets depend on.
 
 ### Running a research ticket
 
-Research is the one type that doesn't need the human, so it runs without waiting on them — and the one type a session may resolve more than one of. riffer-rig has no subagents (this is the single-agent variant), so resolve research tickets yourself, **one after another**, in this session, and be mindful that each one's reading lands in the driving session's context.
+Research is the one type that doesn't need the human, so it runs without waiting on them — and the one type a session may resolve more than one of. Delegate each research ticket to a headless subagent — activate the `riffer-subagent` skill and follow it — so the ticket's reading lands in the child's context, not the driving session's. Research tickets are independent, so run them concurrently in one fan-out.
 
-For each research ticket, orient on the ticket's question and the map's Destination and Notes, and produce **findings, not a recommendation** — a research ticket surfaces the facts a decision waits on; the decision itself belongs to a later HITL ticket. Fetch remote documentation with `curl -sL <url>` via the bash tool; read local resources with the read tool. Require sources: a fact without a link or file path can't be re-checked when it goes stale.
+Each child's prompt carries: the ticket's question, the map's Destination and the relevant Notes, and the instruction to produce **findings, not a recommendation** — a research ticket surfaces the facts a decision waits on; the decision itself belongs to a later HITL ticket. The child fetches remote documentation with `curl -sL <url>` via the bash tool and reads local resources with the read tool. Require sources: a fact without a link or file path can't be re-checked when it goes stale.
 
-Its answer becomes the resolution comment. If the findings are too long to sit comfortably in a comment, write them to a file, link it from the ticket, and comment the gist.
+The child's report becomes the resolution comment. If the findings are too long to sit comfortably in a comment, have the child write them to a file, link it from the ticket, and comment the gist.
 
 ### Running a prototype ticket
 
@@ -129,11 +129,11 @@ Two modes. Either way, **never resolve more than one ticket per session** — wi
 
 User invokes with a loose idea.
 
-1. **Name the destination.** Run a grilling interview in place (one question per reply in plain prose, options listed with the recommended one first, stop and wait for each answer) to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
+1. **Name the destination.** Activate `grilling` and interview (one question per reply in plain prose, options listed with the recommended one first, stop and wait for each answer) to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
 2. **Map the frontier.** Grill again, **breadth-first** this time: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way to the destination is already clear, the whole journey small enough for one session — you don't need a map. Stop and ask the user how they'd like to proceed.
 3. **Create the map**: Destination and Notes filled in — Notes naming the tracker you picked — Decisions-so-far empty, the fog sketched into **Not yet specified**.
 4. **Create the tickets you can specify now** as child issues of the map — then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog — the **Not yet specified** section.
-5. **Resolve the research tickets.** For each `research` ticket you just created, resolve it yourself, one after another, in this session. See [Running a research ticket](#running-a-research-ticket).
+5. **Resolve the research tickets.** For each `research` ticket you just created, delegate it to a headless subagent per [Running a research ticket](#running-a-research-ticket) — the tickets are independent, so spawn them in one fan-out.
 6. Stop — charting is one session's work; it hand-resolves nothing.
 
 ### Work through the map
@@ -142,7 +142,7 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 
 1. Load the **map** — the low-res view, not every ticket body.
 2. Choose the ticket. If the user named one, use it. Otherwise take the first frontier ticket in order. **Claim it**: assign it to yourself before any work.
-3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; read the skills the `## Notes` block names (`~/.agents/skills/<name>/SKILL.md`) with the read tool and follow them in place, since a skill cannot activate another skill mid-turn. If in doubt, grill in place: one question per reply, options listed, recommended first, then stop and wait.
+3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; activate the skills the `## Notes` block names and follow them. If in doubt, activate `grilling`: one question per reply, options listed, recommended first, then stop and wait.
 4. Record the resolution: post the answer as a **resolution comment**, **close** the issue, and **append a context pointer** to the map's Decisions-so-far.
 5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
 
