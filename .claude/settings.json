@@ -21,5 +21,6 @@
   "skipDangerousModePermissionPrompt": true,
   "inputNeededNotifEnabled": false,
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "skipWorkflowUsageWarning": true
 }
