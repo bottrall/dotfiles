@@ -23,7 +23,7 @@ All changes since the current branch diverged from its **base branch** — the b
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
 - Determine the base branch — first match wins:
-  1. **Open PR:** `gh pr view --json baseRefName -q .baseRefName`. The PR's target is authoritative.
+  1. **Open PR:** the one step 0 checked out, else the current branch's: `gh pr view [<n>] --json baseRefName -q .baseRefName`. The PR's target is authoritative.
   2. **Nearest parent:** among the local branches plus the default branch, excluding the current branch, drop any branch stacked _on top of_ this one (`git rev-list --count <candidate>..HEAD` is 0 while `git rev-list --count HEAD..<candidate>` is not). The base is the remaining branch with the smallest `git rev-list --count <candidate>..HEAD`; on a tie, prefer the default branch.
 - Run `git fetch origin`. Of `<base>` and `origin/<base>` (whichever exist), use the one with the smaller `git rev-list --count <ref>..HEAD` — it's the fresher view of where this branch forked. This is `<base-branch>`.
 - `BASE=$(git merge-base <base-branch> HEAD)` — compute once at the start of the review.
@@ -50,9 +50,16 @@ Omitting the model (inheriting the session's) is a valid choice, not a default �
 
 Create a todo list before starting.
 
-### 0. Check out the PR and name the session
+### 0. Get onto a worktree and name the session
 
-If I passed a PR reference (URL, `#<n>`, or `<n>`), run `gh pr checkout <n>` in the main session — not a subagent — so every step below runs on the PR's branch. With no argument (including when `build` invokes this skill), skip the checkout and review the current branch as is.
+The review always runs in a linked worktree, never a repo's main checkout. Do this in the main session, not a subagent, so every step below runs there. It uses these worktree operations, the same layout `/build` uses:
+
+<worktree>
+!`cat ~/.claude/skills/_lib/worktree.md`
+</worktree>
+
+- **I passed a PR reference** (URL, `#<n>`, or `<n>`): `ensureReview(pr)`.
+- **No argument** (including when `build` invokes this skill): review the current branch as is. If `where()` says this is the main checkout, stop. Tell me to pass the PR or run the review from the branch's worktree.
 
 Then name the session so its tab says what's under review: `Inspect: #<n> <a few words of the PR title>` when there's a PR (the one passed, or `gh pr view --json number,title` for the current branch), else `Inspect: <branch>`. Keep the whole title under ~40 characters. Set it from the main session (a subagent can't rename the session it runs in) with `mcp__ccd_session_mgmt__set_session_title`, `session_id: "self"`, loading it via ToolSearch if it's deferred. Skip this when `build` invoked the review, since that session is already named for the build, or when the tool isn't available (not in Claude Code Desktop).
 
