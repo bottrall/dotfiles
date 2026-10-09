@@ -25,17 +25,13 @@ The builder is graded by the `inspect` skill against its [criteria.md](../inspec
 !`cat ~/.claude/skills/inspect/criteria.md`
 </criteria>
 
-## Tracker and worktree
+## Tracker
 
-Shared operations. Phase 1 uses them when the task is a ticket reference and to get onto a worktree. Phase 4 uses them to keep Jira out of public PRs. They're inlined from `_lib/`: the tracker is the same definition `/finish` and `/track` use, so the branch naming convention has a single owner, and the worktree layout is the same one `/inspect` uses.
+Shared operations, used by Phase 1 when the task is a ticket reference and by Phase 4 to keep Jira out of public PRs. They're inlined from `_lib/` — the same definitions `/finish` and `/track` use, so the branch naming convention has a single owner.
 
 <tracker>
 !`cat ~/.claude/skills/_lib/tracker.md`
 </tracker>
-
-<worktree>
-!`cat ~/.claude/skills/_lib/worktree.md`
-</worktree>
 
 ## Model selection
 
@@ -59,9 +55,7 @@ Run this phase in the main session, not a subagent, since it may move the sessio
   - **The task is a ticket reference** (as defined under Tracker above): `resolve` it. The branch is `branchFor(ticket)`. The ticket's summary, description and acceptance criteria are the task. If `pathsFor(ticket)` maps it to a subdirectory of this repo, tell the builder that's where the work lives. Its base branch is the default branch.
   - **The current branch is the default branch:** the branch is a new feature branch with a short kebab-case name derived from the task. Never build directly on the default branch. Its base branch is the default branch.
   - **Already on a feature branch:** the branch is this one. Its base branch is whatever it's stacked on. Determine it exactly as the `inspect` skill's [Review scope](../inspect/SKILL.md) section defines.
-- **Get onto a worktree for the branch** before anything is built. Check `where()` (see Worktree above):
-  - **Linked worktree** (pit's or Claude Code Desktop's): switch it to the branch if it isn't on it already, creating the branch if it's new.
-  - **Main checkout:** `ensureBuild(branch, default branch)`. Never edit files in the main checkout.
+- Ensure you're in a worktree, on the branch.
 - For a ticket, `transition` it to In Progress.
 - Report the branch, its base, and the worktree path.
 
