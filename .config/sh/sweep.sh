@@ -92,7 +92,7 @@ sweep() (
     fi
     command -v cc >/dev/null || return 1
     tmp=$(mktemp -d) || return 1
-    printf 'int main(void) { return 0; }\n' | cc -x c - -o "$tmp/a.out" >/dev/null 2>&1
+    printf 'int main(void) { return 0; }\n' | command cc -x c - -o "$tmp/a.out" >/dev/null 2>&1
     rc=$?
     rm -rf "$tmp"
     return $rc
