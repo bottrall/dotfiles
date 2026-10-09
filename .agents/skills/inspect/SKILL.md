@@ -37,11 +37,11 @@ Pass the resolved `BASE` commit and these exact commands to every subagent. Each
 
 Before starting, write a numbered checklist of the steps below in your reply and tick each one off as you go.
 
-### 0. Check out the PR (only if one was passed)
+### 1. Check out the PR (only if one was passed)
 
 If I passed a PR reference (URL, `#<n>`, or `<n>`) and the current branch isn't already its head: `gh pr checkout <n>`. With no argument (including when `build` runs this review in place), skip this step and review the current branch as is.
 
-### 1. Preflight
+### 2. Preflight
 
 Spawn a subagent to verify there is something to review:
 
@@ -50,7 +50,7 @@ Spawn a subagent to verify there is something to review:
 - If there are no changes (committed, staged, or unstaged), stop and tell me there's nothing to review.
 - If the current branch **is** the default branch, stop and tell me to switch to a feature branch first (even if there are uncommitted changes).
 
-### 2. Discover rule files
+### 3. Discover rule files
 
 Spawn a subagent to return a list of file paths (not contents) for **every** rule file that applies to a changed file. Rule files live at any depth, not just the repo root: a subdirectory can carry its own `AGENTS.md`, `CLAUDE.md`, or `.claude/` directory with a `CLAUDE.md` and `rules/`, and those are just as binding. Search the whole repo for them — never stop at the root.
 
@@ -59,36 +59,36 @@ Spawn a subagent to return a list of file paths (not contents) for **every** rul
 - Keep a candidate when `X` contains at least one changed file at any depth (`git diff --name-only $BASE`, which includes uncommitted changes). The repo root always qualifies. If a `.claude/rules/` file has `paths:` frontmatter, also require at least one changed file to match those globs.
 - Return the kept paths grouped by owning directory, so reviewers can see which rules govern which files.
 
-### 3. Summarize the changes
+### 4. Summarize the changes
 
 Spawn a subagent to summarize the branch. It should:
 
 - Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline $BASE..HEAD` (commits only).
-- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in step 4 have that context.
+- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in step 5 have that context.
 - Return a short summary of what the branch does.
 
-Steps 2 and 3 depend only on `BASE`, not on each other — spawn them in one fan-out.
+Steps 3 and 4 depend only on `BASE`, not on each other — spawn them in one fan-out.
 
-### 4. Parallel review
+### 5. Parallel review
 
 Spawn **one reviewer per lens** in the criteria — five in parallel, in one fan-out. Each receives:
 
 - The criteria path, with the instruction to read it and hold it **verbatim**.
 - Which single lens it owns. It reviews through that lens only, at the stated bar, and honours the false-positive list.
-- The rule-file paths from step 2 and the branch summary from step 3.
+- The rule-file paths from step 3 and the branch summary from step 4.
 - The resolved `BASE` commit and the exact scope commands from the Review scope section.
 
 Each returns a list of findings — `path:line`, a reason tag naming the lens, and a one-line description. A finding that fails the bar is not returned.
 
-### 5. Validate
+### 6. Validate
 
 For each finding, spawn a subagent to adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim — all validators in one fan-out. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive.
 
-### 6. Filter
+### 7. Filter
 
-In this session, not a subagent: drop every finding that failed validation in step 5, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final high-signal set.
+In this session, not a subagent: drop every finding that failed validation in step 6, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final high-signal set.
 
-### 7. Report findings inline in chat
+### 8. Report findings inline in chat
 
 **If no findings survived**, print exactly:
 

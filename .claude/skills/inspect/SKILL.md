@@ -23,7 +23,7 @@ All changes since the current branch diverged from its **base branch** — the b
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
 - Determine the base branch — first match wins:
-  1. **Open PR:** the one step 0 checked out, else the current branch's: `gh pr view [<n>] --json baseRefName -q .baseRefName`. The PR's target is authoritative.
+  1. **Open PR:** the one step 1 checked out, else the current branch's: `gh pr view [<n>] --json baseRefName -q .baseRefName`. The PR's target is authoritative.
   2. **Nearest parent:** among the local branches plus the default branch, excluding the current branch, drop any branch stacked _on top of_ this one (`git rev-list --count <candidate>..HEAD` is 0 while `git rev-list --count HEAD..<candidate>` is not). The base is the remaining branch with the smallest `git rev-list --count <candidate>..HEAD`; on a tie, prefer the default branch.
 - Run `git fetch origin`. Of `<base>` and `origin/<base>` (whichever exist), use the one with the smaller `git rev-list --count <ref>..HEAD` — it's the fresher view of where this branch forked. This is `<base-branch>`.
 - `BASE=$(git merge-base <base-branch> HEAD)` — compute once at the start of the review.
@@ -50,14 +50,14 @@ Omitting the model (inheriting the session's) is a valid choice, not a default �
 
 Create a todo list before starting.
 
-### 0. Get onto a worktree
+### 1. Get onto a worktree
 
 Do this in the main session, not a subagent — a subagent's worktree and checkout don't carry back to this session, and every subagent below must see the PR's branch.
 
 - **I passed a PR reference** (URL, `#<n>`, or `<n>`): ensure you're in a worktree, then `gh pr checkout <n>`.
 - **No argument** (including when `build` invokes this skill): review the current branch as is.
 
-### 1. Preflight
+### 2. Preflight
 
 Launch a subagent to verify there is something to review:
 
@@ -66,7 +66,7 @@ Launch a subagent to verify there is something to review:
 - If there are no changes (committed, staged, or unstaged), stop and tell me there's nothing to review.
 - If the current branch **is** the default branch, stop and tell me to switch to a feature branch first (even if there are uncommitted changes).
 
-### 2. Discover rule files
+### 3. Discover rule files
 
 Launch a subagent to return a list of file paths (not contents) for **every** rule file that applies to a changed file. Rule files live at any depth, not just the repo root: a subdirectory can carry its own `CLAUDE.md` or its own `.claude/` directory with a `CLAUDE.md` and `rules/`, and those are just as binding. Search the whole repo for them — never stop at the root.
 
@@ -75,34 +75,34 @@ Launch a subagent to return a list of file paths (not contents) for **every** ru
 - Keep a candidate when `X` contains at least one changed file at any depth (`git diff --name-only $BASE`, which includes uncommitted changes). The repo root always qualifies. If a `.claude/rules/` file has `paths:` frontmatter, also require at least one changed file to match those globs.
 - Return the kept paths grouped by owning directory, so reviewers can see which rules govern which files.
 
-### 3. Summarize the changes
+### 4. Summarize the changes
 
 Launch a subagent to summarize the branch. It should:
 
 - Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline $BASE..HEAD` (commits only).
-- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in step 4 have that context.
+- Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in step 5 have that context.
 - Return a short summary of what the branch does.
 
-### 4. Parallel review
+### 5. Parallel review
 
 Launch **one reviewer per lens** in the criteria — five in parallel: Correctness, Security, Rules compliance, Performance, Simplicity / idiom. Each receives:
 
 - The full criteria text, verbatim.
 - Which single lens it owns. It reviews through that lens only, at the stated bar, and honours the false-positive list.
-- The rule-file paths from step 2 and the branch summary from step 3.
+- The rule-file paths from step 3 and the branch summary from step 4.
 - The resolved `BASE` commit and the exact scope commands from the Review scope section.
 
 Each returns a list of findings — `path:line`, a reason tag naming the lens, and a one-line description. A finding that fails the bar is not returned.
 
-### 5. Validate
+### 6. Validate
 
 For each finding, launch a subagent to adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive.
 
-### 6. Filter
+### 7. Filter
 
-Drop every finding that failed validation in step 5, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final high-signal set.
+Drop every finding that failed validation in step 6, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final high-signal set.
 
-### 7. Report findings inline in chat
+### 8. Report findings inline in chat
 
 **If no findings survived**, print exactly:
 
