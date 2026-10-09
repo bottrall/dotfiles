@@ -137,7 +137,6 @@ Launch **one assessor per PR**, all in a single message so they run concurrently
 
 Each assessor receives:
 
-- The agent assumptions above.
 - The PR number, title, body, head branch, and the triage signals from step 2.
 - The **Failure classification** and **Risk rubric** sections, verbatim.
 - A hard rule: **read-only**. It runs in the main working tree alongside other assessors. It must not `gh pr checkout`, `git checkout`, `git stash`, install dependencies, rerun CI, comment, approve, or write any file. It reads the repo and GitHub.
@@ -168,7 +167,7 @@ State the model and reason in each launch, as decided in step 2.
 
 As each verdict arrives, print one log line for the PR (number, title, CI, risk, model used) and route it:
 
-- **`failure: fixable`** → launch a **fixer** (`isolation: "worktree"`, model chosen per the fixer rules of thumb) with the agent assumptions, the PR number, the assessor's fix command and expected files, and the **Fix procedure** section verbatim. One fix attempt per PR per run — track it. Move the PR to the deferred queue as **pending CI (fix pushed)** once the fixer reports success; if the fixer reports **not fixed**, skip the PR permanently with its reason. Fork PRs (`isCrossRepository`) skip this path and are reported as not fixable.
+- **`failure: fixable`** → launch a **fixer** (`isolation: "worktree"`, model chosen per the fixer rules of thumb) with the PR number, the assessor's fix command and expected files, and the **Fix procedure** section verbatim. One fix attempt per PR per run — track it. Move the PR to the deferred queue as **pending CI (fix pushed)** once the fixer reports success; if the fixer reports **not fixed**, skip the PR permanently with its reason. Fork PRs (`isCrossRepository`) skip this path and are reported as not fixable.
 - **`failure: rerun`** → `gh run rerun <run-id> --failed` for each id, then defer as **pending CI (rerun)**.
 - **`failure: not-simple`** → skip permanently; keep the evidence for the report.
 - **`ci: pending`** or **`mergeable: CONFLICTING`** → defer, keeping the risk verdict so it does not need re-assessing.

@@ -50,9 +50,9 @@ Omitting the model (inheriting the session's) is a valid choice, not a default â
 
 Create a todo list before starting.
 
-### 0. Get onto a worktree and name the session
+### 0. Get onto a worktree
 
-Do this in the main session, not a subagent, so every step below runs there.
+Do this in the main session, not a subagent â€” a subagent's worktree and checkout don't carry back to this session, and every subagent below must see the PR's branch.
 
 - **I passed a PR reference** (URL, `#<n>`, or `<n>`): ensure you're in a worktree, then `gh pr checkout <n>`.
 - **No argument** (including when `build` invokes this skill): review the current branch as is.

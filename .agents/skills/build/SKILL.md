@@ -1,6 +1,6 @@
 ---
 name: build
-description: Autonomous build loop — pass a GitHub issue URL to start it in its own worktree, or describe the task
+description: Autonomous build loop — pass a GitHub issue URL, or describe the task
 disable-model-invocation: true
 ---
 
@@ -28,7 +28,7 @@ Phase 2 runs as a headless build subagent, and Phase 3's review fans out its own
 ## Phase 1 — Preflight (once)
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- **If the task is a GitHub issue** (URL, `#<n>`, or `<n>`) in this repo: `gh issue view <n> --json title,body,assignees` — its title and body are the task. Assign it to me (`gh issue edit <n> --add-assignee @me`) if I'm not assigned, and put `Closes #<n>` in the PR body in 4d. I've already made the worktree, so carry on with the branch bullets below.
+- **If the task is a GitHub issue** (URL, `#<n>`, or `<n>`) in this repo: `gh issue view <n> --json title,body,assignees` — its title and body are the task. Assign it to me (`gh issue edit <n> --add-assignee @me`) if I'm not assigned, and put `Closes #<n>` in the PR body in 4d. Then carry on with the branch bullets below.
 - **If the current branch is the default branch:** create and switch to a feature branch with a short kebab-case name derived from the task, then report the branch name. Do not build directly on the default branch. Its base branch is the default branch.
 - **If already on a feature branch:** use it. Its base branch is whatever it's stacked on — determine it exactly as the Review scope section of the `inspect` skill defines (activate `inspect` for it), and report it.
 
@@ -88,6 +88,7 @@ Use the **first** match, in order:
 ### 4d. Title & body
 
 - PR title < 70 chars, derived from the branch commits.
+- **Task is a GitHub issue:** put `Closes #<n>` in the body (under Problem when using the format below).
 - **Template found:** fill it from the diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
 - **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
 
@@ -105,7 +106,7 @@ Use the **first** match, in order:
 If you genuinely can't determine the problem or solution, leave a `<TODO: …>` placeholder rather than inventing intent. Always append:
 
 ```
-🤖 Generated with [Riffer Rig](https://github.com/bottrall/riffer-rig)
+🤖 Generated with [riffer-rig](https://github.com/bottrall/riffer-rig)
 ```
 
 ### 4e. Create or update the PR

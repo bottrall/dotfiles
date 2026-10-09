@@ -1,6 +1,6 @@
 ---
 name: build
-description: Autonomous build loop
+description: Autonomous build loop — pass a GitHub issue URL, or describe the task
 disable-model-invocation: true
 ---
 
@@ -25,14 +25,6 @@ The builder is graded by the `inspect` skill against its [criteria.md](../inspec
 !`cat ~/.claude/skills/inspect/criteria.md`
 </criteria>
 
-## Tracker
-
-Shared operations, used by Phase 1 when the task is a ticket reference and by Phase 4 to keep Jira out of public PRs. They're inlined from `_lib/` — the same definitions `/finish` and `/track` use, so the branch naming convention has a single owner.
-
-<tracker>
-!`cat ~/.claude/skills/_lib/tracker.md`
-</tracker>
-
 ## Model selection
 
 Every subagent launch includes a deliberate model choice, picked from whatever tiers the Agent tool currently exposes. No phase is mapped to a model — decide per launch, per cycle, by weighing:
@@ -51,12 +43,11 @@ This applies to anything delegated — a fully-encoded phase (like ship + CI) ma
 Run this phase in the main session, not a subagent, since it may move the session into a worktree.
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
+- **If the task is a GitHub issue** (URL, `#<n>`, or `<n>`) in this repo: `gh issue view <n> --json title,body,assignees` — its title and body are the task. Assign it to me (`gh issue edit <n> --add-assignee @me`) if I'm not assigned, and put `Closes #<n>` in the PR body in 4d.
 - Pick the branch and its base:
-  - **The task is a ticket reference** (as defined under Tracker above): `resolve` it. The branch is `branchFor(ticket)`. The ticket's summary, description and acceptance criteria are the task. If `pathsFor(ticket)` maps it to a subdirectory of this repo, tell the builder that's where the work lives. Its base branch is the default branch.
   - **The current branch is the default branch:** the branch is a new feature branch with a short kebab-case name derived from the task. Never build directly on the default branch. Its base branch is the default branch.
   - **Already on a feature branch:** the branch is this one. Its base branch is whatever it's stacked on. Determine it exactly as the `inspect` skill's [Review scope](../inspect/SKILL.md) section defines.
 - Ensure you're in a worktree, on the branch.
-- For a ticket, `transition` it to In Progress.
 - Report the branch, its base, and the worktree path.
 
 The base branch is what the review diffs against and what the PR targets.
@@ -115,7 +106,7 @@ Use the **first** match, in order:
 ### 4d. Title & body
 
 - PR title < 70 chars, derived from the branch commits.
-- **Public repo** (see Tracker): never mention the Jira ticket, in the title, body, or commit messages.
+- **Task is a GitHub issue:** put `Closes #<n>` in the body (under Problem when using the format below).
 - **Template found:** fill it from the diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
 - **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
 
@@ -142,7 +133,6 @@ If you genuinely can't determine the problem or solution, leave a `<TODO: …>` 
 - **None:** `gh pr create --draft --base <base-branch> --assignee @me --title "<title>" --body "$(cat <<'EOF'` … `EOF` … `)"`.
 - **Exists:** if the generated body differs, `gh pr edit --body`; otherwise skip.
 - `<base-branch>` is the bare branch name from Phase 1 (no `origin/` prefix), so a stacked PR targets its parent rather than the default branch.
-- **Public repo with a Jira ticket** (`ticketFor`): `link(ticket, pr)`.
 - Print the PR URL.
 
 ### 4f. Monitor CI

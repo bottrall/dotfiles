@@ -12,13 +12,15 @@ Prepare and open a pull request for the current branch.
 
 ### 1. Preflight checks
 
+- Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`). If the current branch **is** the default branch, stop and tell me to create a feature branch first.
 - Run `git status` (never use `-uall`) and `git diff` (staged + unstaged) to check for uncommitted changes.
 - If there are changes, stage and commit them. **Run staging and committing as separate commands — never combine them into a single chained command.**
   - Stage relevant files by name (never use `git add -A` or `git add .`).
   - Write a commit message using **Conventional Commits** (`feat:`, `fix:`, `chore:`, etc.).
   - Commit using a HEREDOC for the message and include the `Co-Authored-By: Riffer <noreply@riffer.dev>` trailer.
   - Run `git status` after committing to verify success.
-- Run `git log --oneline main..HEAD` (or the repo's default branch) to confirm there are commits to ship. If the branch **is** the default branch, stop and tell me to create a feature branch first.
+- Determine `<base-branch>` — the branch this one is stacked on, not necessarily the default branch — exactly as the Review scope section of `~/.agents/skills/inspect/SKILL.md` defines (activate `inspect` for it).
+- Run `git log --oneline <base-branch>..HEAD` to confirm there are commits to ship.
 
 ### 2. Push
 
@@ -40,12 +42,12 @@ Search for a pull request template in the repo. Check these paths **in order** a
 ### 4. Build PR title & body
 
 - Derive a short PR title (< 70 chars) from the branch commits.
-- **If a template was found:** fill it in using the branch's diff (`git diff main...HEAD`) and commit history. Leave any section empty rather than guessing.
+- **If a template was found:** fill it in using the branch's diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history. Leave any section empty rather than guessing.
 - **If no template was found:** write a human-friendly description using the format below. Prefer prose over bullet lists — a reviewer should be able to read it top-to-bottom and understand the change without scanning the diff. Don't restate what the diff already shows; explain the intent.
 
 ```
 ## Problem
-<What problem does this PR solve? Why does it matter? Include user-visible symptoms, bug context, or the motivation behind the feature. If there's a linked issue or ticket, reference it.>
+<What problem does this PR solve? Why does it matter? Include user-visible symptoms, bug context, or the motivation behind the feature. If there's a linked issue, reference it.>
 
 ## Solution
 <How does this PR solve the problem? Explain the approach and any notable trade-offs or alternatives considered. Call out anything subtle a reviewer might otherwise miss (e.g. migration ordering, feature flags, follow-up work).>
@@ -72,12 +74,13 @@ Infer the content from the branch's diff, commit messages, and any linked issue.
 - **If no PR exists:** create one:
 
 ```
-gh pr create --draft --assignee @me --title "<title>" --body "$(cat <<'EOF'
+gh pr create --draft --base <base-branch> --assignee @me --title "<title>" --body "$(cat <<'EOF'
 <body>
 EOF
 )"
 ```
 
+- `<base-branch>` is the bare branch name from step 1 (no `origin/` prefix), so a stacked PR targets its parent rather than the default branch.
 - **If a PR already exists:** compare the generated body against the existing body.
   - **If the body has changed:** update it with `gh pr edit --body`.
   - **If the body is the same:** skip.

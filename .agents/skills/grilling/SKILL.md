@@ -15,6 +15,8 @@ For each question:
 - Say explicitly that more than one option may be chosen only when the choices genuinely aren't exclusive.
 
 If a _fact_ can be found by exploring the environment (filesystem, tools, etc.), look it up rather than asking me. The _decisions_, though, are mine — put each one to me and wait for my answer.
-Never ask how the resulting work should be completed. I will give the appropirate direction once the shared understanding has been reached.
+Never ask how the resulting work should be completed. I will give the appropriate direction once the shared understanding has been reached.
 
 Do not act on it until I confirm we have reached a shared understanding. Provide the shared understanding as a html plan outlining what will be done and open the document in the browser (write the file with the write tool, then open it with `xdg-open <file>` on Linux or `open <file>` on macOS via the bash tool). Include visuals when appropriate and use simple language.
+
+If another skill runs this interview as one of its steps (e.g. `wayfinder`), skip the HTML plan: once I confirm the shared understanding, hand it back to that skill, which records it its own way.

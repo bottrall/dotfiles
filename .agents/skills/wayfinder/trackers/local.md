@@ -1,30 +1,13 @@
-# Issue tracker: Local Markdown
+# Wayfinding operations — Local Markdown
 
-Issues and specs for this repo live as markdown files in `.scratch/`.
+Used by `/skill:wayfinder`. Issues live as markdown files in `.scratch/`: the **map** is a file with one **child** file per ticket, all under `.scratch/<effort>/`.
 
-## Conventions
-
-- One feature per directory: `.scratch/<feature-slug>/`
-- The spec is `.scratch/<feature-slug>/spec.md`
-- Implementation issues are one file per ticket at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` — never a single combined tickets file
-- Triage state is recorded as a `Status:` line near the top of each issue file
-- Comments and conversation history append to the bottom of the file under a `## Comments` heading
-
-## When a skill says "publish to the issue tracker"
-
-Create a new file under `.scratch/<feature-slug>/` (creating the directory if needed).
-
-## When a skill says "fetch the relevant ticket"
-
-Read the file at the referenced path. The user will normally pass the path or the issue number directly.
-
-## Wayfinding operations
-
-Used by `/skill:wayfinder`. The **map** is a file with one **child** file per ticket.
-
-- **Map**: `.scratch/<effort>/map.md` — the Notes / Decisions-so-far / Fog body.
-- **Child ticket**: `.scratch/<effort>/issues/NN-<slug>.md`, numbered from `01`, with the question in the body. A `Type:` line records the ticket type (`research`/`prototype`/`grilling`/`task`); a `Status:` line records `claimed`/`resolved`.
-- **Blocking**: a `Blocked by: NN, NN` line near the top. A ticket is unblocked when every file it lists is `resolved`.
-- **Frontier**: scan `.scratch/<effort>/issues/` for files that are open, unblocked, and unclaimed; first by number wins.
+- **Create the map**: write `.scratch/<effort>/map.md` — a `# <map name>` title line, then the map body (creating the directory if needed).
+- **Create a ticket**: `.scratch/<effort>/issues/NN-<slug>.md`, numbered from `01` — one file per ticket, never a combined file — opening with a `# <ticket name>` title line, then the question body. A `Type:` line records the ticket type (`research`/`prototype`/`grilling`/`task`); a `Status:` line records `open`/`claimed`/`resolved`/`out-of-scope`. New tickets start `Status: open`.
+- **Wire a blocking edge**: a `Blocked by: NN, NN` line near the top. A ticket is unblocked when every file it lists is `resolved` or `out-of-scope`.
+- **Query the frontier**: scan `.scratch/<effort>/issues/` for files with `Status: open` that are unblocked; first by number wins.
 - **Claim**: set `Status: claimed` and save before any work.
 - **Resolve**: append the answer under an `## Answer` heading, set `Status: resolved`, then append a context pointer (gist + link) to the map's Decisions-so-far in `map.md`.
+- **Close as out of scope**: set `Status: out-of-scope`. It counts as closed — it never blocks anything and never rejoins the frontier.
+- **Update the map body**: edit `map.md` in place. Re-read it immediately before writing — concurrent sessions edit the same file, and a stale read silently clobbers their appends.
+- **Names and links**: a map or ticket's name is its `#` title line; its link is its path relative to the repo root.
