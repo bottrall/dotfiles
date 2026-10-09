@@ -57,8 +57,6 @@ Do this in the main session, not a subagent, so every step below runs there.
 - **I passed a PR reference** (URL, `#<n>`, or `<n>`): ensure you're in a worktree, then `gh pr checkout <n>`.
 - **No argument** (including when `build` invokes this skill): review the current branch as is.
 
-Then name the session so its tab says what's under review: `Inspect: #<n> <a few words of the PR title>` when there's a PR (the one passed, or `gh pr view --json number,title` for the current branch), else `Inspect: <branch>`. Keep the whole title under ~40 characters. Set it from the main session (a subagent can't rename the session it runs in) with `mcp__ccd_session_mgmt__set_session_title`, `session_id: "self"`, loading it via ToolSearch if it's deferred. Skip this when `build` invoked the review, since that session is already named for the build, or when the tool isn't available (not in Claude Code Desktop).
-
 ### 1. Preflight
 
 Launch a subagent to verify there is something to review:

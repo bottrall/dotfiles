@@ -61,8 +61,6 @@ Run this phase in the main session, not a subagent, since it may move the sessio
 
 The base branch is what the review diffs against and what the PR targets.
 
-**Name the session** so its tab says what it's building: `Build: <subject>`, where the subject is the ticket key plus a few words of its summary (`Build: ABC-123 retry failed webhooks`), or a few words of the task when there's no ticket. Keep the whole title under ~40 characters. Set it from the main session (a subagent can't rename the session it runs in) with `mcp__ccd_session_mgmt__set_session_title`, `session_id: "self"`, loading it via ToolSearch if it's deferred. If the tool isn't available (not in Claude Code Desktop), skip this.
-
 ## Phase 2 — Build
 
 Launch a subagent to do the work for this cycle. Its prompt must include, in this order:
