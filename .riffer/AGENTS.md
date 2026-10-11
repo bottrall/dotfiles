@@ -15,7 +15,7 @@
 - Write pure functions where possible; isolate side effects (I/O, DB, network) behind clear boundaries.
 - Use a class only when an instance has identity, lifecycle, or mutable state. Otherwise use a module of pure functions. A class whose methods are all static (`self.foo`) is a module wearing pants.
 - Default to composition — pass collaborators ("has-a") rather than inheriting from a parent ("is-a"). For shared _shape_, use an interface, structural type, or duck typing. Reserve inheritance for genuine "is-a" with shared _implementation_, or framework-mandated parents (`ApplicationRecord`, `Sidekiq::Worker`, custom `Error` subclasses).
-- Don't use thrown exceptions for control flow — return a Result/Either/discriminated union or `[:ok, value]` / `[:error, reason]` tuple. Reserve `throw` / `raise` for truly exceptional circumstances: programmer errors, unrecoverable state, framework-level boundaries.
+- Don't use thrown exceptions for control flow — return an explicit result type, or follow the established pattern of the project. Reserve `throw` / `raise` for truly exceptional circumstances: programmer errors, unrecoverable state, framework-level boundaries.
 
 ## Dependency injection
 
