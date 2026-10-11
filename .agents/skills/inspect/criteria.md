@@ -8,7 +8,7 @@ When two criteria genuinely conflict on the same code, the higher-ranked one win
 
 1. **Correctness** — the code does what the task requires and does not break what already worked.
 2. **Security** — no exploitable defect in the changed code.
-3. **Rules compliance** — the project's rule files (`AGENTS.md`, `CLAUDE.md`, `.claude/rules/`) are followed.
+3. **Rules compliance** — the project's rule files (`AGENTS.md`) are followed.
 4. **Performance** — no major performance defect. Readability beats a small performance win.
 5. **Simplicity** — nothing the change could drop or collapse; idiomatic for its language and framework.
 
@@ -26,13 +26,17 @@ Each lens is scoped to **the changed code only**. Pre-existing issues outside th
 
 2. **Security** — injection (SQL/command/template), broken authn/authz, secrets or credentials in code, unsafe deserialization, SSRF, path traversal, missing validation of **untrusted** input at a trust boundary, unsafe use of untrusted data, and similar.
 
-3. **Rules compliance** — audit against the discovered rule files. An `AGENTS.md` or `CLAUDE.md` applies only to files it shares a path with (the file or its parents). Files under `.claude/rules/` apply repo-wide unless the rule itself scopes them. Flag only clear, unambiguous violations where the exact rule and its source file path can be quoted.
+3. **Rules compliance** — audit the changed code against the discovered rule files; an `AGENTS.md` governs the files under its directory. Every rule check ends in a **catalog**: what the rule governs in this diff, each item with a verdict — or a count plus the method used, when the set is too large to itemize. Counts must be recomputable from the diff (`grep`-able claims, not unverifiable prose), and the catalog must be the coarsest that still proves the audit ran — a mostly-compliant inventory collapses to a count. Findings-only audits cannot distinguish "checked everything" from "checked nothing"; the catalog can. What the governed artifact classes are comes from the project's rule files — these criteria name none. A non-compliant item is a finding at the bar below: unambiguous → Tier 1, judgement → Tier 2. A rule that cannot name what it governs is not yet a rule — report the rule itself.
 
 4. **Performance** — N+1 queries, missing pagination or indexes, accidental O(n²) or repeated work in loops, unnecessary allocations, blocking I/O on hot paths, and similar. Major issues only.
 
 5. **Simplicity / idiom** — what the changed code could drop or collapse (dead code, redundant branches, needless abstraction, duplication) and where it diverges from the idioms of its language or framework, per the project's conventions and rule files. Every finding must name a concrete, mechanical change and the idiomatic replacement — never a vague "could be cleaner."
 
-## The bar (HIGH SIGNAL only)
+## The bar
+
+Findings come in two tiers, split by one question: **is this certain, or is it a judgement the owner would plausibly make?**
+
+### Tier 1 — HIGH SIGNAL (sends the loop back)
 
 Flag a finding only when at least one of these holds:
 
@@ -42,13 +46,23 @@ Flag a finding only when at least one of these holds:
 - It is an unambiguous rule violation that can be quoted with its source file path.
 - It is a concrete, clearly-beneficial simplification or idiom fix with a specific replacement.
 
-Do **not** flag: subjective style preferences, issues that only manifest for specific unstated inputs or state, speculative improvements, or anything not certain to be real. A false positive costs a whole build cycle and erodes trust.
+A false positive at this tier costs a whole build cycle and erodes trust.
+
+### Tier 2 — In-passing (reported, fixed without a cycle)
+
+A judgement-call finding on the changed code that is cheap and safe to apply:
+
+- A classification from the catalog of a principle rule: the item fails a policy the project's rule files state in a way that requires judging weight rather than matching a form — for example, where a project defines a comment policy, an item that restates the code, repeats a type the signature states, narrates history, or sits in the wrong place.
+- A small divergence from a written convention (naming, idiom) with a concrete replacement.
+
+Tier 2 findings are not adversarially validated and do not send the loop back — they are fixed in passing before ship. The bar for reporting one is lower: would the owner plausibly rule this way? The cost of a false positive is seconds; the cost of silence is the owner re-catching it by hand after ship, which has happened repeatedly. Subjective style preferences with no anchor in a rule file or the project's conventions are still not findings at any tier.
+
+Do **not** flag (either tier): issues that only manifest for specific unstated inputs or state, speculative improvements, or anything not real.
 
 ## Never flag (false-positive list)
 
 - Pre-existing issues (outside the diff).
 - Something that looks like a bug but is actually correct.
-- Pedantic nitpicks a senior engineer would not raise.
 - Issues a linter will catch (do not run the linter to verify).
 - General code-quality gaps (e.g. lack of test coverage) unless a rule file explicitly requires otherwise.
 - Issues silenced deliberately in the code (e.g. a lint-ignore comment).

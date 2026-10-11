@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Build Loop
 
-Drive a task to a green, shipped PR autonomously. One cycle is: **build → review → ship + CI**. Any surviving review finding or CI failure sends the loop back to build with the specifics; a clean review followed by green CI ends it.
+Drive a task to a green, shipped PR autonomously. One cycle is: **build → review → ship + CI**. A HIGH SIGNAL review finding or CI failure sends the loop back to build with the specifics; in-passing findings are fixed without a cycle; a clean review followed by green CI ends it.
 
 This loop is **fully autonomous**. It never pauses between phases, and it pushes and opens a **draft** PR on its own. Run it only on a feature branch you're happy to ship from. It surfaces to me exactly twice: on success, or when it stops because the cycle cap was reached (or it's genuinely blocked).
 
@@ -19,7 +19,7 @@ Create a todo list before starting. Track a single **cycle counter** starting at
 
 ## Criteria
 
-The builder is graded by the `inspect` skill against its [criteria.md](../inspect/criteria.md) — ranked lenses, the HIGH SIGNAL bar, and the false-positive list. The builder sees exactly what the reviewers see, so it can self-review before handing back. It is inlined here so it can be passed **verbatim** into the build subagent's prompt. Do not paraphrase it.
+The builder is graded by the `inspect` skill against its [criteria.md](../inspect/criteria.md) — ranked lenses, the two-tier bar, and the false-positive list. The builder sees exactly what the reviewers see, so it can self-review before handing back. It is inlined here so it can be passed **verbatim** into the build subagent's prompt. Do not paraphrase it.
 
 <criteria>
 !`cat ~/.claude/skills/inspect/criteria.md`
@@ -60,7 +60,7 @@ Launch a subagent to do the work for this cycle. Its prompt must include, in thi
 2. **The rule files.** Before editing a file, it must read every rule file that governs it — `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/**` at the repo root **and in every directory between the root and that file**, as the `inspect` skill's "Discover rule files" step defines. Nested ones are easy to miss and just as binding — the Rules compliance lens audits against exactly those.
 3. **The work for this cycle:**
    - **Cycle 1:** implement the task.
-   - **Cycle > 1:** its sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
+   - **Cycle > 1:** its sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim — and apply any in-passing list carried alongside them. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
 4. **Verify locally before handing back.** Run the tests that exercise the files it changed (the touched spec/test files and anything obviously covering them). A failing test is the builder's to fix in this cycle, not CI's to discover — a CI round is the most expensive way to find it.
 
 Leave the changes uncommitted — the review reads staged + unstaged work, and the ship phase handles committing.
@@ -73,11 +73,12 @@ Because **every surviving finding sends the loop back to Phase 2**, the review's
 
 ### Gate
 
-Read the report the `inspect` skill printed.
+Read the report the `inspect` skill printed. A finding's heading carries its tier: no suffix means HIGH SIGNAL, `(in-passing)` means Tier 2.
 
 - **"No issues found":** proceed to Phase 4.
-- **Findings, and the cycle counter is below the cap:** increment the counter, pass the findings (grouped `path:line`, with reason tag and description, exactly as printed) to Phase 2, and loop.
-- **Findings, and the cycle counter is at the cap:** stop. Hand back per the report format — do not ship.
+- **In-passing findings only:** apply them now, in the main session — small, policy-level edits of the kind the criteria's Tier 2 names, already located precisely by the review. This does not increment the cycle counter. Run the project's lint and typecheck entry points (`bin/lint`, `bin/typecheck`, or their equivalents) plus the touched tests, then proceed to Phase 4.
+- **HIGH SIGNAL findings, and the cycle counter is below the cap:** increment the counter, pass the findings (grouped `path:line`, with reason tag and description, exactly as printed) **plus any in-passing list** to Phase 2, and loop — the builder resolves the blockers and applies the in-passing fixes in the same visit.
+- **HIGH SIGNAL findings, and the cycle counter is at the cap:** stop. Hand back per the report format — do not ship.
 
 ## Phase 4 — Ship + CI (encoded)
 
