@@ -13,7 +13,7 @@ This loop is **fully autonomous**. It never pauses between phases, and it pushes
 ## Inputs
 
 - **The task**: the text passed when invoking the skill. If none was passed, use the task established in the current conversation. If neither is clear, that's the one time to stop and ask me what to build.
-- **Cycle cap**: max number of build cycles before handing back. Default **3**. Honor an explicit override if I gave one.
+- **Cycle cap**: max number of build cycles before handing back. Default **5**. Honor an explicit override if I gave one.
 
 Create a todo list before starting. Track a single **cycle counter** starting at 1. Every return to Phase 2 — whether triggered by review findings or CI failure — increments it. When the counter would exceed the cap, stop and hand back instead of looping.
 
