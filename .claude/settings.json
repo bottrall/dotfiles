@@ -19,8 +19,13 @@
   },
   "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
   "inputNeededNotifEnabled": false,
   "agentPushNotifEnabled": true,
   "voiceEnabled": true,
-  "skipWorkflowUsageWarning": true
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  }
 }
