@@ -11,7 +11,6 @@
     "frontend-design@claude-plugins-official": false,
     "code-review@claude-plugins-official": false
   },
-  "effortLevel": "high",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
