@@ -8,5 +8,20 @@
       "cache_write": 0.075,
       "cache_read": 0.015
     }
+  },
+  "mcp": {
+    "servers": {
+      "kagi": {
+        "url": "https://mcp.kagi.com/mcp",
+        "headers": {
+          "Authorization": "Bearer ${api_key}"
+        },
+        "auth": {
+          "api_key": [
+            "KAGI_API_KEY"
+          ]
+        }
+      }
+    }
   }
 }
