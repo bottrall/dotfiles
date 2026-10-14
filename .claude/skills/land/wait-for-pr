@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Block until a pull request changes in a way worth another landing pass, or
+# until a deadline passes. Designed to sit for hours: it polls every minute
+# while CI is running and every five minutes while only people are pending,
+# and a failed poll is retried rather than read as a change.
+#
+# usage: wait-for-pr <pr> <deadline-epoch> [--max-wait <seconds>] [--baseline <hash>]
+#
+# Prints one line, then exits with:
+#   0  changed          the PR moved — refresh it and run a pass
+#   1  idle             the deadline passed with nothing changed
+#   2  paused <hash>    --max-wait elapsed first; call again with --baseline <hash>
+#   3  error <message>  gh can't read the PR (bad PR, auth), or kept failing
+#
+# A change is: a push, a state, draft, or mergeability change, a new review
+# decision or review request, a new review or comment, a check failing, or CI
+# finishing. Individual checks passing along the way don't count.
+set -uo pipefail
+
+pr=${1:?usage: wait-for-pr <pr> <deadline-epoch> [--max-wait <seconds>] [--baseline <hash>]}
+deadline=${2:?missing deadline (epoch seconds)}
+shift 2
+max_wait="" baseline=""
+while [ $# -gt 0 ]; do
+  case $1 in
+    --max-wait) max_wait=$2; shift 2 ;;
+    --baseline) baseline=$2; shift 2 ;;
+    *) echo "error unknown argument: $1"; exit 3 ;;
+  esac
+done
+
+ci_interval=60 people_interval=300 retry_interval=30 give_up_after=1800
+
+now() { date +%s; }
+min() { echo $(( $1 < $2 ? $1 : $2 )); }
+
+# Prints "<ci-pending> <fingerprint-hash>". Prints nothing while GitHub is
+# still computing mergeability, and fails if gh does.
+poll() {
+  # shellcheck disable=SC2016  # $ci_pending is jq, not shell
+  gh pr view "$pr" \
+    --json state,isDraft,headRefOid,mergeStateStatus,reviewDecision,reviewRequests,reviews,comments,statusCheckRollup \
+    --jq '
+      def pending: if .__typename == "StatusContext" then .state | IN("PENDING", "EXPECTED")
+                   else .status != "COMPLETED" end;
+      def failed: (.conclusion // .state) | IN("FAILURE", "ERROR", "TIMED_OUT", "CANCELLED", "ACTION_REQUIRED", "STARTUP_FAILURE");
+      if .mergeStateStatus == "UNKNOWN" then empty else
+        ([.statusCheckRollup[] | select(pending)] | length > 0) as $ci_pending
+        | [ .state, .isDraft, .headRefOid, .mergeStateStatus, .reviewDecision,
+            ([.reviewRequests[] | .login // .slug // .name] | sort | join(",")),
+            (.reviews | length), (.comments | length), $ci_pending,
+            ([.statusCheckRollup[] | select(failed) | .name // .context] | sort | join(",")) ]
+        | "\($ci_pending) \(map(tostring) | join("|"))"
+      end' |
+    { read -r ci_pending fingerprint && printf '%s %s\n' "$ci_pending" "$(printf '%s' "$fingerprint" | shasum | cut -c1-12)"; }
+}
+
+stop_at=$deadline
+[ -n "$max_wait" ] && stop_at=$(min "$deadline" $(( $(now) + max_wait )))
+
+# If gh can't read the PR at all (wrong PR, wrong repo, auth), say so now
+# rather than after the give-up window.
+err=$(mktemp)
+trap 'rm -f "$err"' EXIT
+if ! first=$(poll 2>"$err"); then
+  echo "error $(tail -n 1 "$err")"
+  exit 3
+fi
+
+ci_pending=true failing_since="" result=$first
+while :; do
+  if [ -n "$result" ]; then
+    failing_since=""
+    read -r ci_pending hash <<<"$result"
+    if [ -z "$baseline" ]; then
+      baseline=$hash
+    elif [ "$hash" != "$baseline" ]; then
+      echo changed
+      exit 0
+    fi
+    interval=$([ "$ci_pending" = true ] && echo "$ci_interval" || echo "$people_interval")
+  else
+    failing_since=${failing_since:-$(now)}
+    if [ $(( $(now) - failing_since )) -ge "$give_up_after" ]; then
+      echo "error gh pr view has failed for $(( give_up_after / 60 )) minutes"
+      exit 3
+    fi
+    interval=$retry_interval
+  fi
+
+  remaining=$(( stop_at - $(now) ))
+  if [ "$remaining" -le 0 ]; then
+    [ "$stop_at" -lt "$deadline" ] && { echo "paused $baseline"; exit 2; }
+    echo idle
+    exit 1
+  fi
+
+  sleep "$(min "$remaining" "$interval")"
+  result=$(poll 2>/dev/null) || result=""
+done

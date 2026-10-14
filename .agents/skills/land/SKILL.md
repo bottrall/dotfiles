@@ -13,7 +13,7 @@ This skill is **autonomous within a small-fix boundary**. Invoking it is my go-a
 ## Inputs
 
 - **The PR**: a URL, `#<n>`, or `<n>` passed when invoking the skill. With none, use the current branch's PR (`gh pr view`). If there's no PR, stop and tell me to run `ship` first.
-- **Patience**: how long to wait on people (reviews, approvals) with nothing changing before handing back. Default **60 minutes**. Honor an override if I gave one (e.g. `/land 123 patience 4h`).
+- **Patience**: how long the PR can sit with nothing changing — no push, review, comment, or CI result — before handing back. Default **24 hours**; the clock restarts whenever something changes. Honor an override if I gave one (e.g. `/land 123 patience 3d`).
 - **Fix cap**: max pushes of fixes (CI or feedback) before handing back. Default **3**. Rebases don't count toward it.
 
 Before starting, write a numbered checklist of the steps below in your reply and tick each one off as you go. Track the fix counter and the set of feedback items already handled.
@@ -127,18 +127,18 @@ Pushing may dismiss existing approvals under branch protection; if it does, re-r
   - If the command errors, check `gh pr view <n> --json state` before treating it as a failure — gh can merge successfully and then fail to switch or delete the local branch. If the remote branch survived, `git push origin --delete <headRefName>`.
   - Never `--admin`, never bypass branch protection, never dismiss someone's review.
 - **Review required but nobody's on it** — `REVIEW_REQUIRED` with no `reviewRequests` and no reviews: **stop** and ask me who should review.
-- **Waiting** — on CI or on people: wait for the PR's state to change, then start the next pass. Don't busy-poll; run this in one bash call, with `<seconds>` capped at ~10 minutes per call so no single call hangs — if it times out unchanged, call it again until patience runs out:
+- **Waiting** — on CI or on people: block until the PR changes, then start the next pass. Use the bundled waiter — it polls every minute while CI runs and every five minutes while only people are pending, retries failed polls rather than reading them as changes, and doesn't wake for individual checks passing, only for a failure or CI finishing. Compute the deadline once per wait — `deadline=$(( $(date +%s) + <patience-seconds> ))`, echoed so you can reuse the number — then run, in one bash call:
 
   ```bash
-  fp() { gh pr view <n> --json headRefOid,state,mergeStateStatus,reviewDecision,statusCheckRollup,reviews,comments \
-    --jq '[.headRefOid,.state,.mergeStateStatus,.reviewDecision,
-           ([.statusCheckRollup[]|(.conclusion // .state // .status)]|join(",")),
-           (.reviews|length),(.comments|length)]|join("|")'; }
-  start=$(fp); deadline=$(( $(date +%s) + <seconds> ))
-  while [ "$(fp)" = "$start" ] && [ "$(date +%s)" -lt "$deadline" ]; do sleep <interval>; done
+  ~/.agents/skills/land/wait-for-pr <n> <deadline> --max-wait 540
   ```
 
-  Poll every ~60s while checks run, every ~5 minutes while only people are pending. Waiting on people draws down the **patience** budget; when it's spent with nothing changed, **stop** and report what the PR is waiting on.
+  `--max-wait` returns within ~10 minutes so no single call hangs. Each wait gets a fresh deadline, which is what restarts the patience clock. It prints one line:
+
+  - `paused <hash>` → patience isn't spent yet: call it again with the **same** `<deadline>` plus `--baseline <hash>`, so a change between calls isn't missed.
+  - `changed` → start the next pass (2a).
+  - `idle` → patience is spent with nothing changed: **stop** and report what the PR is waiting on.
+  - `error <message>` → gh can't read the PR: **stop** with the message.
 
 ### 3. Stopping
 
