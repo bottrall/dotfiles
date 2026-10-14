@@ -38,14 +38,38 @@ Omitting the model (inheriting the session's) is a valid choice, not a default �
 
 This applies to anything delegated — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch. The review phase makes its own model choices per the `inspect` skill.
 
+## Ticket
+
+A ticket is a **GitHub issue** in this repo (URL, `#<n>`, or `<n>`) or a **Jira issue** (a key like `ABC-123`, or a `…/browse/ABC-123` URL). Its content is the task.
+
+- **Preflight:** read it, then claim it — assign it to me only if it has no assignee; if someone else holds it, leave it. Move a Jira issue to **in progress**.
+- **On success** (4f): move a Jira issue to **in review**. A hand-back leaves it where it is.
+
+Bookkeeping never blocks the loop — if a step fails, carry on. Every report (preflight, success, hand-back) states the ticket's assignee, its Jira status, and anything skipped and why.
+
+### GitHub issue
+
+- **Read:** `gh issue view <n> --json title,body,assignees`.
+- **Claim:** `gh issue edit <n> --add-assignee @me`.
+
+### Jira issue
+
+Use the Atlassian MCP; call `getAccessibleAtlassianResources` once for the `cloudId` and reuse it. Without it, build from any task text given alongside the key — a bare key means asking me for the task — and skip the bookkeeping.
+
+- **Read:** `getJiraIssue` — summary and description, assignee, and status with its category (To Do / In Progress / Done).
+- **Claim:** `atlassianUserInfo` for my `accountId`, then `editJiraIssue` with `fields: { "assignee": { "accountId": "<id>" } }`.
+- **Move:** list the transitions out of the current status (`listJiraIssueTransitions` — via `discover` if it isn't a primary tool) and apply one with `transitionJiraIssue` by `transitionId`. Choose by **target status**, not transition name. Never move it to Done — the project's Jira automation handles that on merge. No fitting transition → leave it.
+  - **In progress:** only from a To Do-category status, into an In Progress-category one (prefer `In Progress`).
+  - **In review:** only from an In Progress-category status that isn't already a review status, into one whose name contains "review" (`In Review`, `Code Review`, …).
+
 ## Phase 1 — Preflight (once)
 
 Run this phase in the main session, not a subagent, since it may move the session into a worktree.
 
 - Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD` (e.g. `main`).
-- **If the task is a GitHub issue** (URL, `#<n>`, or `<n>`) in this repo: `gh issue view <n> --json title,body,assignees` — its title and body are the task. Assign it to me (`gh issue edit <n> --add-assignee @me`) if I'm not assigned, and put `Closes #<n>` in the PR body in 4d.
+- **If the task is a ticket:** do its preflight steps per [Ticket](#ticket).
 - Pick the branch and its base:
-  - **The current branch is the default branch:** the branch is a new feature branch with a short kebab-case name derived from the task. Never build directly on the default branch. Its base branch is the default branch.
+  - **The current branch is the default branch:** the branch is a new feature branch with a short kebab-case name derived from the task — prefixed with the key for a Jira issue (`ABC-123-fix-login`), so Jira links the branch and its PR. Never build directly on the default branch. Its base branch is the default branch.
   - **Already on a feature branch:** the branch is this one. Its base branch is whatever it's stacked on. Determine it exactly as the `inspect` skill's [Review scope](../inspect/SKILL.md) section defines.
 - Ensure you're in a worktree, on the branch.
 - Report the branch, its base, and the worktree path.
@@ -107,7 +131,7 @@ Use the **first** match, in order:
 ### 4d. Title & body
 
 - PR title < 70 chars, derived from the branch commits.
-- **Task is a GitHub issue:** put `Closes #<n>` in the body (under Problem when using the format below).
+- **Task is a ticket:** reference it in the body (under Problem when using the format below) — `Closes #<n>` for a GitHub issue, `[ABC-123](<browse URL>)` for Jira.
 - **Template found:** fill it from the diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
 - **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
 
@@ -140,7 +164,7 @@ If you genuinely can't determine the problem or solution, leave a `<TODO: …>` 
 
 - Watch the checks to completion: `gh pr checks <number> --watch` (fall back to polling `gh pr checks <number>` every ~30s if `--watch` is unavailable). Allow a short retry for checks to register after the push.
 - **No checks configured:** note it — there's nothing gating — and treat CI as passed.
-- **All pass:** done → success report.
+- **All pass:** move a Jira ticket to in review per [Ticket](#ticket), then done → success report.
 - **Any fail:** gather concrete failure detail — `gh pr checks <number>` plus the failing job's logs (`gh run view <run-id> --log-failed`).
   - Cycle counter **below** the cap: increment it, pass the CI failure detail to Phase 2, and loop (the next cycle re-runs the full review before re-shipping).
   - Cycle counter **at** the cap: stop and hand back.
@@ -205,5 +229,5 @@ If it stopped on **CI failure**, report which checks failed, the key log excerpt
 
 ## Notes
 
-- This skill never posts review findings to GitHub — the only GitHub writes are the push and the draft PR in Phase 4.
+- This skill never posts review findings to GitHub or Jira — beyond the ticket bookkeeping, the only writes are the push and the draft PR in Phase 4.
 - The review scope always covers the full branch diff each cycle, so fixes can't silently regress previously-clean code.
