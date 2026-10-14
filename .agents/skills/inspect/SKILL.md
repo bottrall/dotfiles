@@ -33,6 +33,19 @@ All changes since the current branch diverged from its **base branch** — the b
 
 Pass the resolved `BASE` commit and these exact commands to every subagent. Each reviewer must read the changes via `git diff $BASE` — never a three-dot diff.
 
+## Authorship
+
+My global instructions bind the review only when I wrote the change. Decide once, in preflight — first match wins:
+
+1. **Open PR:** the one step 1 checked out, else the current branch's. Mine when `gh pr view [<n>] --json author -q .author.login` equals `gh api user -q .login`.
+2. **No PR:** mine when `git log --format=%ae $BASE..HEAD` includes `git config user.email`, or the range has no commits (uncommitted work only).
+
+When the change is **not mine**, `~/.riffer/AGENTS.md` is out of scope. It loads into every session and subagent regardless, so pass this instruction verbatim to every reviewer and validator:
+
+> This change was not written by the user. Your context includes the user's global instructions (`~/.riffer/AGENTS.md`): they are personal preferences, not this project's rules. Do not cite them, catalog them, or let them anchor a finding at either tier — judge only against the criteria and the repo's rule files. A rule file tracked in the repo stays binding even if its text matches the global file.
+
+When the change is mine, review as usual.
+
 ## Steps
 
 Before starting, write a numbered checklist of the steps below in your reply and tick each one off as you go.
@@ -47,6 +60,7 @@ Spawn a subagent to verify there is something to review:
 
 - Determine `<base-branch>` and compute `BASE` as defined in the Review scope section. Say which base was chosen and why (open PR or nearest parent).
 - Run `git diff --stat $BASE`.
+- Determine authorship as defined in the Authorship section. Say whether the change is mine and which signal decided it (PR author or commit authors).
 - If there are no changes (committed, staged, or unstaged), stop and tell me there's nothing to review.
 - If the current branch **is** the default branch, stop and tell me to switch to a feature branch first (even if there are uncommitted changes).
 
@@ -77,18 +91,19 @@ Spawn **one reviewer per lens** in the criteria — five in parallel, in one fan
 - Which single lens it owns. It reviews through that lens only, at the stated bar, and honours the false-positive list.
 - The rule-file paths from step 3 and the branch summary from step 4.
 - The resolved `BASE` commit and the exact scope commands from the Review scope section.
+- When the change is not mine, the instruction from the Authorship section, verbatim.
 
 Each returns findings tagged with their tier — `path:line`, a reason tag naming the lens, and a one-line description. A Tier 1 finding must meet the HIGH SIGNAL bar; a Tier 2 finding needs only a plausible owner ruling (see the bar in the criteria). The Rules-compliance reviewer additionally returns the **catalog** every rule check ends in (see the criteria): the governed set, the verdicts, and the method where the set cannot be itemized. The catalog is the audit's observable output: it is what distinguishes a performed audit from a skipped one.
 
 ### 6. Validate
 
-For each finding, spawn a subagent to adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim — all validators in one fan-out. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive.
+For each finding, spawn a subagent to adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim — all validators in one fan-out. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive. When the change is not mine, each validator also receives the instruction from the Authorship section, verbatim.
 
 Tier 2 findings skip validation — there is nothing adversarial to confirm in a classification, and re-judging it would reintroduce the silence this tier exists to prevent. For Tier 1 rule findings, validation is **correspondence, not re-judgement**: confirm the quoted rule exists in the quoted file and the quoted text is in the diff. Judging whether the finding is subjective was the lens's call; the validator checks facts.
 
 ### 7. Filter
 
-In this session, not a subagent: drop every finding that failed validation in step 6, plus anything on the false-positive list. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final set, tagged by tier: HIGH SIGNAL findings and in-passing findings.
+In this session, not a subagent: drop every finding that failed validation in step 6, plus anything on the false-positive list. When the change is not mine, also drop any finding anchored in my global instructions rather than the criteria or a repo rule file. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final set, tagged by tier: HIGH SIGNAL findings and in-passing findings.
 
 ### 8. Report findings inline in chat
 
