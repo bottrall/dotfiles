@@ -48,6 +48,7 @@ Stop, typically: a design or approach change, new scope, a reviewer question tha
   - **Jira:** keys matching `\b[A-Z][A-Z0-9]+-[0-9]+\b` in the branch name, title, body, and commit messages. A key in the branch name, the title, a commit subject, or a closing-style phrase in the body ("Closes", "Fixes", "Resolves", a `Jira:` field) is **resolved by this PR**; anywhere else ("related to", "follow-up in") is **mentioned**.
 - **Open PRs stacked on this branch:** `gh pr list --base <headRefName> --state open --json number,title,url`. Record them for the report — GitHub retargets them when the branch is deleted, and they'll likely need a rebase.
 - **Merge method:** a method stated in the repo's rule files or `CONTRIBUTING` wins. Otherwise `gh repo view --json squashMergeAllowed,mergeCommitAllowed,rebaseMergeAllowed` and prefer squash, then merge, then rebase.
+- **Merge mechanism:** if the repo merges through something other than `gh pr merge` — a merge queue, auto-merge, a label or comment command a bot acts on — find it from the repo's config and docs, and use it in place of `gh pr merge` in 2f.
 - **Draft:** `gh pr ready <n>`. This notifies reviewers — it's part of landing.
 - Report the PR, its base, the merge method, and the linked tickets.
 
@@ -122,7 +123,8 @@ Pushing may dismiss existing approvals under branch protection; if it does, re-r
 
 #### 2f. Merge, wait, or stop
 
-- **Ready to merge** — `mergeStateStatus` is `CLEAN` (or `HAS_HOOKS`), required checks pass, `reviewDecision` is `APPROVED` or empty, and no feedback is unhandled. Re-run 2a once more immediately before merging, in case a comment landed in the meantime. Then `gh pr merge <n> --<method> --delete-branch`.
+- **Ready to merge** — `mergeStateStatus` is `CLEAN` (or `HAS_HOOKS`), required checks pass, `reviewDecision` is `APPROVED` or empty, and no feedback is unhandled. Re-run 2a once more immediately before merging, in case a comment landed in the meantime. Then `gh pr merge <n> --<method> --delete-branch`, or the merge mechanism found in preflight.
+  - Whatever the merge mechanism, triggering it is the merge. Take it only here, once the PR is ready to merge — never earlier as setup, even when the mechanism would hold the PR until it's approved. Applying it early tells reviewers the PR is cleared to merge, and it merges the moment an approval lands, with no final check in between.
   - **Merge queue:** gh enqueues the PR instead of merging. Keep looping until it's `MERGED`; if it's ejected, the next pass finds out why.
   - If the command errors, check `gh pr view <n> --json state` before treating it as a failure — in a worktree, gh can merge successfully and then fail to switch the local checkout. If the remote branch survived, `git push origin --delete <headRefName>`.
   - Never `--admin`, never bypass branch protection, never dismiss someone's review.
