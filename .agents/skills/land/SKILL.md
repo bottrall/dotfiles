@@ -157,7 +157,7 @@ Run only once the PR is `MERGED`.
 
 - Fetch it. A key that doesn't resolve is a false match (`UTF-8`, `SHA-256`) — drop it silently.
 - **Already in a Done-category status** (often an integration moved it): skip.
-- Otherwise list its transitions and pick the one that means "the code is merged" in this workflow: a status explicitly named for the post-merge stage (`Merged`, `Ready for QA`, `Ready for Release`) when the workflow has one before Done; otherwise the single Done-category transition that isn't a won't-do (`Won't Do`, `Cancelled`, `Duplicate`). If it's still ambiguous, don't guess — leave the ticket and list its options in the report.
+- Otherwise move it to **Done**. My teams only use three statuses — To Do, In Progress, Done — so merged means done: never stop at an intermediate status (`In Review`, `Merged`, `Ready for QA`, `Ready for Release`, …). List its transitions and pick the one into a Done-category status that isn't a won't-do (`Won't Do`, `Cancelled`, `Duplicate`), preferring one named `Done`. If there's no such transition from the current status, or more than one candidate, don't guess — leave the ticket and list its options in the report.
 - After transitioning, comment `Landed in <PR url>.` plus the signoff.
 
 **Mentioned** Jira keys are left alone and listed in the report.
