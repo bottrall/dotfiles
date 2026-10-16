@@ -6,11 +6,8 @@
 ---- ENVIRONMENT VARIABLES ----
 -------------------------------
 
--- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
-
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_SIZE", "24")
-hl.env("QT_QPA_PLATFORM", "wayland")
+-- Set in ~/.config/uwsm/env (session-wide) and env-hyprland, not hl.env:
+-- under uwsm those reach systemd units and D-Bus-activated apps too.
 
 
 ------------------
@@ -35,14 +32,17 @@ hl.monitor({
 -------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
+--
+-- Most of the session starts outside this file, via uwsm:
+--   waybar, hypridle, hyprpaper  systemd units enabled by install.sh
+--                                (Restart=on-failure, logs in journalctl --user)
+--   1password, dropbox           XDG autostart (~/.config/autostart, written by
+--                                the apps themselves)
+-- Only things without either live here, wrapped in `uwsm app` so they get
+-- their own unit too.
 
 hl.on("hyprland.start", function()
-    hl.exec_cmd("waybar")
-    hl.exec_cmd("hypridle")
-    hl.exec_cmd("hyprpaper")
-    hl.exec_cmd("clipse -listen")
-    hl.exec_cmd("1password")
-    hl.exec_cmd("dropbox")
+    hl.exec_cmd("uwsm app -- clipse -listen")
 end)
 
 

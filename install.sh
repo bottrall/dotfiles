@@ -124,22 +124,13 @@ if [[ "$OS" == "Linux" ]]; then
   link_file ".config/gtk-3.0/gtk.css"
   link_file ".config/gtk-4.0/settings.ini"
   link_file ".config/gtk-4.0/gtk.css"
+  # Session: tty1 login -> uwsm -> Hyprland (see .bash_profile). Session
+  # daemons run as units under graphical-session.target, not Hyprland execs.
+  link_file ".bash_profile"
+  link_dir  ".config/uwsm"
+  systemctl --user enable waybar.service hypridle.service hyprpaper.service 2>/dev/null || true
   # Portal routing: FileChooser -> Nautilus via xdg-desktop-portal-gnome
   link_file ".config/xdg-desktop-portal/hyprland-portals.conf"
-  link_file ".config/xdg-desktop-portal/portals/nautilus.portal"
-  # with XDG_DESKTOP_PORTAL_DIR set, the daemon reads portals.conf from there too
-  link_file ".config/xdg-desktop-portal/portals/portals.conf"
-  # XDG_DESKTOP_PORTAL_DIR replaces the system portal dir, so mirror it
-  # (and drop links to definitions whose package has since been removed)
-  for portal in /usr/share/xdg-desktop-portal/portals/*.portal; do
-    [[ -e "$portal" ]] && ln -sfn "$portal" "$HOME/.config/xdg-desktop-portal/portals/"
-  done
-  find "$HOME/.config/xdg-desktop-portal/portals" -xtype l -delete
-  link_file ".config/systemd/user/xdg-desktop-portal.service.d/override.conf"
-  systemctl --user daemon-reload 2>/dev/null || true
-  # The portal DBus-activates Nautilus at startup; keep that Nautilus from
-  # calling back into the half-started portal (25s deadlock at every boot)
-  link_file ".local/share/dbus-1/services/org.gnome.Nautilus.service"
   # GTK4 apps on Wayland read the icon theme via the settings portal
   # (gsettings), not settings.ini. GTK3 on Wayland also lets gsettings
   # override settings.ini for the theme name: it must be the built-in

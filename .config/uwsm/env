@@ -1,0 +1,7 @@
+# Session-wide env for the uwsm-managed graphical session: exported into the
+# systemd/D-Bus activation environment, so units (waybar, portals) and
+# D-Bus-activated apps (Nautilus) see it too — unlike Hyprland's hl.env, which
+# only reaches Hyprland's own children. Hyprland-only vars go in env-hyprland.
+
+export XCURSOR_SIZE=24
+export QT_QPA_PLATFORM=wayland
