@@ -223,7 +223,7 @@ sweep() (
 
   # --- node versions (nvm) ---------------------------------------------------------
 
-  NVM_DIR="${NVM_DIR:-$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "$HOME/.nvm" || printf %s "$XDG_CONFIG_HOME/nvm")}"
+  NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
   export NVM_DIR
   if [[ -s "$NVM_DIR/nvm.sh" ]]; then
     say "node versions"

@@ -1,4 +1,7 @@
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+# nvm lives in ~/.nvm. Not nvm's stock XDG_CONFIG_HOME-aware line: uwsm
+# exports XDG_CONFIG_HOME into the session, which pointed it at a nonexistent
+# ~/.config/nvm.
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 load-nvmrc() {
