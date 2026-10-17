@@ -5,7 +5,8 @@
 #
 # Iterates the repos listed by repos() (see repos.sh / ~/.repos.local).
 # First checks the C toolchain can build a test program; if it can't (e.g.
-# Xcode lagging a macOS upgrade), brew upgrade and bundle install are skipped.
+# Xcode lagging a macOS upgrade), brew upgrade, AUR upgrades and bundle install
+# are skipped.
 # For each repo:
 #   - git fetch --prune + git worktree prune
 #   - switch to the default branch and pull (skipped if the tree is dirty)
@@ -14,7 +15,9 @@
 #   - git maintenance run
 #   - record the node/ruby versions the repo (and its worktrees) pin
 # Then:
-#   - brew update / upgrade / autoremove / cleanup
+#   - brew update / upgrade / autoremove / cleanup (macOS)
+#   - pacman/paru -Syu, remove orphans, prune package and AUR build caches,
+#     flag unmerged .pacnew/.pacsave files (Arch; prompts for sudo)
 #   - uninstall nvm node versions and rbenv rubies no repo needs
 #   - pnpm store prune, nvm cache clear, gem cleanup on kept rubies
 #   - docker system prune (volumes and tagged images untouched)
@@ -80,7 +83,7 @@ sweep() (
 
   # --- toolchain -----------------------------------------------------------------
 
-  # Building from source (brew, native gems) fails when the compiler can't link,
+  # Building from source (brew, AUR, native gems) fails when the compiler can't link,
   # e.g. an Xcode older than the macOS SDK. Check up front instead of failing
   # halfway through an upgrade.
   cc_works() {
@@ -104,7 +107,7 @@ sweep() (
     note "cc ok"
   else
     TOOLCHAIN_OK=0
-    fail "cc can't build a test program — skipping brew upgrade and bundle install"
+    fail "cc can't build a test program — skipping brew upgrade, AUR upgrades and bundle install"
     if [[ "$(uname)" == "Darwin" ]]; then
       note "developer dir: $(xcode-select -p 2>/dev/null || echo none)"
       note "update Xcode to match macOS, or: sudo xcode-select -s /Library/Developer/CommandLineTools"
@@ -124,6 +127,79 @@ sweep() (
     run brew autoremove || fail "brew autoremove failed"
     run brew cleanup --prune=all || fail "brew cleanup failed"
   fi
+
+  # --- pacman / paru -------------------------------------------------------------
+
+  # Arch doesn't support partial upgrades, so repo packages always upgrade and
+  # the toolchain only gates AUR builds. Upgrades stay interactive (no
+  # --noconfirm) so paru can show PKGBUILD diffs for review.
+  clean_pacman() {
+    say "pacman"
+    if (( ! DRY_RUN )) && ! sudo -v; then
+      fail "sudo unavailable — pacman skipped"
+      return 1
+    fi
+
+    if (( TOOLCHAIN_OK )) && command -v paru >/dev/null; then
+      run paru -Syu || fail "paru -Syu failed"
+    else
+      (( TOOLCHAIN_OK )) || note "AUR upgrades skipped (toolchain)"
+      run sudo pacman -Syu || fail "pacman -Syu failed"
+    fi
+
+    # dependencies nothing requires any more (brew autoremove)
+    local orphans=() p
+    while IFS= read -r p; do orphans+=("$p"); done < <(pacman -Qdtq)
+    if (( ${#orphans[@]} )); then
+      run sudo pacman -Rns --noconfirm "${orphans[@]}" || fail "orphan removal failed"
+      SUMMARY+=("pacman: removed orphans ${orphans[*]}")
+    fi
+
+    # keep the two newest versions of installed packages for rollback, none of
+    # uninstalled ones
+    if command -v paccache >/dev/null; then
+      run sudo paccache -rk2 || fail "paccache failed"
+      run sudo paccache -ruk0 || fail "paccache failed"
+    else
+      warn "paccache not found (install pacman-contrib) — package cache left as is"
+    fi
+
+    # partial downloads left behind by interrupted syncs
+    if [[ ! -e /var/lib/pacman/db.lck ]]; then
+      run sudo find /var/cache/pacman/pkg -mindepth 1 -maxdepth 1 -type d -name 'download-*' -exec rm -rf {} +
+    fi
+
+    # paru keeps a git clone per AUR package base. Drop clones of packages no
+    # longer installed, and build leftovers (sources, built packages) from the
+    # rest — the git history stays so paru can still diff PKGBUILDs.
+    local clone_dir="${XDG_CACHE_HOME:-$HOME/.cache}/paru/clone" foreign=() d name keep
+    if [[ -d "$clone_dir" ]]; then
+      while IFS= read -r p; do foreign+=("$p"); done < <(pacman -Qmq)
+      while IFS= read -r d; do
+        keep=0
+        # a split package's clone is named after its base, so check every pkgname
+        while IFS= read -r name; do
+          contains "$name" "${foreign[@]}" && keep=1
+        done < <(basename "$d"; sed -n 's/^[[:space:]]*pkgname = //p' "$d/.SRCINFO" 2>/dev/null)
+        if (( keep )); then
+          run git -C "$d" clean -ffdxq || fail "paru: git clean failed in $d"
+        else
+          run rm -rf "$d"
+          SUMMARY+=("paru: removed clone $(basename "$d")")
+        fi
+      done < <(find "$clone_dir" -mindepth 1 -maxdepth 1 -type d)
+    fi
+
+    local pacnew
+    pacnew=$(find /etc \( -name '*.pacnew' -o -name '*.pacsave' \) 2>/dev/null)
+    if [[ -n "$pacnew" ]]; then
+      warn "unmerged config files — review with: sudo DIFFPROG='nvim -d' pacdiff"
+      while IFS= read -r p; do note "$p"; done <<< "$pacnew"
+      SUMMARY+=("pacman: $(wc -l <<< "$pacnew" | tr -d ' ') unmerged .pacnew/.pacsave file(s)")
+    fi
+  }
+
+  command -v pacman >/dev/null && clean_pacman
 
   # --- per-repo version pins -----------------------------------------------------
 
