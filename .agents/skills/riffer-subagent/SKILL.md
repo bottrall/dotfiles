@@ -1,6 +1,6 @@
 ---
 name: riffer-subagent
-description: Spawn headless riffer subagents (riffer -p children as background bash jobs) for fresh-context or concurrent work — parallel reviewers, per-ticket research, delegated builds.
+description: Spawn headless riffer subagents for fresh-context or concurrent work — parallel reviewers, per-ticket research, delegated builds.
 ---
 
 # Subagents on riffer
@@ -20,17 +20,16 @@ Children are **read-only by convention**: they review, research, summarize, repo
 
 Each child is a `bash` call with `run_in_background: true`. The call returns a job id immediately and the job's exit is announced to this session — no pid files, no mktemp, no wait loop, no polling. Issue the spawn calls together so the children run concurrently.
 
-Write each child's prompt to a file first. A background job gets an empty stdin, so the prompt reaches the child only through a redirect from that file or a command-line argument — never through the job's own stdin:
+Pass the prompt as an argument, write it to a file, or pipe it in — anything but the job's own stdin, which is empty in a background job (a heredoc inside the command string works too, since it's the shell's stdin, not the job's). A file is the low-friction default for long prompts: no shell quoting, and it survives for retries:
 
 ```bash
-riffer -p --no-save < /tmp/child-security-prompt.md \
+riffer -p < /tmp/child-security-prompt.md \
   > /tmp/child-security-report.md 2> /tmp/child-security-err.md
 ```
 
 - **Redirect the report to a file you named** — child stdout is streamed to the file as it is written, so the report is complete the moment the exit lands, and the exit notice alone carries only the last 2,000 bytes. Read the file for the full report.
-- **Keep stderr** — it carries the only diagnostics when a child fails, including the exit-3 reason.
+- **Keep stderr** — it carries the child's session id (for a later resume) and the only diagnostics when a child fails, including the exit-3 reason.
 - **Wrap with `timeout`** (`timeout 900 riffer -p …`) for a hard cap; a child killed by it reports `status=killed`. Add `--max-steps N` to bound a child that could loop.
-- `--no-save` for one-shot children; drop it when you plan a follow-up (below).
 
 ## Collect
 
@@ -50,7 +49,7 @@ Keep fan-outs bounded — five to eight concurrent children; batch beyond that.
 
 ## Follow up on a child
 
-A child that saved its session is resumable: run `riffer -p -c "…"` in the same directory to continue its most recent session — the cheap retry when a child asked a clarifying question or stopped short, instead of paying the cold start again. A missing session exits 2, so this only works for children run without `--no-save`.
+A saved child is resumable — the cheap retry when a child asked a clarifying question or stopped short, instead of paying the cold start again. Resume from the id: `riffer -p -r <id> "follow-up"`, which works from any directory. Capture the id at spawn: headless prints `session <id>` on stderr when the session starts (in `--json` mode it rides on the `session_start` record instead), so it is in the stderr file you kept — `grep -m1 '^session '` it. A `--no-save` child has no session to resume. Avoid `-c` for follow-ups — it continues the most recent session in the _current_ directory only, which is ambiguous after a parallel fan-out; it also reads as if it takes the prompt as its value, but `-c` is valueless and the prompt is just the `-p` argument.
 
 ## Children that run long
 
