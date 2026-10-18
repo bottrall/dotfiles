@@ -67,7 +67,7 @@ Spawn a build subagent to do the work for this cycle. It runs long — give it a
 3. **The work for this cycle:**
    - **Cycle 1:** implement the task.
    - **Cycle > 1:** the sole job is to resolve the exact blockers carried over from the previous phase — quote the review findings and/or CI failures verbatim — and apply any in-passing list carried alongside them. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
-4. **Verify locally before handing back.** It must run the tests that exercise the files it changed (the touched spec/test files and anything obviously covering them). A failing test is the builder's to fix in this cycle, not CI's to discover — a CI round is the most expensive way to find it.
+4. **Verify locally before handing back.** Run automatic fixes (formatters/linters) & the tests that exercise the files it changed (the touched spec/test files and anything obviously covering them). A failing test is the builder's to fix in this cycle, not CI's to discover — a CI round is the most expensive way to find it.
 
 Its report states what it did, what it verified, and anything it couldn't finish. It leaves the changes uncommitted — the review reads staged + unstaged work, and the ship phase handles committing.
 
