@@ -63,6 +63,7 @@ button {
 #idle_inhibitor:hover,
 #custom-notification:hover,
 #custom-power:hover,
+#custom-claude-usage:hover,
 #tray > widget:hover,
 #tray > eventbox:hover {
   background-color: @overlay-hover;
@@ -90,6 +91,19 @@ button {
   margin: 0;
   padding: 0 10px;
   color: @text;
+}
+
+/* Clawd + usage text in one module: the crab rides in as a background image
+   (padded into the left inset), so hover covers the whole unit. Stats are
+   tertiary info — muted, per the token ladder. */
+#custom-claude-usage {
+  margin: 0;
+  padding: 0 7px 0 36px;
+  color: @text-muted;
+  background-image: url("file:///home/jake/.config/waybar/icons/clawd.png");
+  background-repeat: no-repeat;
+  background-position: 6px center;
+  background-size: 20px 15px;
 }
 
 #mpris {
@@ -120,6 +134,11 @@ button {
 #custom-notification.notification,
 #custom-notification.inhibited-notification {
   color: @accent;
+}
+
+/* Only the data itself signals failure; Clawd stays as-is. */
+#custom-claude-usage.claude-usage-error {
+  color: @red;
 }
 
 /* Healthy state is neutral; the destructive affordance shows red on approach */

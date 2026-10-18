@@ -5,6 +5,7 @@
   "modules-center": [],
   "modules-right": [
     "mpris",
+    "custom/claude-usage",
     "tray",
     "network",
     "pulseaudio",
@@ -81,6 +82,18 @@
   "clock": {
     "format": "  {:%a %d %H:%M}",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+  },
+  "custom/claude-usage": {
+    // Clawd (the Claude Code crab) + usage text in one module: the crab is a
+    // CSS background so hover covers the whole unit. The Ruby script polls
+    // the official usage endpoint; see claude-usage.rb.
+    "exec": "~/.config/waybar/scripts/claude-usage.rb",
+    "return-type": "json",
+    // Re-render every minute for fresh countdowns; the Ruby script decides
+    // on its own (cache TTL) when an actual API request is worth making.
+    "interval": 60,
+    "escape": false,
+    "cursor": 68,
   },
   "idle_inhibitor": {
     "format": "{icon}",
