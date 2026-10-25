@@ -128,7 +128,10 @@ if [[ "$OS" == "Linux" ]]; then
   # daemons run as units under graphical-session.target, not Hyprland execs.
   link_file ".bash_profile"
   link_dir  ".config/uwsm"
-  systemctl --user enable waybar.service hypridle.service hyprpaper.service 2>/dev/null || true
+  # OpenRGB SDK server for the case fan RGB (.config/hypr/scripts/case-rgb.sh)
+  link_file ".config/systemd/user/openrgb.service"
+  systemctl --user daemon-reload 2>/dev/null || true
+  systemctl --user enable waybar.service hypridle.service hyprpaper.service openrgb.service 2>/dev/null || true
   # Portal routing: FileChooser -> Nautilus via xdg-desktop-portal-gnome
   link_file ".config/xdg-desktop-portal/hyprland-portals.conf"
   # GTK4 apps on Wayland read the icon theme via the settings portal

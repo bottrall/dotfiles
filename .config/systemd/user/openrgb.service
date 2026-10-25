@@ -1,0 +1,14 @@
+# OpenRGB SDK server for the case fan RGB (.config/hypr/scripts/case-rgb.sh).
+# Detecting hardware takes ~3s, so a resident server keeps each call fast
+# enough to fade, and to come on with the screen rather than seconds after.
+[Unit]
+Description=OpenRGB SDK server
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/openrgb --server --noautoconnect
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target
