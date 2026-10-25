@@ -43,6 +43,8 @@ hl.monitor({
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("uwsm app -- clipse -listen")
+    -- One-shot, so no unit: sets the case fans to the accent colour.
+    hl.exec_cmd("~/.config/hypr/scripts/case-rgb.sh on")
 end)
 
 
