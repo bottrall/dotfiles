@@ -18,7 +18,7 @@ echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf
 sudo modprobe i2c-dev
 ```
 
-The case fan RGB is a static hotglass accent, set at login and by hypridle (off with the screen, back on with activity) via `.config/hypr/scripts/case-rgb.sh`. The fans' ARGB cable must be on the motherboard's `JRAINBOW` header (not the case's own controller), and it needs OpenRGB — its package ships the udev rules for hidraw access:
+The case fan RGB is a static hot pink, set at login and by hypridle (off with the screen, back on with activity) via `.config/hypr/scripts/case-rgb.sh`. The fans' ARGB cable must be on the motherboard's `JRAINBOW` header (not the case's own controller), and it needs OpenRGB — its package ships the udev rules for hidraw access:
 
 ```sh
 sudo pacman -S openrgb

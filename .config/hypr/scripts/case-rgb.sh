@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 # Set the case fan RGB, wired to the motherboard's JRAINBOW headers (MSI
-# Mystic Light). "on" is a static hotglass accent, so the fans follow the
-# theme — the deep shade, since the bright accent washes out on LEDs.
-# Called at login, and by hypridle: off when the screen turns off, back on
-# when activity resumes.
+# Mystic Light). "on" is a static hot pink to suit the magenta case — picked
+# by eye rather than from hotglass, since the theme's pinks wash out on these
+# LEDs (any green in the mix reads as white). Called at login, and by
+# hypridle: off when the screen turns off, back on when activity resumes.
 set -euo pipefail
 
 command -v openrgb >/dev/null || exit 0
 
 device="MSI PRO B650M-P"
-
-accent_deep() {
-  awk '/^accent:/ { in_accent = 1 }
-       in_accent && /deep:/ { gsub(/"/, "", $2); print $2; exit }' \
-    "$HOME/.config/hotglass/tokens.yml"
-}
+color="FF0080"
 
 # JRAINBOW zones default to 0 LEDs, and the controller ignores mode changes
 # until they're sized.
@@ -26,7 +21,7 @@ set_rgb() {
 }
 
 case "${1:-}" in
-  on) set_rgb -m static -c "$(accent_deep)" ;;
+  on) set_rgb -m static -c "$color" ;;
   off) set_rgb -m direct -c 000000 ;;
   *) echo "usage: $0 on|off" >&2; exit 1 ;;
 esac
