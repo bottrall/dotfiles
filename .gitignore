@@ -2,3 +2,5 @@
 # riffer-rig: API keys and session data must never enter the repo
 .riffer/auth.json
 .riffer/sessions/
+# Claude Code worktrees for isolated sessions
+.claude/worktrees/
