@@ -51,6 +51,25 @@ hl.window_rule({
     size  = "1400 800",
 })
 
+-- Games: force fullscreen. Hyprland 0.56 tiles XWayland windows that ask for
+-- fullscreen before they map (SDL and Wine both do), which leaves CS2 under
+-- the bar and crashes DOOM Eternal during its intro videos. Match the game
+-- window itself, not the whole steam_app_<id> class — Proton launchers (DOOM's
+-- idTech launcher) share it and shouldn't be fullscreened.
+hl.window_rule({
+    name  = "cs2-fullscreen",
+    match = { class = "^cs2$" },
+
+    fullscreen = true,
+})
+
+hl.window_rule({
+    name  = "doom-eternal-fullscreen",
+    match = { class = "^steam_app_782330$", title = "^DOOMEternal$" },
+
+    fullscreen = true,
+})
+
 -- swaync notifications + control center: blur like regular windows.
 -- ignore_alpha 0 keeps the fully-transparent parts of the layer surface
 -- (the area around the toasts) from being blurred too.
