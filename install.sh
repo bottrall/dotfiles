@@ -128,7 +128,7 @@ if [[ "$OS" == "Linux" ]]; then
   # daemons run as units under graphical-session.target, not Hyprland execs.
   link_file ".bash_profile"
   link_dir  ".config/uwsm"
-  # OpenRGB SDK server for the case fan RGB (.config/hypr/scripts/case-rgb.sh)
+  # OpenRGB SDK server for the case fan RGB (.config/hypr/hypridle.conf)
   link_file ".config/systemd/user/openrgb.service"
   systemctl --user daemon-reload 2>/dev/null || true
   systemctl --user enable waybar.service hypridle.service hyprpaper.service openrgb.service 2>/dev/null || true

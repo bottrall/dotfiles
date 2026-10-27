@@ -1,6 +1,6 @@
-# OpenRGB SDK server for the case fan RGB (.config/hypr/scripts/case-rgb.sh).
-# Detecting hardware takes ~3s, so a resident server keeps each call fast
-# enough to fade, and to come on with the screen rather than seconds after.
+# OpenRGB SDK server for the case fan RGB (hypridle.conf). Detecting hardware
+# takes ~3s, so a resident server keeps each call fast enough to come on with
+# the screen rather than seconds after.
 [Unit]
 Description=OpenRGB SDK server
 PartOf=graphical-session.target
