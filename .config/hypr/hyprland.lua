@@ -43,9 +43,8 @@ hl.monitor({
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("uwsm app -- clipse -listen")
-    -- One-shot, so no unit: case fans off (the board remembers its last
-    -- colour across boots, so this has to be explicit).
-    hl.exec_cmd("~/.config/hypr/scripts/case-rgb.sh off")
+    -- One-shot, so no unit: sets the case fans to the accent colour.
+    hl.exec_cmd("~/.config/hypr/scripts/case-rgb.sh on")
 end)
 
 
