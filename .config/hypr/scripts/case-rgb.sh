@@ -8,6 +8,10 @@
 # Goes through the openrgb.service SDK server, where a call takes ~30ms, so
 # the fade can step quickly. Without it, each call detects hardware locally
 # (~3s), so "on" skips the fade.
+#
+# "off" is static black, not direct: the board stores static modes and falls
+# back to the stored one whenever its USB controller resets (boot, resume from
+# suspend), while direct mode is never stored.
 set -euo pipefail
 
 command -v openrgb >/dev/null || exit 0
@@ -79,6 +83,6 @@ fade_on() {
 
 case "${1:-}" in
   on) if $fade; then fade_on; else sized_rgb -m static -c "$color"; fi ;;
-  off) sized_rgb -m direct -c 000000 ;;
+  off) sized_rgb -m static -c 000000 ;;
   *) echo "usage: $0 on|off" >&2; exit 1 ;;
 esac
