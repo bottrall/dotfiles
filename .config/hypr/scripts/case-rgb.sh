@@ -2,8 +2,9 @@
 # Set the case fan RGB, wired to the motherboard's JRAINBOW headers (MSI
 # Mystic Light). "on" fades up to a static hot pink to suit the magenta case —
 # picked by eye rather than from hotglass, since the theme's pinks wash out on
-# these LEDs (any green in the mix reads as white). Called at login, and by
-# hypridle: off when the screen turns off, back on when activity resumes.
+# these LEDs (any green in the mix reads as white). Called at login, after
+# sleep (the board resets to its own rainbow on resume), and by hypridle: off
+# when the screen turns off, back on when activity resumes.
 #
 # Goes through the openrgb.service SDK server, where a call takes ~30ms, so
 # the fade can step quickly. Without it, each call detects hardware locally
