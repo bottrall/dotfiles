@@ -1,6 +1,6 @@
 ---
 name: riffer-subagent
-description: Spawn headless riffer subagents for fresh-context or concurrent work — parallel reviewers, per-ticket research, delegated builds.
+description: How to spawn and collect headless riffer subagents. Use before spawning any subagent for fresh-context or parallel work.
 ---
 
 # Subagents on riffer

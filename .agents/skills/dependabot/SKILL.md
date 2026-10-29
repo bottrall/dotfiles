@@ -1,6 +1,6 @@
 ---
 name: dependabot
-description: Review and merge open Dependabot PRs with risk assessment, fixing simple CI failures along the way
+description: Triages, fixes, and merges open Dependabot PRs by risk. Use to clear a repo's Dependabot backlog.
 disable-model-invocation: true
 ---
 

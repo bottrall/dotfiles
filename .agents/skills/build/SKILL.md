@@ -1,6 +1,6 @@
 ---
 name: build
-description: Autonomous build loop — pass a GitHub issue URL, or describe the task
+description: Autonomous build loop that turns a task, GitHub issue, or Jira ticket into a reviewed draft PR with green CI. Use to create high quality PRs.
 disable-model-invocation: true
 ---
 

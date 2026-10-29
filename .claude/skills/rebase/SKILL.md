@@ -1,6 +1,6 @@
 ---
 name: rebase
-description: Rebase the current branch onto the latest default branch and resolve conflicts
+description: Rebases the current branch onto the latest default branch and resolves conflicts. Use when a branch needs updating from the default branch.
 disable-model-invocation: true
 ---
 

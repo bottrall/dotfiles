@@ -1,6 +1,6 @@
 ---
 name: land
-description: Drive a PR to merged — rebase when needed, fix small CI and review issues, act on new feedback as it arrives — then close out its linked GitHub issues and Jira tickets
+description: Drives an open PR to merged, fixing small CI and review issues, then closes its linked tickets. Use to take a PR over the line after launch.
 disable-model-invocation: true
 ---
 

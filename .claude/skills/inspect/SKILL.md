@@ -1,6 +1,6 @@
 ---
 name: inspect
-description: Multi-agent code review of the current branch, or of a PR URL in its own worktree, against the shared review criteria; reports findings inline in chat. Use only when explicitly asked to review, or when invoked by the build skill. Never run it speculatively.
+description: Multi-agent code review of the current branch or a PR, reported in chat. Use only when explicitly asked for a review, or from the build skill.
 ---
 
 # Code Review

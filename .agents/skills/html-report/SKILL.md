@@ -1,6 +1,6 @@
 ---
 name: html-report
-description: Generate a standalone HTML report summarising the current conversation's context or work, with visualisations where appropriate, saved into ~/reports and opened in the browser. Use when the user asks for a report, a summary document, or to 'report on' / 'visualise' what was discussed or built.
+description: Builds a self-contained HTML report of the conversation's work and opens it in the browser. Use when the user asks for a report, summary document, or visualisation of what was discussed or built.
 ---
 
 # HTML Report

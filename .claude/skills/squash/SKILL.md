@@ -1,6 +1,6 @@
 ---
 name: squash
-description: Squash all commits on the current branch into a single commit and force push
+description: Squashes the current branch's commits into one and force-pushes. Use when asked to squash a branch.
 disable-model-invocation: true
 ---
 
