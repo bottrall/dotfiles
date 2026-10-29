@@ -6,13 +6,13 @@ disable-model-invocation: true
 
 # Land
 
-Drive a pull request all the way to merged, then clean up the tickets it resolves. `ship` opens the PR; `land` finishes it.
+Drive a pull request all the way to merged, then clean up the tickets it resolves. `launch` opens the PR; `land` finishes it.
 
 This skill is **autonomous within a small-fix boundary**. Invoking it is my go-ahead to mark the PR ready, push fixes and rebases, reply to review comments, merge, and transition tickets. Anything bigger than a small fix is mine to decide — it stops and hands back rather than guessing.
 
 ## Inputs
 
-- **The PR**: a URL, `#<n>`, or `<n>` passed when invoking the skill. With none, use the current branch's PR (`gh pr view`). If there's no PR, stop and tell me to run `ship` first.
+- **The PR**: a URL, `#<n>`, or `<n>` passed when invoking the skill. With none, use the current branch's PR (`gh pr view`). If there's no PR, stop and tell me to run `launch` first.
 - **Patience**: how long the PR can sit with nothing changing — no push, review, comment, or CI result — before handing back. Default **24 hours**; the clock restarts whenever something changes. Honor an override if I gave one (e.g. `/land 123 patience 3d`).
 - **Fix cap**: max pushes of fixes (CI or feedback) before handing back. Default **3**. Rebases don't count toward it.
 

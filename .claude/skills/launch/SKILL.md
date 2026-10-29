@@ -1,12 +1,12 @@
 ---
-name: ship
-description: Prepare and open a pull request for the current branch
+name: launch
+description: Push the current branch and open (or update) its draft pull request — the counterpart to land
 disable-model-invocation: true
 ---
 
-# Ship
+# Launch
 
-Prepare and open a pull request for the current branch.
+Push the current branch up and open its pull request. `launch` opens the PR; `land` finishes it.
 
 ## Steps
 
@@ -20,7 +20,7 @@ Prepare and open a pull request for the current branch.
   - Commit using a HEREDOC for the message and include the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
   - Run `git status` after committing to verify success.
 - Determine `<base-branch>` — the branch this one is stacked on, not necessarily the default branch — exactly as the Review scope section of `~/.claude/skills/inspect/SKILL.md` defines (read it).
-- Run `git log --oneline <base-branch>..HEAD` to confirm there are commits to ship.
+- Run `git log --oneline <base-branch>..HEAD` to confirm there are commits to launch.
 
 ### 2. Push
 

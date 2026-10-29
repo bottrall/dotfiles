@@ -55,7 +55,7 @@ A judgement-call finding on the changed code that is cheap and safe to apply:
 - A classification from the catalog of a principle rule: the item fails a policy the project's rule files state in a way that requires judging weight rather than matching a form — for example, where a project defines a comment policy, an item that restates the code, repeats a type the signature states, narrates history, or sits in the wrong place.
 - A small divergence from a written convention (naming, idiom) with a concrete replacement.
 
-Tier 2 findings are not adversarially validated and do not send the loop back — they are fixed in passing before ship. The bar for reporting one is lower: would the owner plausibly rule this way? The cost of a false positive is seconds; the cost of silence is the owner re-catching it by hand after ship, which has happened repeatedly. Subjective style preferences with no anchor in a rule file or the project's conventions are still not findings at any tier.
+Tier 2 findings are not adversarially validated and do not send the loop back — they are fixed in passing before launch. The bar for reporting one is lower: would the owner plausibly rule this way? The cost of a false positive is seconds; the cost of silence is the owner re-catching it by hand after launch, which has happened repeatedly. Subjective style preferences with no anchor in a rule file or the project's conventions are still not findings at any tier.
 
 Do **not** flag (either tier): issues that only manifest for specific unstated inputs or state, speculative improvements, or anything not real.
 
