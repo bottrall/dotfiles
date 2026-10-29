@@ -1,6 +1,6 @@
 ---
 name: inspect
-description: Multi-agent code review of the current branch or a PR, reported in chat. Use only when explicitly asked for a review, or from the build skill.
+description: Multi-agent code review. Use only when asked to review.
 ---
 
 # Code Review

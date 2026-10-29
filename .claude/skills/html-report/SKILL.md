@@ -1,6 +1,6 @@
 ---
 name: html-report
-description: Builds a self-contained HTML report of the conversation's work and opens it in the browser. Use when the user asks for a report, summary document, or visualisation of what was discussed or built.
+description: HTML report generator. Use when the user asks for a report.
 ---
 
 # HTML Report

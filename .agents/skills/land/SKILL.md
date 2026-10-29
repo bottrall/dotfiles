@@ -1,6 +1,6 @@
 ---
 name: land
-description: Drives an open PR to merged, fixing small CI and review issues, then closes its linked tickets. Use to take a PR over the line after launch.
+description: PR merge driver. Use to get an open PR merged.
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: riffer-subagent
-description: How to spawn and collect headless riffer subagents. Use before spawning any subagent for fresh-context or parallel work.
+description: Riffer subagent guide. Use before spawning any subagent.
 ---
 
 # Subagents on riffer

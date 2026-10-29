@@ -1,6 +1,6 @@
 ---
 name: dependabot
-description: Triages, fixes, and merges open Dependabot PRs by risk. Use to clear a repo's Dependabot backlog.
+description: Dependabot PR merger. Use to clear open Dependabot PRs.
 disable-model-invocation: true
 ---
 

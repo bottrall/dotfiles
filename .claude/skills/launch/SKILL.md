@@ -1,6 +1,6 @@
 ---
 name: launch
-description: Pushes the current branch and opens or updates its draft PR. Use only when explicitly asked to push or open a PR, or from the build skill.
+description: Push and open a draft PR. Use only when asked to push or open a PR.
 ---
 
 # Launch

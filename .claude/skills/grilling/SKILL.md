@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: Relentless one-question-at-a-time interview that stress-tests a plan, decision, or idea. Use when the user wants their thinking challenged or says 'grill'.
+description: Stress-test interview. Use when the user wants to be grilled.
 ---
 
 Interview me relentlessly about every aspect of this until we reach a shared understanding. Walk down each branch of the decision tree, resolving dependencies between decisions one-by-one.

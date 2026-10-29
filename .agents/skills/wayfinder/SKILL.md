@@ -1,6 +1,6 @@
 ---
 name: wayfinder
-description: Plans work too big for one session as a map of decision tickets on an issue tracker. Use when an idea is too large or unclear to build directly.
+description: Multi-session planner. Use for work too big for one session.
 disable-model-invocation: true
 ---
 
