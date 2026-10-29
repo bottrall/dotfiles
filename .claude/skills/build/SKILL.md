@@ -6,9 +6,9 @@ disable-model-invocation: true
 
 # Build Loop
 
-Drive a task to a green, shipped PR autonomously. One cycle is: **build → review → ship + CI**. A HIGH SIGNAL review finding or CI failure sends the loop back to build with the specifics; in-passing findings are fixed without a cycle; a clean review followed by green CI ends it.
+Drive a task to a green, launched PR autonomously. One cycle is: **build → review → launch + CI**. A HIGH SIGNAL review finding or CI failure sends the loop back to build with the specifics; in-passing findings are fixed without a cycle; a clean review followed by green CI ends it.
 
-This loop is **fully autonomous**. It never pauses between phases, and it pushes and opens a **draft** PR on its own. Run it only on a feature branch you're happy to ship from. It surfaces to me exactly twice: on success, or when it stops because the cycle cap was reached (or it's genuinely blocked).
+This loop is **fully autonomous**. It never pauses between phases, and it pushes and opens a **draft** PR on its own. Run it only on a feature branch you're happy to push from. It surfaces to me exactly twice: on success, or when it stops because the cycle cap was reached (or it's genuinely blocked).
 
 ## Inputs
 
@@ -30,20 +30,20 @@ The builder is graded by the `inspect` skill against its [criteria.md](../inspec
 Every subagent launch includes a deliberate model choice, picked from whatever tiers the Agent tool currently exposes. No phase is mapped to a model — decide per launch, per cycle, by weighing:
 
 - **Judgment density.** How much of the task is reasoning versus mechanical execution? Following explicit instructions (commit, push, fill a template, watch checks) needs far less capability than open-ended design or debugging.
-- **Cost of a miss.** What happens if this subagent gets it wrong? A weak build gets caught by review; a weak ship step wastes a CI round. Work the loop double-checks can afford less capability than work it doesn't.
+- **Cost of a miss.** What happens if this subagent gets it wrong? A weak build gets caught by review; a weak launch step wastes a CI round. Work the loop double-checks can afford less capability than work it doesn't.
 - **Ambiguity of the input.** A cycle-1 "implement the task" prompt is open-ended; a cycle-2 "fix exactly these quoted findings" prompt is nearly mechanical. The same phase can warrant different models on different cycles.
 - **Recovery cost.** A cheap model that fails burns a subagent; a cheap model that _plausibly_ succeeds burns a whole cycle. When wrong-but-confident output is hard to detect downstream, pay for capability up front.
 
 Omitting the model (inheriting the session's) is a valid choice, not a default — make it deliberately. State the chosen model in each launch so the decision is visible in the transcript.
 
-This applies to anything delegated — a fully-encoded phase (like ship + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other launch. The review phase makes its own model choices per the `inspect` skill.
+This applies to anything delegated — a fully-encoded phase (like launch + CI) may be handed to a subagent when that's sensible, and it gets the same weighing as any other subagent. The review phase makes its own model choices per the `inspect` skill.
 
 ## Ticket
 
 A ticket is a **GitHub issue** in this repo (URL, `#<n>`, or `<n>`) or a **Jira issue** (a key like `ABC-123`, or a `…/browse/ABC-123` URL). Its content is the task.
 
 - **Preflight:** read it, then claim it — assign it to me only if it has no assignee; if someone else holds it, leave it. Move a Jira issue to **in progress**.
-- **On success** (4f): move a Jira issue to **in review**. A hand-back leaves it where it is.
+- **On success** (4b): move a Jira issue to **in review**. A hand-back leaves it where it is.
 
 Bookkeeping never blocks the loop — if a step fails, carry on. Every report (preflight, success, hand-back) states the ticket's assignee, its Jira status, and anything skipped and why.
 
@@ -87,7 +87,7 @@ Launch a subagent to do the work for this cycle. Its prompt must include, in thi
    - **Cycle > 1:** its sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim — and apply any in-passing list carried alongside them. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
 4. **Verify locally before handing back.** Run automatic fixes (formatters/linters) & the tests that exercise the files it changed (the touched spec/test files and anything obviously covering them). A failing test is the builder's to fix in this cycle, not CI's to discover — a CI round is the most expensive way to find it.
 
-Leave the changes uncommitted — the review reads staged + unstaged work, and the ship phase handles committing.
+Leave the changes uncommitted — the review reads staged + unstaged work, and the launch phase handles committing.
 
 ## Phase 3 — Review (gates the loop)
 
@@ -102,71 +102,26 @@ Read the report the `inspect` skill printed. A finding's heading carries its tie
 - **"No issues found":** proceed to Phase 4.
 - **In-passing findings only:** apply them now, in the main session — small, policy-level edits of the kind the criteria's Tier 2 names, already located precisely by the review. This does not increment the cycle counter. Run the project's lint and typecheck entry points (`bin/lint`, `bin/typecheck`, or their equivalents) plus the touched tests, then proceed to Phase 4.
 - **HIGH SIGNAL findings, and the cycle counter is below the cap:** increment the counter, pass the findings (grouped `path:line`, with reason tag and description, exactly as printed) **plus any in-passing list** to Phase 2, and loop — the builder resolves the blockers and applies the in-passing fixes in the same visit.
-- **HIGH SIGNAL findings, and the cycle counter is at the cap:** stop. Hand back per the report format — do not ship.
+- **HIGH SIGNAL findings, and the cycle counter is at the cap:** stop. Hand back per the report format — do not launch.
 
-## Phase 4 — Ship + CI (encoded)
+## Phase 4 — Launch + CI
 
-### 4a. Commit
+### 4a. Launch
 
-- Run `git status` (never `-uall`) and `git diff` to see uncommitted work.
-- Stage relevant files by name (never `git add -A` / `git add .`), then commit — **staging and committing are separate commands, never chained.**
-- Commit message: **Conventional Commits** (`feat:`, `fix:`, `chore:`…), written via HEREDOC, with the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
-- Run `git status` after to verify.
+Invoke the `launch` skill via the Skill tool and follow it to commit, push, and open or update the draft PR, with these overrides:
 
-### 4b. Push
+- `<base-branch>` is the one from Phase 1 — skip launch's own base-branch detection. Its default-branch stop can't fire; Phase 1 guarantees a feature branch.
+- **Task is a ticket:** reference it in the body (under Problem when using launch's format) — `Closes #<n>` for a GitHub issue, `[ABC-123](<browse URL>)` for Jira.
 
-- Determine the current branch. Run `git fetch origin`, then `git log origin/<branch>..HEAD`.
-- **Unpushed commits:** `git push -u origin <branch>`. **Already up to date:** skip.
+When it prints the PR URL, carry on to 4b — don't stop there.
 
-### 4c. Detect PR template
-
-Use the **first** match, in order:
-
-1. `.github/PULL_REQUEST_TEMPLATE.md`
-2. `.github/pull_request_template.md`
-3. `PULL_REQUEST_TEMPLATE.md`
-4. `pull_request_template.md`
-5. `.github/PULL_REQUEST_TEMPLATE/` (first `.md` file)
-
-### 4d. Title & body
-
-- PR title < 70 chars, derived from the branch commits.
-- **Task is a ticket:** reference it in the body (under Problem when using the format below) — `Closes #<n>` for a GitHub issue, `[ABC-123](<browse URL>)` for Jira.
-- **Template found:** fill it from the diff (`git diff $(git merge-base <base-branch> HEAD)`) and commit history; leave a section empty rather than guessing.
-- **No template:** use the format below — prefer prose over bullets; explain intent, don't restate the diff.
-
-```
-## Problem
-<What problem does this solve and why it matters — user-visible symptoms, bug context, or motivation. Reference any linked issue.>
-
-## Solution
-<The approach and notable trade-offs. Call out anything subtle a reviewer might miss — migration ordering, feature flags, follow-up work.>
-
-## Proof
-<Evidence it works. If CI covers it, say so. If visual/UX, instruct: "Attach a screenshot of X". If it needs manual verification in a specific environment/dataset/integration, instruct the author to confirm and paste results.>
-```
-
-If you genuinely can't determine the problem or solution, leave a `<TODO: …>` placeholder rather than inventing intent. Always append:
-
-```
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-```
-
-### 4e. Create or update the PR
-
-- `gh pr view --json url,body` to check for an existing PR on this branch.
-- **None:** `gh pr create --draft --base <base-branch> --assignee @me --title "<title>" --body "$(cat <<'EOF'` … `EOF` … `)"`.
-- **Exists:** if the generated body differs, `gh pr edit --body`; otherwise skip.
-- `<base-branch>` is the bare branch name from Phase 1 (no `origin/` prefix), so a stacked PR targets its parent rather than the default branch.
-- Print the PR URL.
-
-### 4f. Monitor CI
+### 4b. Monitor CI
 
 - Watch the checks to completion: `gh pr checks <number> --watch` (fall back to polling `gh pr checks <number>` every ~30s if `--watch` is unavailable). Allow a short retry for checks to register after the push.
 - **No checks configured:** note it — there's nothing gating — and treat CI as passed.
 - **All pass:** move a Jira ticket to in review per [Ticket](#ticket), then done → success report.
 - **Any fail:** gather concrete failure detail — `gh pr checks <number>` plus the failing job's logs (`gh run view <run-id> --log-failed`).
-  - Cycle counter **below** the cap: increment it, pass the CI failure detail to Phase 2, and loop (the next cycle re-runs the full review before re-shipping).
+  - Cycle counter **below** the cap: increment it, pass the CI failure detail to Phase 2, and loop (the next cycle re-runs the full review before re-launching).
   - Cycle counter **at** the cap: stop and hand back.
 
 ## Reporting

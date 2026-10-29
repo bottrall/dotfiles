@@ -1,12 +1,11 @@
 ---
-name: ship
-description: Prepare and open a pull request for the current branch
-disable-model-invocation: true
+name: launch
+description: Push the current branch and open (or update) its draft pull request — the counterpart to land. Use only when explicitly asked to push or open a PR, or when invoked by the build skill. Never run it speculatively.
 ---
 
-# Ship
+# Launch
 
-Prepare and open a pull request for the current branch.
+Push the current branch up and open its pull request. `launch` opens the PR; `land` finishes it.
 
 ## Steps
 
@@ -17,10 +16,10 @@ Prepare and open a pull request for the current branch.
 - If there are changes, stage and commit them. **Run staging and committing as separate commands — never combine them into a single chained command.**
   - Stage relevant files by name (never use `git add -A` or `git add .`).
   - Write a commit message using **Conventional Commits** (`feat:`, `fix:`, `chore:`, etc.).
-  - Commit using a HEREDOC for the message and include the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
+  - Commit using a HEREDOC for the message and include the `Co-Authored-By: Riffer <noreply@riffer.dev>` trailer.
   - Run `git status` after committing to verify success.
-- Determine `<base-branch>` — the branch this one is stacked on, not necessarily the default branch — exactly as the Review scope section of `~/.claude/skills/inspect/SKILL.md` defines (read it).
-- Run `git log --oneline <base-branch>..HEAD` to confirm there are commits to ship.
+- Determine `<base-branch>` — the branch this one is stacked on, not necessarily the default branch — exactly as the Review scope section of `~/.agents/skills/inspect/SKILL.md` defines (activate `inspect` for it).
+- Run `git log --oneline <base-branch>..HEAD` to confirm there are commits to launch.
 
 ### 2. Push
 
@@ -65,7 +64,7 @@ Infer the content from the branch's diff, commit messages, and any linked issue.
 - Always append the following footer to the body:
 
 ```
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+🤖 Generated with [riffer-rig](https://github.com/bottrall/riffer-rig)
 ```
 
 ### 5. Create or update the PR
