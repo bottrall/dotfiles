@@ -1,7 +1,6 @@
 ---
 name: launch
-description: Push the current branch and open (or update) its draft pull request — the counterpart to land
-disable-model-invocation: true
+description: Push the current branch and open (or update) its draft pull request — the counterpart to land. Use only when explicitly asked to push or open a PR, or when invoked by the build skill. Never run it speculatively.
 ---
 
 # Launch

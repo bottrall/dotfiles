@@ -108,7 +108,7 @@ Read the report the `inspect` skill printed. A finding's heading carries its tie
 
 ### 4a. Launch
 
-Read `~/.claude/skills/launch/SKILL.md` and follow it to commit, push, and open or update the draft PR, with these overrides:
+Invoke the `launch` skill via the Skill tool and follow it to commit, push, and open or update the draft PR, with these overrides:
 
 - `<base-branch>` is the one from Phase 1 — skip launch's own base-branch detection. Its default-branch stop can't fire; Phase 1 guarantees a feature branch.
 - **Task is a ticket:** reference it in the body (under Problem when using launch's format) — `Closes #<n>` for a GitHub issue, `[ABC-123](<browse URL>)` for Jira.
