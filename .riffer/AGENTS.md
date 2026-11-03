@@ -2,7 +2,7 @@
 
 ## Communication
 
-- When sending any message on my behalf (Slack, email, PR/issue comments, etc.) without me approving a draft first, always indicate that the message was written and sent by you, not me. Use this exact signoff at the end of the message so it's consistent:
+- When sending any message on my behalf (Slack, email, PR/issue comments, etc.; not PR descriptions, which get the "Generated with riffer-rig" footer instead) without me approving a draft first, always indicate that the message was written and sent by you, not me. Use this exact signoff at the end of the message so it's consistent:
 
   > — 🤖 Riffer (beep boop)
 
