@@ -6,6 +6,8 @@
 
   > — 🤖 Claude (beep boop)
 
+  **Exception — PR descriptions:** don't add this signoff. End PR descriptions only with the `🤖 Generated with [Claude Code](https://claude.com/claude-code)` footer. (PR _comments_ still get the beep boop signoff.)
+
 - Don't hard-wrap markdown prose — write one line per paragraph and let it soft-wrap. (Hard-wrapping code comments at the usual column width is fine.)
 
 ## Code style
