@@ -2,11 +2,9 @@
 
 ## Communication
 
-- When sending any message on my behalf (Slack, email, PR/issue comments, etc.) without me approving a draft first, always indicate that the message was written and sent by Claude, not me. Use this exact signoff at the end of the message so it's consistent:
+- When sending any message on my behalf (Slack, email, PR/issue comments, etc.; not PR descriptions, which get the "Generated with Claude Code" footer instead) without me approving a draft first, always indicate that the message was written and sent by Claude, not me. Use this exact signoff at the end of the message so it's consistent:
 
   > — 🤖 Claude (beep boop)
-
-  **Exception — PR descriptions:** don't add this signoff. End PR descriptions only with the `🤖 Generated with [Claude Code](https://claude.com/claude-code)` footer. (PR _comments_ still get the beep boop signoff.)
 
 - Don't hard-wrap markdown prose — write one line per paragraph and let it soft-wrap. (Hard-wrapping code comments at the usual column width is fine.)
 
