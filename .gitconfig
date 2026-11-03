@@ -2,7 +2,10 @@
 	rebase = true
 	tags = true
 [fetch]
-	prune = true
+	# Off so squash-merged branches keep their origin/* ref; otherwise Claude
+	# Code sees the worktree commits as unpushed and blocks session deletion.
+	# Prune explicitly with `git fetch --prune` (sweep.sh does this).
+	prune = false
 	pruneTags = true
 [push]
 	default = current
