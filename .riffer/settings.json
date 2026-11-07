@@ -1,5 +1,5 @@
 {
-  "model": "openrouter/z-ai/glm-5.3-flash",
+  "model": "anthropic/claude-haiku-5-5",
   "reasoning": "high",
   "catalog_files": ["/Users/jakebottrall/dotfiles/.riffer/models.json"],
   "mcp": {
@@ -10,9 +10,7 @@
           "Authorization": "Bearer ${api_key}"
         },
         "auth": {
-          "api_key": [
-            "KAGI_API_KEY"
-          ]
+          "api_key": ["KAGI_API_KEY"]
         }
       }
     }
