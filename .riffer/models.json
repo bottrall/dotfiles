@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "models": {
+    "anthropic/claude-haiku-5-5": {
+      "pricing": {
+        "input": 0.1,
+        "output": 0.5,
+        "cache_read": 0.01,
+        "cache_write": 0.125
+      }
+    },
+    "openrouter/z-ai/glm-5.3-flash": {
+      "pricing": {
+        "input": 0.075,
+        "output": 0.25,
+        "cache_read": 0.015,
+        "cache_write": 0.075
+      }
+    }
+  }
+}

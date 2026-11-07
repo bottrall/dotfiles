@@ -1,7 +1,7 @@
 {
   "model": "openrouter/z-ai/glm-5.3-flash",
   "reasoning": "high",
-  "catalog_files": ["/home/jake/.riffer/catalog/models.json"],
+  "catalog_files": ["/Users/jakebottrall/dotfiles/.riffer/models.json"],
   "mcp": {
     "servers": {
       "kagi": {
