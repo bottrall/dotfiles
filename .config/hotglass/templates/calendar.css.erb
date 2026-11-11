@@ -113,3 +113,8 @@ window.hotglass-calendar {
 .hotglass-calendar calendar > grid > label.day-number.today:selected {
   background-color: <%= c(:fill_active) %>;
 }
+
+/* Keyboard focus: the system ring color (GTK's default is blue). */
+.hotglass-calendar *:focus-visible {
+  outline-color: <%= c(:accent) %>;
+}
