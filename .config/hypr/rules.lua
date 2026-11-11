@@ -89,9 +89,9 @@ hl.workspace_rule({
 
 -- hotglass: every glass layer is blurred. ignore_alpha 0.5 blurs behind the
 -- glass itself (surfaces are .66–.72 black) but not behind the transparent
--- margins or the low-alpha drop shadows drawn inside them. Overlays are
--- layers rather than floating windows for this reason: Hyprland only blurs
--- the wallpaper behind a floating window, but blurs everything behind a layer.
+-- margins or the low-alpha drop shadows drawn inside them. (Known gap: on
+-- 0.57 neither layers nor floating windows blur the *windows* beneath them,
+-- only the wallpaper, so window content shows faintly through overlays.)
 hl.layer_rule({
     name  = "glass-blur",
     match = { namespace = "^(waybar|wofi|swayosd|swaync-.*|hotglass-calendar)$" },

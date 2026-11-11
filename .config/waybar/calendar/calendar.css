@@ -5,7 +5,7 @@
    right-aligned under the bar like the control center. Header: overline
    (the day, or "Today"), title, caption. Grid: tertiary day names,
    secondary numbers, today in primary with the accent mark beneath it,
-   the selected day on fill.active. Footer: one text button. */
+   the selected day on fill.active. */
 
 window.hotglass-calendar {
   background-color: rgba(0, 0, 0, 0.72);
@@ -112,26 +112,4 @@ window.hotglass-calendar {
 
 .hotglass-calendar calendar > grid > label.day-number.today:selected {
   background-color: rgba(255, 255, 255, 0.12);
-}
-
-.hotglass-calendar button.open {
-  min-height: 44px;
-  padding: 0 20px;
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: rgba(255, 255, 255, 0.94);
-  font-size: 13px; font-weight: 500;
-  font-weight: 600;
-}
-
-.hotglass-calendar button.open:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.hotglass-calendar button.open:focus-visible {
-  outline: 2px solid #FF52AB;
-  outline-offset: -4px;
 }
