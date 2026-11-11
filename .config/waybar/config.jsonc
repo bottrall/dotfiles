@@ -28,9 +28,9 @@
       "paused": "󰏤",
       "stopped": "󰓛",
     },
-    // Tooltips follow one shape: what it is (600), its values (secondary),
-    // what a click does (tertiary). Alphas are relative to text.primary.
-    "tooltip-format": "<span weight='600'>{title}</span>\n<span alpha='72%'>{artist}</span>\n<span alpha='49%'>{player} · click to play or pause</span>",
+    // Tooltips: what it is (600), then its values (secondary). No usage
+    // hints. Alphas are relative to text.primary.
+    "tooltip-format": "<span weight='600'>{title}</span>\n<span alpha='72%'>{artist} · {player}</span>",
     "cursor": "default", // keep the normal arrow on hover
   },
   "tray": {
@@ -47,9 +47,9 @@
     "format-ethernet": "󰈀 {ipaddr}",
     "format-linked": "󰈀 No IP",
     "format-disconnected": "󰤭 Off",
-    "tooltip-format-wifi": "<span weight='600'>{essid}</span>\n<span alpha='72%'>Signal {signalStrength}% · {ipaddr}</span>\n<span alpha='49%'>Click for networks</span>",
+    "tooltip-format-wifi": "<span weight='600'>{essid}</span>\n<span alpha='72%'>Signal {signalStrength}% · {ipaddr}</span>",
     "tooltip-format-ethernet": "<span weight='600'>Wired · {ifname}</span>\n<span alpha='72%'>{ipaddr}</span>",
-    "tooltip-format-disconnected": "<span weight='600'>Not connected</span>\n<span alpha='49%'>Click for networks</span>",
+    "tooltip-format-disconnected": "<span weight='600'>Not connected</span>",
     "on-click": "~/.config/waybar/menus/toggle.sh wifi",
     "cursor": "default",
   },
@@ -60,7 +60,7 @@
       "default": ["󰕿", "󰖀", "󰕾"],
     },
     "scroll-step": 5,
-    "tooltip-format": "<span weight='600'>{desc}</span>\n<span alpha='72%'>Volume {volume}%</span>\n<span alpha='49%'>Click to mute · scroll to adjust · right-click for the mixer</span>",
+    "tooltip-format": "<span weight='600'>{desc}</span>\n<span alpha='72%'>Volume {volume}%</span>",
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
     "on-click-right": "pavucontrol",
     "cursor": "default",
@@ -77,7 +77,7 @@
   "memory": {
     "format": "󰍛 {}%",
     "states": { "warning": 70, "critical": 90 },
-    "tooltip-format": "<span weight='600'>Memory</span>\n<span alpha='72%'>{used:0.1f} of {total:0.1f} GiB in use</span>\n<span alpha='49%'>Click for btop</span>",
+    "tooltip-format": "<span weight='600'>Memory</span>\n<span alpha='72%'>{used:0.1f} of {total:0.1f} GiB in use</span>",
     "on-click": "ghostty --class=dev.jake.btop -e btop",
     "cursor": "default",
   },
@@ -88,7 +88,7 @@
     "input-filename": "temp1_input",
     "warning-threshold": 80,
     "critical-threshold": 90,
-    "tooltip-format": "<span weight='600'>CPU temperature</span>\n<span alpha='72%'>{temperatureC} °C</span>\n<span alpha='49%'>Click for btop</span>",
+    "tooltip-format": "<span weight='600'>CPU temperature</span>\n<span alpha='72%'>{temperatureC} °C</span>",
     "on-click": "ghostty --class=dev.jake.btop -e btop",
     "cursor": "default",
     "format": "{icon} {temperatureC}°",
@@ -122,8 +122,8 @@
       "activated": "󰅶",
       "deactivated": "󰾪",
     },
-    "tooltip-format-activated": "<span weight='600'>Keeping the screen awake</span>\n<span alpha='49%'>Click to let it sleep when idle</span>",
-    "tooltip-format-deactivated": "<span weight='600'>Screen sleeps when idle</span>\n<span alpha='49%'>Click to keep it awake</span>",
+    "tooltip-format-activated": "<span weight='600'>Keeping the screen awake</span>",
+    "tooltip-format-deactivated": "<span weight='600'>Screen sleeps when idle</span>",
     "cursor": "default",
   },
   "custom/notification": {
@@ -144,7 +144,7 @@
     "on-click": "swaync-client -t -sw",
     "on-click-right": "swaync-client -d -sw",
     "escape": true,
-    "tooltip-format": "<span weight='600'>Notifications</span>\n<span alpha='72%'>{} unread</span>\n<span alpha='49%'>Click to open · right-click for Do not disturb</span>",
+    "tooltip-format": "<span weight='600'>Notifications</span>\n<span alpha='72%'>{} unread</span>",
     "cursor": "default",
   },
   "custom/power": {
