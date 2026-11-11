@@ -60,19 +60,6 @@ hl.window_rule({
     center = true,
 })
 
--- hotglass clock dropdown (waybar/calendar/calendar.py): an overlay, so it
--- floats right-aligned under the bar on the 12px grid, in the same column as
--- the control center, and draws its own edge instead of a window border.
-hl.window_rule({
-    name  = "hotglass-calendar",
-    match = { class = "^dev\\.jake\\.hotglass\\.calendar$" },
-
-    float       = true,
-    move        = "(monitor_w-window_w-12) 44",
-    border_size = 0,
-    animation   = "popin 96%",
-})
-
 -- Games: force fullscreen. Hyprland 0.56 tiles XWayland windows that ask for
 -- fullscreen before they map (SDL and Wine both do), which leaves CS2 under
 -- the bar and crashes DOOM Eternal during its intro videos. Match the game
@@ -102,19 +89,21 @@ hl.workspace_rule({
 
 -- hotglass: every glass layer is blurred. ignore_alpha 0.5 blurs behind the
 -- glass itself (surfaces are .66–.72 black) but not behind the transparent
--- margins or the low-alpha drop shadows drawn inside them.
+-- margins or the low-alpha drop shadows drawn inside them. Overlays are
+-- layers rather than floating windows for this reason: Hyprland only blurs
+-- the wallpaper behind a floating window, but blurs everything behind a layer.
 hl.layer_rule({
     name  = "glass-blur",
-    match = { namespace = "^(waybar|wofi|swayosd|swaync-.*)$" },
+    match = { namespace = "^(waybar|wofi|swayosd|swaync-.*|hotglass-calendar)$" },
 
     blur         = true,
     ignore_alpha = 0.5,
 })
 
--- The launcher and menus settle in instead of fading flat.
+-- The launcher, menus and the clock dropdown settle in instead of fading flat.
 hl.layer_rule({
     name  = "wofi-popin",
-    match = { namespace = "^wofi$" },
+    match = { namespace = "^(wofi|hotglass-calendar)$" },
 
     animation = "popin 96%",
 })
