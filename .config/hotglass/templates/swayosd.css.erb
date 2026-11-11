@@ -1,0 +1,64 @@
+/* <%= header %>
+   Template: hotglass/templates/swayosd.css.erb. See hotglass/DESIGN.md.
+
+   Volume / caps-lock OSD: a 320 x 56 level 3 overlay, bottom centre. The
+   level fill is accent, like every progress fill; muted (disabled) drops
+   to tertiary. */
+
+window#osd {
+  border-radius: 0;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  background: <%= c(:surface_overlay) %>;
+  box-shadow: inset 0 1px 0 <%= c(:edge_highlight) %>;
+}
+
+window#osd #container {
+  min-width: 284px;
+  min-height: 56px;
+  margin: 0 <%= px(16) %>;
+}
+
+window#osd image,
+window#osd label {
+  color: <%= c(:text_primary) %>;
+  font-family: <%= ui_family %>;
+  <%= font(:ui) %>
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}
+
+window#osd image {
+  -gtk-icon-size: 20px;
+  margin-right: <%= px(12) %>;
+}
+
+window#osd progressbar:disabled,
+window#osd image:disabled {
+  opacity: 1;
+  color: <%= c(:text_tertiary) %>;
+}
+
+window#osd progressbar {
+  min-height: 4px;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+}
+
+window#osd trough {
+  min-height: 4px;
+  border-radius: 0;
+  border: none;
+  background: <%= c(:fill_control) %>;
+}
+
+window#osd progress {
+  min-height: 4px;
+  border-radius: 0;
+  border: none;
+  background: <%= c(:accent) %>;
+}
+
+window#osd progressbar:disabled progress {
+  background: <%= c(:text_tertiary) %>;
+}

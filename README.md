@@ -12,9 +12,9 @@ Personal dotfiles for macOS and Arch Linux.
 
 **Prompt** — Starship
 
-**Hyprland** (Linux) — Hyprland, Hyprpaper, Hypridle, Hyprlock, Waybar, Wofi, swaync, clipse, btop, satty, GTK 3/4
+**Hyprland** (Linux) — Hyprland, Hyprpaper, Hypridle, Hyprlock, Waybar, Wofi, swaync, swayosd, clipse, btop, satty, GTK 3/4
 
-**hotglass** (Linux) — the desktop's design system. `.config/hotglass/tokens.yml` is the source of truth; `.config/hotglass/generate` rewrites every derived color file. See `.config/hotglass/DESIGN.md`.
+**hotglass** (Linux) — the desktop's design system (2.0). `.config/hotglass/tokens.yml` is the source of truth for color, type, space, motion and depth; `.config/hotglass/generate` audits contrast, then renders `templates/*.erb` and every other derived file (`--check` prints the audit only). See `.config/hotglass/DESIGN.md`.
 
 **Shell helpers** — `.config/sh/`: `repos` lists local projects from the untracked `~/.repos.local`, `sweep` resets the dev environment across them (supports `--dry-run`), and `wta`/`wtd` add and remove git worktrees.
 

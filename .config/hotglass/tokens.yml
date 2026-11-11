@@ -1,52 +1,128 @@
-# hotglass — canonical design tokens.
-# This file is the single source of truth for every color in the system.
-# Edit here, then run ./generate to rewrite all derived files.
-# Shape and type constants live in DESIGN.md — they are stable by principle
-# (radius 0, borders 1px/3px) and have no cross-format runtime carrier.
+# hotglass 2.0 — canonical design tokens.
+# The single source of truth for every color, size, space and timing in the
+# desktop. Edit here, then run ./generate: it audits contrast (--check runs
+# first and aborts on failure) and rewrites every derived file. See DESIGN.md.
 
-# "voltage" — the one accent. Selection, focus, active workspace, borders,
-# prompt identity. 7.1:1 on black.
-# "deep" ("blaze") is the same hue at lower lightness (hsl 329·92·40) — a
-# shade, not a second accent — for filled blocks that carry light text:
-# bright voltage is too glaring a ground for any text color (black tops out
-# at 7.0:1 and reads worse than it measures), while white on deep is 5.9:1
-# and crisp.
+# ---- color -------------------------------------------------------------
+
+# "voltage", the one accent. Used as a mark, never a frame: active
+# workspace, selection indicator, caret, prompt arrow, progress fill, focus
+# ring. "deep" is the same hue at lower lightness, for fills that carry
+# white text (prompt directory, suggested buttons, switch track). "soft" is
+# the accent at alpha, for text-selection and search-match grounds only.
 accent:
-  hex: "FF52AB"
+  base: "FF52AB"
   deep: "C40869"
+  soft: 0.16
 
-# The "vivid" rail — luminance-matched siblings of the accent.
-# Status colors never do identity work: color appears only when
-# something needs attention.
+# The status rail, luminance-matched to the accent. Color means attention:
+# none of these ever marks a healthy resting state. Red sits on the orange
+# side ("ember", 10°) so it is 41° from voltage and never reads as identity.
 status:
-  red: "FF5C6C"    # error / critical / failed command
-  yellow: "FFC44D" # warning / dirty state / capslock
-  green: "3DE383"  # success confirmation
-  blue: "4FA8FF"   # info
+  red: "FF6A4D"    # error, critical, failed command, destructive confirm
+  yellow: "FFC44D" # warning, dirty tree, caps lock, idle inhibited
+  green: "3DE383"  # success confirmation only
+  blue: "4FA8FF"   # info, vim visual mode
 
-# White-alpha neutral ladder (over glass) and accent edge strengths.
-# The generator composites each over pure black to produce the opaque
-# "-ink" fallbacks for contexts that can't do transparency.
-alpha:
-  text: 1.00
-  text_dim: 0.65
-  text_muted: 0.40
-  edge_idle: 0.25       # inactive window border, quiet outlines
-  overlay_hover: 0.12   # hover surface
-  edge_subtle: 0.08     # hairline separators
-  edge_focus: 0.90      # accent @ — frames of focused chrome
-  edge_focus_dim: 0.40  # accent @ — quieter framed elements
+# Neutrals are white at alpha, named by job. Contexts that can't composite
+# get the same values flattened over black (the generated "-ink" fallbacks).
+text:
+  primary: 0.94   # titles, values, active labels
+  secondary: 0.68 # body copy, resting labels
+  tertiary: 0.46  # meta, timestamps, healthy stats
+  disabled: 0.28  # unavailable controls only
+fill:
+  subtle: 0.04    # cards and sections inside a panel
+  hover: 0.08
+  active: 0.12    # selected row, pressed
+  control: 0.18   # switch track off, slider and progress troughs
+edge:
+  hairline: 0.08  # separators, inactive window, bar bottom
+  default: 0.14   # overlay edges, inputs, tooltips
+  strong: 0.32    # focused window
+  highlight: 0.10 # 1px inner top light on overlays
 
-# Black at tokenized opacity — the foundation.
-glass:
-  glass: 0.75      # panels: bar, launcher, terminal
-  glass_thin: 0.55 # notification layer: composites on already-translucent
-                   # surfaces, so stacked alpha reads near-opaque unless
-                   # this layer is dialed down
+# Glass: black at alpha, always blurred. One value per elevation tier.
+surface:
+  window: 0.78    # ghostty, GTK apps, floating tools
+  bar: 0.66       # waybar (sits over the wallpaper's bright sky)
+  overlay: 0.72   # launcher, toasts, control center, OSD, tooltips, menus
 
-# Opaque raised surfaces on ink (white @ alpha, composited on black).
-# Used where translucency isn't available: prompt segments, GTK chrome.
+# Opaque raised surfaces (white @ alpha flattened on black) for contexts
+# with no translucency: prompt segments, TUIs.
 raise:
   raise_1: 0.14
   raise_2: 0.09
   raise_3: 0.05
+
+# ---- type --------------------------------------------------------------
+
+# Two voices: the interface speaks Adwaita Sans; the machine (terminal,
+# prompt, code) speaks CaskaydiaCove. Nerd glyphs in UI text resolve from
+# the Propo face through Pango's per-glyph fallback.
+type:
+  ui: "Adwaita Sans"
+  glyphs: "CaskaydiaCove Nerd Font Propo"
+  mono: "CaskaydiaCove Nerd Font"
+  mono_size: 13
+  # step: [px, weight, tracking em]
+  scale:
+    display: [168, 200, -0.04]
+    title: [17, 600, -0.01]
+    headline: [15, 600, 0]
+    body: [14, 400, 0]
+    ui: [13, 500, 0]
+    caption: [12, 500, 0]
+    overline: [11, 650, 0.08]
+
+# ---- space, shape, motion, depth ---------------------------------------
+
+space: [4, 8, 12, 16, 20, 24, 32]
+grid: 12 # window gaps: 12 between windows (gaps_in 6 per side) and to every edge
+
+shape:
+  radius: 0
+  edge: 1   # every border
+  mark: 3   # accent indicator / critical stripe; never a full frame
+  bar_mark: 2
+
+motion: # milliseconds
+  fast: 120
+  base: 200
+  exit: 140
+  slow: 320
+  enter_curve: [0.22, 1, 0.36, 1]
+  exit_curve: [0.4, 0, 1, 1]
+
+elevation:
+  window:
+    shadow: [0, 8, 24, 0.35]   # x, y, range, black alpha (focused only)
+    dim_inactive: 0.12
+  overlay:
+    shadow: [0, 16, 48, 0.55]
+
+blur:
+  size: 6
+  passes: 3
+  noise: 0.02
+  vibrancy: 0.17
+
+# ---- contrast audit (./generate --check) -------------------------------
+
+# Each text tier and the accent are composited over each surface, over each
+# backdrop that surface can actually sit on, and must clear the minimum.
+# "sky" is the wallpaper's brightest region, behind the bar.
+check:
+  backdrops:
+    black: "000000"
+    white: "FFFFFF"
+    sky: "F7C3B3"
+  surfaces:
+    window: [black, white]
+    overlay: [black, white]
+    bar: [black, sky]
+  minimum:
+    primary: 4.5
+    secondary: 4.5
+    tertiary: 3.0
+    accent: 3.0 # as a mark (UI component), not as text

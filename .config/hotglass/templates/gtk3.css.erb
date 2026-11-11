@@ -1,0 +1,27 @@
+/* <%= header %>
+   Template: hotglass/templates/gtk3.css.erb. See hotglass/DESIGN.md.
+
+   hotglass on Adwaita-dark for GTK3 apps. GTK3 Adwaita bakes most colors to
+   literals, so this layer is nominal: selection, a few grounds, and sharp
+   corners. GTK surfaces stay opaque (raise tiers on ink). */
+
+@define-color theme_bg_color <%= flat(:raise_3) %>;
+@define-color theme_base_color <%= c(:ink) %>;
+@define-color theme_selected_bg_color <%= c(:accent_deep) %>;
+@define-color theme_selected_fg_color <%= c(:white) %>;
+
+/* Radius 0, no exceptions. */
+button,
+entry,
+menu,
+popover,
+tooltip,
+headerbar,
+.titlebar,
+frame border,
+switch,
+switch slider,
+check,
+radio {
+  border-radius: 0;
+}

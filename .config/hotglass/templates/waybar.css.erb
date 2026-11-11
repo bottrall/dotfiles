@@ -1,0 +1,209 @@
+/* <%= header %>
+   Template: hotglass/templates/waybar.css.erb. See hotglass/DESIGN.md.
+
+   Bar anatomy (level 2 glass): workspaces left, nothing in the centre (the
+   webcam sits over it), clusters on the right with a 16px gap between
+   clusters. Tone follows importance: the clock is the only primary item at
+   600; network and volume are secondary; healthy stats are tertiary and
+   only take a status color when they cross a threshold. */
+
+* {
+  font-family: <%= ui_family %>;
+  <%= font(:ui) %>
+  font-feature-settings: "tnum";
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+window#waybar {
+  background-color: <%= c(:surface_bar) %>;
+  border-bottom: <%= edge %> solid <%= c(:edge_hairline) %>;
+  color: <%= c(:text_secondary) %>;
+}
+
+tooltip {
+  background-color: <%= c(:surface_overlay) %>;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+}
+
+tooltip label {
+  color: <%= c(:text_primary) %>;
+  padding: <%= px(8) %> <%= px(12) %>;
+}
+
+/* Tray context menus are separate popups: opaque, quiet edge. */
+menu {
+  background-color: <%= flat(:raise_2) %>;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  padding: <%= px(4) %> 0;
+}
+
+menu menuitem {
+  padding: <%= px(8) %> <%= px(12) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+menu menuitem:hover {
+  background-color: <%= c(:fill_active) %>;
+}
+
+button {
+  background: none;
+}
+
+/* --- workspaces: occupied cells are tertiary; the active one is primary
+   with a 16 x 2px accent mark centred on the bottom edge. --- */
+
+#workspaces button {
+  min-width: 32px;
+  padding: 0;
+  font-weight: 600;
+  color: <%= c(:text_tertiary) %>;
+  background-image: none;
+  transition: background-color <%= ms(:fast) %>, color <%= ms(:fast) %>;
+}
+
+#workspaces button:hover {
+  background-color: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+#workspaces button.active {
+  color: <%= c(:text_primary) %>;
+  background-image: linear-gradient(<%= c(:accent) %>, <%= c(:accent) %>);
+  background-size: 16px <%= bar_mark %>;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+
+#workspaces button.urgent {
+  color: <%= c(:text_primary) %>;
+  background-image: linear-gradient(<%= c(:red) %>, <%= c(:red) %>);
+  background-size: 16px <%= bar_mark %>;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+
+/* --- modules --- */
+
+#mpris,
+#custom-claude-usage,
+#network,
+#pulseaudio,
+#cpu,
+#memory,
+#temperature,
+#clock,
+#idle_inhibitor,
+#custom-notification,
+#custom-power {
+  margin: 0;
+  padding: 0 <%= px(8) %>;
+  transition: background-color <%= ms(:fast) %>, color <%= ms(:fast) %>;
+}
+
+#tray {
+  padding: 0;
+}
+
+#tray image {
+  padding: 0 <%= px(8) %>;
+}
+
+/* Cluster boundaries: [media] [claude] [tray] [network volume]
+   [cpu memory temperature] [clock] [idle notifications power] */
+#custom-claude-usage,
+#tray,
+#network,
+#cpu,
+#clock,
+#idle_inhibitor {
+  margin-left: <%= px(16) %>;
+}
+
+#custom-power {
+  margin-right: <%= px(4) %>;
+}
+
+/* One hover treatment for everything clickable. The clock only has a
+   tooltip and stays inert. */
+#mpris:hover,
+#network:hover,
+#pulseaudio:hover,
+#cpu:hover,
+#memory:hover,
+#temperature:hover,
+#idle_inhibitor:hover,
+#custom-notification:hover,
+#custom-power:hover,
+#custom-claude-usage:hover,
+#tray > widget:hover,
+#tray > eventbox:hover {
+  background-color: <%= c(:fill_hover) %>;
+}
+
+/* Secondary: things you adjust. */
+#network,
+#pulseaudio {
+  color: <%= c(:text_secondary) %>;
+}
+
+/* Tertiary: healthy state recedes. */
+#mpris,
+#cpu,
+#memory,
+#temperature,
+#idle_inhibitor,
+#custom-notification,
+#custom-power,
+#pulseaudio.muted,
+#network.disconnected {
+  color: <%= c(:text_tertiary) %>;
+}
+
+/* The clock anchors the right side; its date is dimmed via Pango markup in
+   config.jsonc, so only the time reads as primary 600. */
+#clock {
+  color: <%= c(:text_primary) %>;
+}
+
+/* Clawd rides in as a background image so hover covers the whole unit. */
+#custom-claude-usage {
+  padding-left: 36px;
+  color: <%= c(:text_tertiary) %>;
+  background-image: url("file:///home/jake/.config/waybar/icons/clawd.png");
+  background-repeat: no-repeat;
+  background-position: 8px center;
+  background-size: 20px 15px;
+}
+
+/* --- attention: color only when something needs you --- */
+
+#cpu.warning,
+#memory.warning,
+#temperature.warning,
+#custom-claude-usage.claude-usage-warning,
+#idle_inhibitor.activated {
+  color: <%= c(:yellow) %>;
+}
+
+#cpu.critical,
+#memory.critical,
+#temperature.critical,
+#custom-claude-usage.claude-usage-critical,
+#custom-claude-usage.claude-usage-error {
+  color: <%= c(:red) %>;
+}
+
+/* Unread notifications are yours and waiting: the bell takes the accent. */
+#custom-notification.notification,
+#custom-notification.inhibited-notification {
+  color: <%= c(:accent) %>;
+}
+
+/* The destructive affordance shows ember only on approach. */
+#custom-power:hover {
+  color: <%= c(:red) %>;
+}

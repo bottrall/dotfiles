@@ -1,0 +1,99 @@
+/* <%= header %>
+   Template: hotglass/templates/wofi.css.erb. See hotglass/DESIGN.md.
+
+   Launcher anatomy (level 3 overlay glass): a 56px search field split from
+   the results by a hairline, then 44px rows with 28px icons. Selection is
+   the system's list language: fill.active plus a 3px accent mark on the
+   leading edge; the label stays primary. No frame: the edge is a quiet 1px
+   with an inner top highlight. Also styles the power menu and
+   networkmanager-dmenu, which run wofi in dmenu mode. */
+
+* {
+  font-family: <%= ui_family %>;
+  font-feature-settings: "tnum";
+}
+
+window {
+  margin: 0;
+  padding: 0;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  border-radius: 0;
+  background-color: <%= c(:surface_overlay) %>;
+  box-shadow: inset 0 1px 0 <%= c(:edge_highlight) %>;
+}
+
+#outer-box,
+#inner-box {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+}
+
+#scroll {
+  margin: 0;
+  padding: <%= px(8) %> 0;
+  border: none;
+  background-color: transparent;
+}
+
+#input {
+  margin: 0;
+  padding: <%= px(16) %> <%= px(20) %>;
+  border: none;
+  border-bottom: <%= edge %> solid <%= c(:edge_hairline) %>;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  font-size: 20px;
+  font-weight: 400;
+  color: <%= c(:text_primary) %>;
+  caret-color: <%= c(:accent) %>;
+  background-color: transparent;
+}
+
+#input image {
+  color: <%= c(:text_tertiary) %>;
+  margin-right: <%= px(4) %>;
+}
+
+#entry {
+  min-height: 44px;
+  margin: 0;
+  padding: 0 <%= px(20) %>;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  transition: background-color <%= ms(:fast) %>;
+}
+
+#entry:hover {
+  background-color: <%= c(:fill_hover) %>;
+}
+
+#entry:selected {
+  outline: none;
+  background-color: <%= c(:fill_active) %>;
+  box-shadow: inset <%= mark %> 0 0 <%= c(:accent) %>;
+}
+
+#text {
+  margin: 0;
+  border: none;
+  <%= font(:headline) %>
+  font-weight: 500;
+  color: <%= c(:text_primary) %>;
+}
+
+#img {
+  margin-right: 14px;
+}
+
+#entry arrow {
+  border: none;
+  color: <%= c(:text_tertiary) %>;
+}
+
+#entry:drop(active) {
+  background-color: <%= c(:fill_active) %>;
+}

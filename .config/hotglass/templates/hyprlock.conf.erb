@@ -1,0 +1,97 @@
+# <%= header %>
+# Template: hotglass/templates/hyprlock.conf.erb. See hotglass/DESIGN.md.
+#
+# One centred column on a hard-blurred, half-dimmed wallpaper: date as an
+# overline, the display clock (ExtraLight, tabular figures), the password
+# field (overlay glass, 1px edge), and a quiet hint. The field's edge is the
+# only thing that changes color: accent while checking, ember on failure,
+# yellow with Caps Lock on. Weight, tracking and figures are set through
+# Pango markup; hyprlang needs "##" for a literal "#".
+
+general {
+    hide_cursor = true
+    ignore_empty_input = true
+}
+
+background {
+    monitor =
+    path = ~/.config/backgrounds/shaded.png
+    blur_passes = 3
+    blur_size = 10
+    brightness = 0.5
+    color = rgba(<%= a(:ink) %>)
+}
+
+# DATE (overline)
+label {
+    monitor =
+    text = cmd[update:60000] echo "<span weight='650' letter_spacing='1800'>$(date +'%A %-d %B' | tr '[:lower:]' '[:upper:]')</span>"
+    color = rgba(<%= a(:text_secondary) %>)
+    font_size = 13
+    font_family = <%= ui_name %>
+    position = 0, 214
+    halign = center
+    valign = center
+}
+
+# CLOCK (display)
+label {
+    monitor =
+    text = cmd[update:1000] echo "<span weight='200' font_features='tnum' letter_spacing='-5000'>$(date +%H:%M)</span>"
+    color = rgba(<%= a(:text_primary) %>)
+    font_size = <%= size(:display) %>
+    font_family = <%= ui_name %>
+    position = 0, 96
+    halign = center
+    valign = center
+}
+
+# PASSWORD
+input-field {
+    monitor =
+    size = 360, 48
+    outline_thickness = 1
+    rounding = 0
+    dots_size = 0.18
+    dots_spacing = 0.6
+    dots_center = true
+    dots_rounding = 0
+    outer_color = rgba(<%= a(:edge_default) %>)
+    inner_color = rgba(<%= a(:surface_overlay) %>)
+    font_color = rgba(<%= a(:text_primary) %>)
+    font_family = <%= ui_name %>
+    fade_on_empty = false
+    placeholder_text = <span foreground='##<%= a(:text_tertiary) %>'>Password</span>
+    hide_input = false
+    check_color = rgba(<%= a(:accent) %>)
+    fail_color = rgba(<%= a(:red) %>)
+    fail_text = Wrong password · attempt $ATTEMPTS
+    capslock_color = rgba(<%= a(:yellow) %>)
+    position = 0, -56
+    halign = center
+    valign = center
+}
+
+# HINT (caption)
+label {
+    monitor =
+    text = Enter to unlock
+    color = rgba(<%= a(:text_tertiary) %>)
+    font_size = <%= size(:caption) %>
+    font_family = <%= ui_name %>
+    position = 0, -108
+    halign = center
+    valign = center
+}
+
+# WHO (bottom-left)
+label {
+    monitor =
+    text = cmd[update:0] echo "<span weight='600' foreground='##<%= a(:text_secondary) %>'>$USER</span>  ·  $(uname -n)"
+    color = rgba(<%= a(:text_tertiary) %>)
+    font_size = <%= size(:ui) %>
+    font_family = <%= ui_name %>
+    position = 32, 28
+    halign = left
+    valign = bottom
+}

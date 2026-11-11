@@ -1,0 +1,34 @@
+# <%= header %>
+# Template: hotglass/templates/ghostty.conf.erb. See hotglass/DESIGN.md.
+# Included from ghostty/config via config-file.
+
+# The machine voice: one monospace face for terminal, prompt and code.
+font-family = <%= mono_name %>
+font-size = <%= mono_size %>
+
+# Level 1 window glass; Hyprland blurs behind it.
+background = <%= c(:ink) %>
+background-opacity = <%= t.fetch("surface").fetch("window") %>
+window-padding-x = <%= sp(16) %>
+window-padding-y = <%= sp(12) %>
+window-padding-balance = true
+
+# The caret is the purest "you are here" mark; selection matches the
+# prompt's directory block.
+cursor-color = <%= c(:accent) %>
+cursor-text = <%= c(:ink) %>
+selection-background = <%= c(:accent_deep) %>
+selection-foreground = <%= c(:white) %>
+
+# ANSI status subset: errors, warnings and success look the same here as
+# everywhere else. Black, white and cyan stay stock.
+palette = 1=<%= c(:red) %>
+palette = 9=<%= c(:red) %>
+palette = 2=<%= c(:green) %>
+palette = 10=<%= c(:green) %>
+palette = 3=<%= c(:yellow) %>
+palette = 11=<%= c(:yellow) %>
+palette = 4=<%= c(:blue) %>
+palette = 12=<%= c(:blue) %>
+palette = 5=<%= c(:accent) %>
+palette = 13=<%= c(:accent) %>

@@ -1,5 +1,7 @@
-background = #000
-background-opacity = 0.75
+# Font, glass, padding, caret, selection and the ANSI status colors come
+# from hotglass (generated; see ~/.config/hotglass/DESIGN.md).
+config-file = hotglass.conf
+
 split-inherit-working-directory = true
 tab-inherit-working-directory = false
 window-inherit-working-directory = false

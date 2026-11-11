@@ -1,60 +1,142 @@
-# hotglass
+# hotglass 2.0
 
-A from-scratch design system for this desktop: pure-black glass, one electric pink, sharp edges. Every themed surface derives from the tokens in `tokens.yml`; this document is the contract for applying it to anything new.
+The design system for this desktop: black glass, one hot pink used as a mark, sharp edges, two typefaces. Every themed surface is generated from `tokens.yml`; this document is the contract for applying it to anything new.
+
+2.0 keeps 1.0's foundation (one token file, black glass, a single accent, alpha neutrals, color reserved for attention, radius 0) and changes how the system speaks: focus is shown with light and depth instead of pink frames, type has two voices and a real scale, and notifications are rebuilt around what you can take in within a second.
 
 ## Principles
 
-1. **Black glass foundation.** Backgrounds are pure neutral black at tokenized opacity — the wallpaper glows through shell chrome. The system is wallpaper-agnostic: nothing may depend on what's behind the glass.
-2. **One accent.** A single pink — *voltage* `#FF52AB` — does all identity work: selection, focus, active workspace, focused borders, prompt identity. Nothing else gets a signature color.
-3. **Alpha-based neutrals.** Every neutral is white at a tokenized alpha. Contexts that can't composite (TUIs, hyprlock, GTK chrome) use the same values flattened over black — the generated `-ink` fallbacks — never hand-picked grays.
-4. **Color means attention.** The status rail (red/yellow/green/blue) appears only when something needs attention: errors, warnings, dirty state, urgent notifications. Healthy state is neutral. Status colors never do identity work — no permanently-green anything.
-5. **Sharp and sparse.** `border-radius: 0` everywhere. Borders are 1px (subtle) or 3px (emphasis) — nothing in between. Chrome typography is CaskaydiaCove Nerd Font.
+1. **Black glass, always blurred.** Every surface is translucent black and every glass surface is blurred, in three opacity tiers by elevation. Nothing may depend on what's behind the glass; `./generate --check` proves contrast over black, white and the wallpaper's brightest sky.
+2. **One accent, used as a mark.** Voltage `#FF52AB` is the only identity color, and it appears small: a 2–3px indicator, the caret, the prompt arrow, a progress fill, a switch track, the keyboard focus ring. It never outlines anything larger than a control. Fills that carry text use `accent.deep`.
+3. **Neutrals by role.** Every neutral is white at an alpha, named by its job: `text`, `fill`, `edge`. Contexts that can't composite use the same values flattened over black.
+4. **Color means attention.** The status rail appears only when something needs you. Healthy state is neutral. Red is ember (`#FF6A4D`, 41° from voltage) so attention never reads as identity.
+5. **Sharp.** Radius 0 with no exceptions, switches included. Edges are 1px everywhere; 3px is reserved for the mark and the critical stripe, never a frame.
+6. **Depth by light.** Focus and elevation are shown with edge brightness, shadow, blur and dimming.
+7. **Two voices.** Adwaita Sans for the interface, CaskaydiaCove for the machine (terminal, prompt, code). Hierarchy comes from size and weight first, tone second.
+8. **Quiet by default.** Healthy state recedes: tertiary stats, transient media toasts, short timeouts, silent low-urgency notifications.
+
+## The focus model
+
+One signal per question, so each can be quiet.
+
+| Question | Signal | Where |
+|---|---|---|
+| Which window am I typing into? | 1px `edge.strong` + window shadow; unfocused windows get `edge.hairline` and 12% dimming. A lone tiled window gets no edge or shadow. | Hyprland |
+| Where am I in this list? | `fill.active` + 3px accent mark on the leading edge; label stays primary. Under `:backdrop` the mark turns tertiary. | wofi, power menu, GTK sidebars and lists |
+| Where is the keyboard? | 2px accent ring, 2px offset, `:focus-visible` only | GTK, swaync |
+| What's active or on? | Accent mark (workspace) or `accent.deep` fill on a small control (switch) | waybar, control center |
+| What needs me? | Status color as a 3px stripe, icon tint or value color. Never a frame. | toasts, bar values, lock input |
 
 ## Tokens
 
-Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, `hotglass.lua`, clipse theme, starship and satty palette blocks, icon theme) are committed but never hand-edited.
+Edit `tokens.yml`, then run `./generate`. It audits contrast first and writes nothing if any check fails; `./generate --check` prints the full table.
 
-| Token | Value | Role |
+### Color
+
+| Group | Tokens | Use |
 |---|---|---|
-| `accent` | `#FF52AB` | selection, focus, active, identity |
-| `accent-deep` | `#C40869` | same hue, lower lightness — filled blocks carrying light text (e.g. the prompt directory); bright voltage is too glaring a ground for text |
-| `red` | `#FF5C6C` | error, critical, failed command |
-| `yellow` | `#FFC44D` | warning, dirty state, capslock |
-| `green` | `#3DE383` | success confirmation |
-| `blue` | `#4FA8FF` | info |
-| `text` | white @ 100% | primary text |
-| `text-dim` | white @ 65% | secondary text |
-| `text-muted` | white @ 40% | tertiary text, passive icons |
-| `edge-idle` | white @ 25% | inactive window border, quiet outlines |
-| `overlay-hover` | white @ 12% | hover surface |
-| `edge-subtle` | white @ 8% | hairline separators |
-| `edge-focus` | accent @ 90% | frames of focused chrome |
-| `edge-focus-dim` | accent @ 40% | quieter framed elements |
-| `glass` | black @ 75% | panels: bar, launcher, terminal, GTK4 app windows |
-| `glass-thin` | black @ 55% | notification layer (stacks on translucent surfaces) |
-| `ink` | `#000000` | opaque ground |
-| `raise-1/2/3` | white @ 14/9/5% on ink | opaque raised surfaces: prompt segments, GTK floating chrome (popovers, dialogs) |
+| accent | `base` voltage · `deep` · `soft` (16%) | marks · fills carrying white text · text-selection ground |
+| status | `red` ember · `yellow` · `green` · `blue` | error/critical/destructive · warning, caps lock, idle inhibited · success only · info |
+| text | `primary` .94 · `secondary` .68 · `tertiary` .46 · `disabled` .28 | titles and values · body and resting labels · meta, timestamps, healthy stats · unavailable |
+| fill | `subtle` .04 · `hover` .08 · `active` .12 · `control` .18 | cards inside panels · hover · selected/pressed · switch track, troughs |
+| edge | `hairline` .08 · `default` .14 · `strong` .32 · `highlight` .10 | separators, inactive window · overlay edges, inputs · focused window · inner top light on overlays |
+| surface | `window` .78 · `bar` .66 · `overlay` .72 (black @) | level 1 · level 2 · level 3 |
+| raise | `raise_1/2/3` | opaque fallbacks: prompt segments, TUIs, popovers |
 
-Shape and type constants (no runtime carrier — apply by hand, cite this doc):
+### Elevation
 
-| Constant | Value |
+| Level | Surface | Edge | Shadow | Members |
+|---|---|---|---|---|
+| 0 Wallpaper | — | — | — | never covered by chrome without glass |
+| 1 Window | `surface.window` | hairline; strong when focused; none when alone | focused only | ghostty, GTK apps, floating btop / clipse / satty |
+| 2 Bar | `surface.bar` | hairline bottom | none | waybar |
+| 3 Overlay | `surface.overlay` | default + inner highlight | deep | wofi, swaync, tooltips, swayosd, hyprlock input |
+
+Blur is Hyprland's (size 6, 3 passes, a little noise for grain), on windows, popups and the `waybar`, `wofi`, `swaync-*` and `swayosd` layers with `ignore_alpha 0.5` so drop shadows aren't blurred.
+
+### Type
+
+Two families: `type.ui` Adwaita Sans (variable, Inter lineage, true tabular figures) with Nerd glyphs falling back per-glyph to `type.glyphs` CaskaydiaCove Nerd Font Propo; `type.mono` CaskaydiaCove Nerd Font at 13.
+
+| Step | px / weight / tracking | Use |
+|---|---|---|
+| display | 168 / 200 / −0.04em | lock clock |
+| title | 17 / 600 / −0.01em | panel titles |
+| headline | 15 / 600 | toast summary, launcher rows (at 500) |
+| body | 14 / 400 | toast body, control center rows |
+| ui | 13 / 500 | bar, buttons |
+| caption | 12 / 500 | timestamps, hints |
+| overline | 11 / 650 / +0.08em, caps | group headers, the lock date |
+
+Numbers that change in place (bar, OSD, clocks, timestamps) use tabular figures. A component uses at most three steps, two weights and three tones.
+
+### Space, shape, motion
+
+- **Space** 4 · 8 · 12 · 16 · 20 · 24 · 32. Templates call `px(n)`, which refuses anything off the scale. **Grid** 12: 12px between windows (`gaps_in` 6) and to every edge; toasts, control center and OSD sit on the same grid.
+- **Shape** radius 0 · edge 1px · mark 3px (2px on the bar).
+- **Motion** fast 120ms (hover, focus edge) · base 200ms enter / 140ms exit (windows, layers, toasts) · slow 320ms (workspaces, `slidefade 12%`). Enter decelerates `(0.22, 1, 0.36, 1)`; exit accelerates `(0.4, 0, 1, 1)`.
+
+### Reference (generated)
+
+<!-- hotglass:tokens:begin -->
+<!-- GENERATED by hotglass/generate from tokens.yml — edit tokens.yml or templates/ and rerun; do not edit this file. -->
+| Token | Value |
 |---|---|
-| radius | `0`, always |
-| border | `1px` subtle / `3px` emphasis |
-| gaps | `5` inner / `10` outer |
-| chrome font | CaskaydiaCove Nerd Font, 15px (bar/notifications) / 18px (launcher) |
-| GTK app font | Adwaita Sans 11 (proportional stays for app content) |
+| `accent` | `#FF52AB` |
+| `accent.deep` | `#C40869` |
+| `accent.soft` | `rgba(255, 82, 171, 0.16)` |
+| `red` | `#FF6A4D` |
+| `yellow` | `#FFC44D` |
+| `green` | `#3DE383` |
+| `blue` | `#4FA8FF` |
+| `white` | `#FFFFFF` |
+| `ink` | `#000000` |
+| `text.primary` | `rgba(255, 255, 255, 0.94)` |
+| `text.secondary` | `rgba(255, 255, 255, 0.68)` |
+| `text.tertiary` | `rgba(255, 255, 255, 0.46)` |
+| `text.disabled` | `rgba(255, 255, 255, 0.28)` |
+| `fill.subtle` | `rgba(255, 255, 255, 0.04)` |
+| `fill.hover` | `rgba(255, 255, 255, 0.08)` |
+| `fill.active` | `rgba(255, 255, 255, 0.12)` |
+| `fill.control` | `rgba(255, 255, 255, 0.18)` |
+| `edge.hairline` | `rgba(255, 255, 255, 0.08)` |
+| `edge.default` | `rgba(255, 255, 255, 0.14)` |
+| `edge.strong` | `rgba(255, 255, 255, 0.32)` |
+| `edge.highlight` | `rgba(255, 255, 255, 0.1)` |
+| `surface.window` | `rgba(0, 0, 0, 0.78)` |
+| `surface.bar` | `rgba(0, 0, 0, 0.66)` |
+| `surface.overlay` | `rgba(0, 0, 0, 0.72)` |
+| `raise.1` | `#242424` |
+| `raise.2` | `#171717` |
+| `raise.3` | `#0D0D0D` |
+<!-- hotglass:tokens:end -->
+
+## Components
+
+**Bar (waybar).** Workspaces left; the centre is reserved and empty because the webcam sits over it. The right side reads as clusters 16px apart: [media] [Claude usage] [tray] [network volume] [cpu memory temperature] [clock] [idle notifications power]. The clock anchors the right side: the only primary item at 600, its date dimmed. Network and volume are secondary; healthy stats tertiary, turning yellow/ember at thresholds (CPU and memory 70/90%, temperature 80/90°, Claude usage 80/95%). Workspaces are 32px cells; the active one carries a 16 × 2px accent mark, an urgent one an ember mark. Unread notifications turn the bell accent.
+
+**Notifications (swaync).** Toasts are 380px overlay cards, 12px below the bar and from the edge, 8px apart. Anatomy: 40px image with the app badge · headline (15/600) and relative time · body (14/400 secondary, clamped) · text-button actions split by hairlines. swaync 0.12 has no app-name label on a toast, so identity comes from the badge; the control center's group headers carry the app name as an overline. Urgency changes behaviour as well as looks: low is quieter (secondary headline), 4s and silent; normal is 6s with the message sound; critical gets the 3px ember stripe, stays until dismissed and plays the warning sound. The control center fits its content, starts with title / Do not disturb (a square switch) / media, and separates cards by fill instead of lines. Spotify's track-change toasts are transient (shown, never kept).
+
+**Launcher and menus (wofi).** 680 × 520, top-anchored 280px down. 56px search field with a placeholder, hairline, 44px rows with 28px icons, the standard selection mark. The power menu keeps a fixed order (`--cache-file /dev/null`); session-ending actions carry "…" and open a confirm menu with the destructive label in ember. networkmanager-dmenu inherits the style.
+
+**Lock (hyprlock).** One centred column on the wallpaper blurred and dimmed to 50%: overline date, display clock, 360 × 48 password field (overlay glass, 1px edge that turns accent while checking, ember on failure, yellow with Caps Lock), caption hint; user and host bottom-left.
+
+**OSD (swayosd).** 320 × 56 overlay, bottom centre; accent level fill, tertiary when muted. Volume and caps-lock binds use it when `swayosd` is installed and fall back to plain `wpctl` otherwise.
+
+**Windows (Hyprland).** See the focus model. Two motion curves plus linear; windows pop in at 95%.
+
+**Terminal and prompt.** Ghostty uses CaskaydiaCove at 13, 16 × 12 padding, `surface.window` glass, accent caret, `accent.deep` selection, and the ANSI status subset (red, green, yellow, blue, magenta → rail and accent; black, white, cyan stock). The starship prompt keeps its powerline shape on raise tiers with the `accent.deep` directory block; `git_status` turns yellow only when dirty and the arrow turns ember after a failed command.
+
+**GTK.** libadwaita named colors on Adwaita dark: window glass, `accent.deep` suggested buttons with white text, the selection mark in sidebars and lists, square everything (window controls included), accent focus rings on `:focus-visible` only. GTK3 gets a nominal layer.
+
+## Generator
+
+`generate` (Ruby, stdlib) renders `templates/*.erb` with literal values — GTK3 consumers can't resolve CSS custom properties — to the paths in its `TEMPLATES` table, and writes `colors.css` (GTK `@define-color` set for ad-hoc stylesheets), `hotglass.lua` (the Hyprland token table that `hypr/look.lua` reads at runtime), the clipse theme, the starship and satty palette blocks, the reference table above, and the icon theme. Generated files are committed and carry a "do not edit" header.
 
 ## Scope
 
-**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, satty (annotation palette, square corners), ghostty background/opacity, GTK4 via a libadwaita named-color override on Adwaita (this includes file pickers: `xdg-desktop-portal/` routes the portal's FileChooser to Nautilus itself via xdg-desktop-portal-gnome, which Electron/Chromium apps like VS Code go through), GTK 3 via Adwaita-dark + the same named colors (GTK3 Adwaita bakes its colors to literals, so this is nominal — GTK3 is off the daily path now), icon theme (generated folder + file glyphs; everything else inherits Adwaita).
+**In:** waybar, wofi (and networkmanager-dmenu), swaync, swayosd, hyprlock, Hyprland decoration and motion, starship, clipse, satty, ghostty (font, glass, padding, caret, selection, ANSI status subset), GTK4 via libadwaita named colors (including the Nautilus-backed file chooser), GTK3 nominally, the icon theme.
 
-**Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop), wallpaper, cursor theme.
+**Out:** the rest of the ANSI-16 palette (black, white, cyan) and anything that only inherits it, btop's own theme, wallpaper, cursor theme.
 
-Boundary rule: *apps whose colors we configure get tokens; the ANSI palette and anything that merely inherits it stays stock.*
-
-Hooks for later: Nautilus is now the daily-driven GUI file manager — revisit GTK depth (does the override layer hold up under heavy content views?); GTK3's theme name must stay the built-in `Adwaita` + prefer-dark (`Adwaita-dark` is a gnome-themes-extra directory, and GTK3 falls back to *light* Adwaita when it's missing); a GTK3 surface that matters again would need selector-based CSS, not named colors; btop can join by the boundary rule if its colors ever get configured.
-
-## Prompt (state-driven)
-
-The starship prompt keeps its powerline shape but sits on neutral raise tiers; the directory block is the one accent surface. Segment identity comes from icons and position. Color is reserved for state: `git_status` renders yellow only when the tree is dirty, and the prompt character flips red after a failed command. A color change in the prompt always means something changed.
+Notes: GTK3's theme name must stay the built-in `Adwaita` + prefer-dark (`Adwaita-dark` is a gnome-themes-extra directory, and GTK3 falls back to *light* Adwaita when it's missing). The monospace gsetting (`monospace-font-name`) is set by `install.sh`.

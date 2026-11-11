@@ -1,0 +1,539 @@
+/* <%= header %>
+   Template: hotglass/templates/swaync.css.erb. See hotglass/DESIGN.md.
+
+   Toasts and the control center are level 3 overlay glass: a quiet 1px edge
+   with an inner top highlight and a soft shadow, never an accent frame.
+   Toast anatomy: [40px image + app badge] headline (15/600) and relative
+   time on one line, body (14/400 secondary, clamped), then text-button
+   actions split by hairlines. Urgency: low whispers (secondary headline,
+   tertiary body); critical gets the 3px ember stripe. swaync replaces its
+   default stylesheet with this one, so every node it styles is covered. */
+
+:root {
+  --notification-icon-size: 40px;
+  --notification-app-icon-size: 16px;
+  --notification-group-icon-size: 16px;
+  --mpris-album-art-icon-size: 48px;
+}
+
+* {
+  font-family: <%= ui_family %>;
+  <%= font(:body) %>
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+}
+
+notificationwindow,
+blankwindow,
+.blank-window,
+.floating-notifications {
+  background: transparent;
+}
+
+/* ---- toast surface ---------------------------------------------------- */
+
+.notification-row {
+  background: none;
+}
+
+.notification-row:focus {
+  background: none;
+}
+
+/* Keyboard focus only: a 2px accent ring, never on click. */
+.notification-row:focus-visible .notification {
+  outline: 2px solid <%= c(:accent) %>;
+  outline-offset: 2px;
+}
+
+/* Floating stack: 12px below the bar and from the screen edge, 8px between
+   toasts. The extra left/bottom padding is room for the drop shadow. */
+.floating-notifications scrolledwindow {
+  padding-top: <%= px(12) %>;
+}
+
+.floating-notifications .notification-row .notification-background {
+  padding: 0 <%= px(12) %> <%= px(8) %> <%= px(24) %>;
+}
+
+.notification {
+  padding: 0;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  background: <%= c(:surface_overlay) %>;
+  box-shadow: inset 0 1px 0 <%= c(:edge_highlight) %>, 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: background-color <%= ms(:fast) %>;
+}
+
+/* Critical: the 3px ember stripe on the leading edge, nothing else loud. */
+.notification.critical {
+  box-shadow: inset <%= mark %> 0 0 <%= c(:red) %>, inset 0 1px 0 <%= c(:edge_highlight) %>, 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.notification-default-action {
+  padding: <%= px(16) %>;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: <%= c(:text_primary) %>;
+  transition: background-color <%= ms(:fast) %>;
+}
+
+.notification-default-action:hover {
+  -gtk-icon-filter: none;
+  background: <%= c(:fill_hover) %>;
+}
+
+.close-button {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  margin-top: <%= px(8) %>;
+  margin-right: <%= px(8) %>;
+  border: none;
+  background: transparent;
+  color: <%= c(:text_tertiary) %>;
+}
+
+.close-button:hover {
+  background: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+/* ---- toast content ---------------------------------------------------- */
+
+.notification-content {
+  padding: 0;
+  background: transparent;
+}
+
+.notification-content .image {
+  -gtk-icon-filter: none;
+  -gtk-icon-size: var(--notification-icon-size);
+  margin: 0 <%= px(12) %> 0 0;
+}
+
+.notification-content .app-icon {
+  -gtk-icon-filter: none;
+  -gtk-icon-size: var(--notification-app-icon-size);
+  margin: 0;
+}
+
+/* Base GTK 4 CSS dims labels to 50%. */
+.notification-content .text-box label {
+  filter: none;
+}
+
+.notification-content .text-box .summary {
+  <%= font(:headline) %>
+  color: <%= c(:text_primary) %>;
+  background: transparent;
+}
+
+.notification-content .text-box .time {
+  <%= font(:caption) %>
+  font-feature-settings: "tnum";
+  color: <%= c(:text_tertiary) %>;
+  background: transparent;
+  margin-right: <%= px(24) %>;
+}
+
+.notification-content .text-box .body {
+  <%= font(:body) %>
+  color: <%= c(:text_secondary) %>;
+  background: transparent;
+  margin-top: 2px;
+}
+
+/* Low urgency whispers. */
+.notification.low .notification-content .text-box .summary {
+  font-weight: 500;
+  color: <%= c(:text_secondary) %>;
+}
+
+.notification.low .notification-content .text-box .body {
+  color: <%= c(:text_tertiary) %>;
+}
+
+.notification.critical .notification-content .app-icon,
+.notification.critical .notification-content .image {
+  color: <%= c(:red) %>;
+}
+
+.notification-content progressbar {
+  margin-top: <%= px(12) %>;
+}
+
+.notification-content progressbar trough {
+  min-height: 4px;
+  border: none;
+  background: <%= c(:fill_control) %>;
+}
+
+.notification-content progressbar progress {
+  min-height: 4px;
+  border: none;
+  background: <%= c(:accent) %>;
+}
+
+.notification-content .body-image {
+  margin-top: <%= px(8) %>;
+  background-color: <%= c(:ink) %>;
+  -gtk-icon-filter: none;
+}
+
+.notification-content .inline-reply {
+  margin-top: <%= px(8) %>;
+}
+
+.notification-content .inline-reply .inline-reply-entry {
+  min-height: 32px;
+  padding: 0 <%= px(8) %>;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  background: <%= c(:fill_subtle) %>;
+  color: <%= c(:text_primary) %>;
+  caret-color: <%= c(:accent) %>;
+}
+
+.notification-content .inline-reply .inline-reply-entry:focus-within {
+  outline: 2px solid <%= c(:accent) %>;
+  outline-offset: 2px;
+}
+
+.notification-content .inline-reply .inline-reply-button {
+  margin-left: <%= px(8) %>;
+  padding: 0 <%= px(12) %>;
+  border: none;
+  background: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+  font-weight: 600;
+}
+
+.notification-content .inline-reply .inline-reply-button:hover {
+  background: <%= c(:fill_active) %>;
+}
+
+.notification-content .inline-reply .inline-reply-button:disabled {
+  background: transparent;
+  color: <%= c(:text_disabled) %>;
+}
+
+/* Actions: text buttons in a footer split by hairlines. No borders. */
+.notification-alt-actions {
+  padding: 0;
+  border-top: <%= edge %> solid <%= c(:edge_hairline) %>;
+  background: none;
+}
+
+.notification-action {
+  margin: 0;
+  padding: 0;
+}
+
+.notification-action > button {
+  min-height: 40px;
+  padding: 0 <%= px(8) %>;
+  border: none;
+  background: transparent;
+  color: <%= c(:text_primary) %>;
+  <%= font(:ui) %>
+  font-weight: 600;
+  transition: background-color <%= ms(:fast) %>;
+}
+
+.notification-action:not(:first-child) > button {
+  border-left: <%= edge %> solid <%= c(:edge_hairline) %>;
+}
+
+.notification-action > button:hover {
+  background: <%= c(:fill_hover) %>;
+}
+
+/* ---- groups (control center) ------------------------------------------ */
+
+.notification-group {
+  transition: opacity <%= ms(:base) %> <%= curve(:enter) %>;
+}
+
+.notification-group:focus {
+  background: none;
+}
+
+.notification-group .notification-group-headers {
+  margin: <%= px(12) %> <%= px(16) %> <%= px(4) %>;
+  color: <%= c(:text_tertiary) %>;
+}
+
+.notification-group .notification-group-headers .notification-group-icon {
+  color: <%= c(:text_tertiary) %>;
+  -gtk-icon-size: var(--notification-group-icon-size);
+  margin-right: <%= px(8) %>;
+}
+
+.notification-group .notification-group-headers .notification-group-header {
+  <%= font(:overline) %>
+  text-transform: uppercase;
+  color: <%= c(:text_tertiary) %>;
+}
+
+.notification-group .notification-group-buttons {
+  margin: 0 <%= px(16) %>;
+}
+
+.notification-group .notification-group-buttons button {
+  padding: <%= px(4) %> <%= px(8) %>;
+  border: none;
+  background: transparent;
+  color: <%= c(:text_tertiary) %>;
+  <%= font(:caption) %>
+}
+
+.notification-group .notification-group-buttons button:hover {
+  background: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+.notification-group .notification-group-close-button .close-button {
+  margin: <%= px(12) %> <%= px(16) %>;
+}
+
+/* Collapsed stacks: cards behind the top one are opaque so they read as a
+   stack instead of bleeding through. */
+.notification-group.collapsed .notification-row .notification {
+  background-color: <%= flat(:raise_3) %>;
+}
+
+.notification-group.collapsed.not-expanded {
+  opacity: 0.5;
+}
+
+.notification-group.collapsed .notification-row:not(:last-child) .notification-action,
+.notification-group.collapsed .notification-row:not(:last-child) .notification-default-action {
+  opacity: 0;
+}
+
+.notification-group.collapsed:hover .notification-row:not(:only-child) .notification {
+  background-color: <%= flat(:raise_3) %>;
+}
+
+/* ---- control center --------------------------------------------------- */
+
+.control-center {
+  background: <%= c(:surface_overlay) %>;
+  color: <%= c(:text_primary) %>;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  box-shadow: inset 0 1px 0 <%= c(:edge_highlight) %>;
+}
+
+.control-center .control-center-list {
+  background: transparent;
+  padding-bottom: <%= px(8) %>;
+}
+
+.control-center .control-center-list-placeholder {
+  color: <%= c(:text_tertiary) %>;
+  opacity: 1;
+  margin: <%= px(24) %> 0 <%= px(32) %>;
+}
+
+.control-center .control-center-list-placeholder label {
+  <%= font(:body) %>
+  font-weight: 500;
+  color: <%= c(:text_secondary) %>;
+}
+
+/* swaync sizes this icon in code; only its tone is ours. */
+.control-center .control-center-list-placeholder image {
+  color: <%= c(:text_tertiary) %>;
+}
+
+/* Inside the panel the one edge belongs to the panel: cards separate by
+   fill and space, with no lines and no shadow. */
+.control-center .notification-row .notification-background {
+  padding: <%= px(4) %> <%= px(16) %>;
+}
+
+.control-center .notification {
+  border: none;
+  background: <%= c(:fill_subtle) %>;
+  box-shadow: none;
+}
+
+.control-center .notification.critical {
+  box-shadow: inset <%= mark %> 0 0 <%= c(:red) %>;
+}
+
+.control-center .notification .notification-default-action {
+  padding: <%= px(12) %> <%= px(16) %>;
+}
+
+.control-center .notification .notification-default-action:hover,
+.control-center .notification .notification-action > button:hover {
+  background-color: <%= c(:fill_hover) %>;
+}
+
+/* ---- widgets ---------------------------------------------------------- */
+
+.widget {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.widget-title {
+  margin: <%= px(16) %> <%= px(16) %> <%= px(8) %>;
+}
+
+.widget-title > label {
+  <%= font(:title) %>
+  color: <%= c(:text_primary) %>;
+}
+
+.widget-title > button {
+  padding: <%= px(8) %> <%= px(12) %>;
+  margin-right: -<%= px(8) %>;
+  border: none;
+  background: transparent;
+  color: <%= c(:text_secondary) %>;
+  <%= font(:ui) %>
+  font-weight: 600;
+}
+
+.widget-title > button:hover {
+  background: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+.widget-dnd {
+  margin: 0 <%= px(16) %> <%= px(8) %>;
+}
+
+.widget-dnd > label {
+  <%= font(:body) %>
+  font-weight: 500;
+  color: <%= c(:text_primary) %>;
+}
+
+/* A square switch: fill.control track off, accent.deep track and white
+   knob on. Radius 0, no exceptions. */
+.widget-dnd > switch {
+  min-width: 36px;
+  min-height: 20px;
+  padding: 3px;
+  border: none;
+  background: <%= c(:fill_control) %>;
+  transition: background-color <%= ms(:fast) %>;
+}
+
+.widget-dnd > switch:checked {
+  background: <%= c(:accent_deep) %>;
+}
+
+.widget-dnd > switch > image {
+  opacity: 0;
+}
+
+.widget-dnd > switch > slider {
+  min-width: 14px;
+  min-height: 14px;
+  margin: 0;
+  border: none;
+  background: <%= c(:text_secondary) %>;
+}
+
+.widget-dnd > switch:checked > slider {
+  background: <%= c(:white) %>;
+}
+
+.widget-label > label {
+  color: <%= c(:text_secondary) %>;
+}
+
+.widget-inhibitors > label {
+  <%= font(:title) %>
+  color: <%= c(:text_primary) %>;
+}
+
+.widget-inhibitors > button,
+.widget-buttons-grid flowboxchild > button,
+.widget-menubar button {
+  border: none;
+  background: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+.widget-inhibitors > button:hover,
+.widget-buttons-grid flowboxchild > button:hover,
+.widget-menubar button:hover {
+  background: <%= c(:fill_active) %>;
+}
+
+.widget-buttons-grid flowboxchild > button.toggle:checked {
+  background: <%= c(:accent_deep) %>;
+  color: <%= c(:white) %>;
+}
+
+/* Media: a fill.subtle block with 48px art, title and artist, and quiet
+   transport buttons. The blurred album-art backdrop is switched off. */
+.widget-mpris {
+  margin: 0 <%= px(16) %> <%= px(8) %>;
+}
+
+.widget-mpris > box > button {
+  border: none;
+  background: transparent;
+  color: <%= c(:text_tertiary) %>;
+}
+
+.widget-mpris > box > button:disabled {
+  opacity: 0;
+}
+
+.widget-mpris .widget-mpris-player {
+  margin: 0;
+  border: none;
+  background: <%= c(:fill_subtle) %>;
+}
+
+.widget-mpris .widget-mpris-player .mpris-background {
+  opacity: 0;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay {
+  padding: <%= px(12) %>;
+  background: transparent;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-album-art {
+  margin-right: <%= px(12) %>;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-title {
+  <%= font(:body) %>
+  font-weight: 600;
+  color: <%= c(:text_primary) %>;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-subtitle {
+  <%= font(:ui) %>
+  font-weight: 400;
+  color: <%= c(:text_secondary) %>;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay button {
+  border: none;
+  background: transparent;
+  color: <%= c(:text_secondary) %>;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay button:hover {
+  background: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+.widget-volume row image,
+.widget-slider label,
+.per-app-volume {
+  color: <%= c(:text_secondary) %>;
+}

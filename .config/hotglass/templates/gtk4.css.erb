@@ -1,0 +1,123 @@
+/* <%= header %>
+   Template: hotglass/templates/gtk4.css.erb. See hotglass/DESIGN.md.
+
+   hotglass on default Adwaita/libadwaita (dark), through libadwaita's named
+   colors plus a few selector rules. Main windows are level 1 window glass
+   (Hyprland blurs behind them); floating chrome (popovers, dialogs) stays
+   on opaque raise tiers for legibility. */
+
+/* accent_color is text and links: voltage. accent_bg_color fills carry
+   white text, so they use accent.deep (5.9:1), never bright voltage. */
+@define-color accent_color <%= c(:accent) %>;
+@define-color accent_bg_color <%= c(:accent_deep) %>;
+@define-color accent_fg_color <%= c(:white) %>;
+
+@define-color window_bg_color <%= c(:surface_window) %>;
+@define-color window_fg_color <%= c(:text_primary) %>;
+@define-color view_bg_color transparent;
+@define-color view_fg_color <%= c(:text_primary) %>;
+@define-color headerbar_bg_color transparent;
+@define-color headerbar_fg_color <%= c(:text_primary) %>;
+@define-color headerbar_backdrop_color transparent;
+@define-color headerbar_border_color <%= c(:edge_hairline) %>;
+@define-color popover_bg_color <%= flat(:raise_2) %>;
+@define-color popover_fg_color <%= c(:text_primary) %>;
+@define-color dialog_bg_color <%= flat(:raise_3) %>;
+@define-color dialog_fg_color <%= c(:text_primary) %>;
+@define-color card_bg_color <%= c(:fill_subtle) %>;
+@define-color card_fg_color <%= c(:text_primary) %>;
+@define-color thumbnail_bg_color <%= flat(:raise_1) %>;
+@define-color thumbnail_fg_color <%= c(:text_primary) %>;
+
+@define-color destructive_bg_color <%= c(:red) %>;
+@define-color destructive_fg_color <%= c(:ink) %>;
+@define-color destructive_color <%= c(:red) %>;
+@define-color success_color <%= c(:green) %>;
+@define-color warning_color <%= c(:yellow) %>;
+@define-color error_color <%= c(:red) %>;
+
+/* Split-view surfaces (Nautilus and friends). */
+@define-color sidebar_bg_color <%= c(:fill_subtle) %>;
+@define-color sidebar_fg_color <%= c(:text_primary) %>;
+@define-color sidebar_backdrop_color <%= c(:fill_subtle) %>;
+@define-color sidebar_border_color <%= c(:edge_hairline) %>;
+@define-color sidebar_shade_color rgba(0, 0, 0, 0.25);
+@define-color secondary_sidebar_bg_color <%= c(:fill_subtle) %>;
+@define-color secondary_sidebar_fg_color <%= c(:text_primary) %>;
+@define-color secondary_sidebar_backdrop_color <%= c(:fill_subtle) %>;
+@define-color secondary_sidebar_border_color <%= c(:edge_hairline) %>;
+
+/* libadwaita drops the alpha when window_bg_color is translucent, so paint
+   the glass directly. */
+window.background {
+  background-color: <%= c(:surface_window) %>;
+}
+
+/* Radius 0, no exceptions. */
+window,
+dialog,
+.card,
+button,
+entry,
+popover > contents,
+popover > arrow,
+tooltip,
+row,
+listview > row,
+gridview > child,
+.navigation-sidebar row,
+.pill,
+windowcontrols > button,
+windowcontrols > button > image,
+switch,
+switch > slider,
+checkbutton > check,
+checkbutton > radio,
+scale > trough,
+scale > trough > slider,
+progressbar > trough,
+progressbar > trough > progress,
+/* Nautilus rounds its pathbar chip at app priority */
+.nautilus-pathbar,
+.nautilus-pathbar > scrolledwindow undershoot.left,
+.nautilus-pathbar > scrolledwindow undershoot.right {
+  border-radius: 0;
+}
+
+/* Selection: fill.active plus a 3px accent mark on the leading edge. The
+   label stays primary (no pink text, no weight change). In a backdrop
+   (unfocused) window the mark turns neutral. */
+.navigation-sidebar > row:selected,
+listview > row:selected,
+columnview > listview > row:selected {
+  background-color: <%= c(:fill_active) %>;
+  box-shadow: inset <%= mark %> 0 0 <%= c(:accent) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+.navigation-sidebar > row:selected:backdrop,
+listview > row:selected:backdrop,
+columnview > listview > row:selected:backdrop {
+  box-shadow: inset <%= mark %> 0 0 <%= c(:text_tertiary) %>;
+}
+
+gridview > child:selected {
+  background-color: <%= c(:fill_active) %>;
+}
+
+.navigation-sidebar > row:selected label,
+.navigation-sidebar > row:selected image {
+  color: <%= c(:text_primary) %>;
+}
+
+/* Text selection and search matches: accent.soft ground. */
+selection {
+  background-color: <%= c(:accent_soft) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+tooltip {
+  background-color: <%= c(:surface_overlay) %>;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  color: <%= c(:text_primary) %>;
+}
