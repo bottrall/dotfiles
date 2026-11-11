@@ -3,7 +3,7 @@
 
    Toasts and the control center are level 3 overlay glass: a quiet 1px edge
    with an inner top highlight and a soft shadow, never an accent frame.
-   Toast anatomy: [40px image + app badge] headline (15/600) and relative
+   Toast anatomy: [40px image] headline (15/600) and relative
    time on one line, body (14/400 secondary, clamped), then text-button
    actions split by hairlines. Urgency: low whispers (secondary headline,
    tertiary body); critical gets the 3px ember stripe. swaync replaces its
@@ -114,10 +114,15 @@ blankwindow,
   margin: 0 <%= px(12) %> 0 0;
 }
 
+/* The app badge is hidden. swaync overlays it on the image's bottom-right
+   corner, but most apps (ghostty for Claude Code, Spotify, ...) send their
+   own icon as the image, so the badge is a smaller copy of the same icon,
+   and it lands in the image's 12px margin, touching the text. */
 .notification-content .app-icon {
   -gtk-icon-filter: none;
   -gtk-icon-size: var(--notification-app-icon-size);
   margin: 0;
+  opacity: 0;
 }
 
 /* Base GTK 4 CSS dims labels to 50%. */
