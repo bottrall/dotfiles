@@ -13,6 +13,10 @@ copy-command = "wl-copy"
 # and stay open, like swappy did. Esc exits (Satty's default).
 actions-on-enter = ["save-to-clipboard", "exit"]
 initial-tool = "arrow"
+# Open at the image's size, capped at 80% of the monitor (scaled down past
+# that). Without it a full-screen or maximized-window capture opens a
+# monitor-sized float that covers the bar.
+resize = { mode = "smart" }
 # hotglass: radius 0, always
 corner-roundness = 0
 no-window-decoration = true
