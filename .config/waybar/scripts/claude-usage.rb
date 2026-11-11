@@ -9,9 +9,10 @@
 # Prints one line of JSON for a waybar custom module (return-type: "json").
 #
 # Display follows the hotglass contract (hotglass/DESIGN.md): healthy state is
-# neutral — the bar shows "<icon> N% used" per window and the tooltip adds
-# progress bars and reset countdowns, all in plain text. Only the failure
-# state carries a status color, via the claude-usage-error class in style.css.
+# neutral — the bar shows "5h N% · 7d N%" and the tooltip adds progress bars
+# and reset countdowns, all in plain text. Color means attention: the class
+# turns claude-usage-warning at WARNING_PCT and claude-usage-critical at
+# CRITICAL_PCT on the fuller window, and claude-usage-error on failure.
 #
 # Rate limiting: the API is hit at most once per CACHE_TTL, no matter how
 # often waybar re-renders, and the last good response is kept in ~/.cache and
@@ -30,6 +31,8 @@ WINDOWS = [
   { key: 'seven_day', label: 'Weekly', short: '7d' },
 ].freeze
 USER_AGENT = 'claude-usage-waybar/1.0'
+WARNING_PCT = 80
+CRITICAL_PCT = 95
 
 # Identity comes from the Clawd image module paired next to this one in the
 # bar (see group/claude-usage in config.jsonc), so text stays numbers-only.
@@ -86,8 +89,16 @@ def tooltip(windows, note: nil)
   lines.join("\n")
 end
 
+def usage_class(windows)
+  peak = windows.map { |w| w[:used] }.max || 0
+  return 'claude-usage-critical' if peak >= CRITICAL_PCT
+  return 'claude-usage-warning' if peak >= WARNING_PCT
+
+  'claude-usage'
+end
+
 def payload_from(windows, note: nil)
-  { text: bar_text(windows), tooltip: tooltip(windows, note:), class: 'claude-usage' }
+  { text: bar_text(windows), tooltip: tooltip(windows, note:), class: usage_class(windows) }
 end
 
 def emit(payload)

@@ -5,20 +5,31 @@
   "positionX": "right",
   "positionY": "top",
   "control-center-width": 400,
-  "control-center-margin-top": 20,
-  "control-center-margin-right": 20,
-  "control-center-margin-bottom": 20,
-  "notification-window-width": 350,
-  "timeout": 10,
-  "timeout-low": 5,
+  "control-center-height": -1,
+  "fit-to-screen": false,
+  "control-center-margin-top": 12,
+  "control-center-margin-right": 12,
+  "control-center-margin-bottom": 12,
+  "notification-window-width": 416,
+  "timeout": 6,
+  "timeout-low": 4,
   "timeout-critical": 0,
+  "transition-time": 200,
+  "image-visibility": "when-available",
+  "relative-timestamps": true,
   "notification-grouping": true,
   "hide-on-clear": true,
   "hide-on-action": true,
   "text-empty": "No notifications",
+  "notification-visibility": {
+    "spotify-track-changes": {
+      "app-name": "^Spotify$",
+      "state": "transient"
+    }
+  },
   "scripts": {
     "sound-normal": {
-      "urgency": "Low|Normal",
+      "urgency": "Normal",
       "exec": "/home/jake/.config/swaync/sound.sh message"
     },
     "sound-critical": {
@@ -29,19 +40,24 @@
   "widgets": [
     "title",
     "dnd",
+    "mpris",
     "notifications"
   ],
   "widget-config": {
     "title": {
       "text": "Notifications",
       "clear-all-button": true,
-      "button-text": "Clear All"
+      "button-text": "Clear all"
     },
     "dnd": {
-      "text": "Do Not Disturb"
+      "text": "Do not disturb"
+    },
+    "mpris": {
+      "autohide": true,
+      "show-album-art": "when-available"
     },
     "notifications": {
-      "vexpand": true
+      "vexpand": false
     }
   }
 }

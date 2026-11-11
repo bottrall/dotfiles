@@ -1,4 +1,10 @@
 no_actions=true
-prompt=
+prompt=Search apps
 allow_images=true
-image_size=24
+image_size=28
+insensitive=true
+hide_scroll=true
+width=680
+height=520
+location=top
+yoffset=280

@@ -2,7 +2,10 @@
   "position": "top",
   "height": 32,
   "modules-left": ["hyprland/workspaces"],
+  // The centre stays empty: the webcam sits over the middle of the bar.
   "modules-center": [],
+  // Clusters, 16px apart (see style.css): [media] [claude] [tray]
+  // [network volume] [cpu memory temperature] [clock] [idle notifications power]
   "modules-right": [
     "mpris",
     "custom/claude-usage",
@@ -18,7 +21,7 @@
     "custom/power",
   ],
   "mpris": {
-    "format": "{status_icon}  {title}",
+    "format": "{status_icon} {title}",
     "title-len": 30,
     "status-icons": {
       "playing": "󰐊",
@@ -26,61 +29,68 @@
       "stopped": "󰓛",
     },
     "tooltip-format": "{player}: {artist} — {title}",
-    "cursor": 68, // GDK_LEFT_PTR: keep the normal arrow on hover
+    "cursor": "default", // keep the normal arrow on hover
   },
   "tray": {
-    "icon-size": 18,
+    "icon-size": 16,
     // Gaps between icons come from CSS padding on the items instead of
     // "spacing", so the hover highlight covers the padded area too.
     "spacing": 0,
   },
   "network": {
-    "format-wifi": "{icon}  {signalStrength}%",
+    "format-wifi": "{icon} {signalStrength}%",
     "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
-    "format-ethernet": "󰈀  {ipaddr}",
-    "format-linked": "󰈀  No IP",
-    "format-disconnected": "󰤭  Off",
+    "format-ethernet": "󰈀 {ipaddr}",
+    "format-linked": "󰈀 No IP",
+    "format-disconnected": "󰤭 Off",
     "tooltip-format-wifi": "{essid} ({signalStrength}%)\n{ipaddr}",
     "tooltip-format-ethernet": "{ifname}: {ipaddr}",
     "on-click": "networkmanager_dmenu",
-    "cursor": 68,
+    "cursor": "default",
   },
   "pulseaudio": {
-    "format": "{icon}  {volume}%",
-    "format-muted": "󰝟  {volume}%",
+    "format": "{icon} {volume}%",
+    "format-muted": "󰝟 {volume}%",
     "format-icons": {
       "default": ["󰕿", "󰖀", "󰕾"],
     },
     "scroll-step": 5,
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
     "on-click-right": "pavucontrol",
-    "cursor": 68,
+    "cursor": "default",
   },
+  // System stats sit in tertiary while healthy and only take a status
+  // color past these thresholds (classes .warning / .critical).
   "cpu": {
-    "format": "  {usage}%",
+    "format": " {usage}%",
+    "states": { "warning": 70, "critical": 90 },
     "tooltip": false,
     "on-click": "ghostty --class=dev.jake.btop -e btop",
-    "cursor": 68,
+    "cursor": "default",
   },
   "memory": {
-    "format": "󰍛  {}%",
+    "format": "󰍛 {}%",
+    "states": { "warning": 70, "critical": 90 },
     "tooltip-format": "{used:0.1f}GiB / {total:0.1f}GiB used",
     "on-click": "ghostty --class=dev.jake.btop -e btop",
-    "cursor": 68,
+    "cursor": "default",
   },
   "temperature": {
     // k10temp Tctl (CPU). Default thermal_zone0 is the Wi-Fi card; hwmonN
     // numbering isn't stable across boots, so resolve via the PCI device.
     "hwmon-path-abs": "/sys/devices/pci0000:00/0000:00:18.3/hwmon",
     "input-filename": "temp1_input",
+    "warning-threshold": 80,
     "critical-threshold": 90,
     "on-click": "ghostty --class=dev.jake.btop -e btop",
-    "cursor": 68,
-    "format": "{icon}  {temperatureC}°C",
+    "cursor": "default",
+    "format": "{icon} {temperatureC}°",
     "format-icons": ["", "", ""],
   },
+  // Anchor of the right side: the date is dimmed with Pango alpha so only
+  // the time reads as primary at 600.
   "clock": {
-    "format": "  {:%a %d %H:%M}",
+    "format": "<span alpha='72%'>{0:%a %d %b}</span>  <span weight='600'>{0:%H:%M}</span>",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
   },
   "custom/claude-usage": {
@@ -93,7 +103,7 @@
     // on its own (cache TTL) when an actual API request is worth making.
     "interval": 60,
     "escape": false,
-    "cursor": 68,
+    "cursor": "default",
   },
   "idle_inhibitor": {
     "format": "{icon}",
@@ -103,7 +113,7 @@
     },
     "tooltip-format-activated": "Idle inhibitor: on — screen stays awake",
     "tooltip-format-deactivated": "Idle inhibitor: off",
-    "cursor": 68,
+    "cursor": "default",
   },
   "custom/notification": {
     "format": "{icon}",
@@ -124,12 +134,12 @@
     "on-click-right": "swaync-client -d -sw",
     "escape": true,
     "tooltip-format": "Notifications: {}\nRight-click: toggle do-not-disturb",
-    "cursor": 68,
+    "cursor": "default",
   },
   "custom/power": {
     "format": "󰐥",
     "tooltip": false,
     "on-click": "~/.config/waybar/scripts/power-menu.sh",
-    "cursor": 68,
+    "cursor": "default",
   },
 }
