@@ -51,6 +51,15 @@ hl.window_rule({
     size  = "1400 800",
 })
 
+-- satty: float the screenshot editor; it sizes itself to the image
+hl.window_rule({
+    name  = "satty",
+    match = { class = "^com\\.gabm\\.satty$" },
+
+    float  = true,
+    center = true,
+})
+
 -- Games: force fullscreen. Hyprland 0.56 tiles XWayland windows that ask for
 -- fullscreen before they map (SDL and Wine both do), which leaves CS2 under
 -- the bar and crashes DOOM Eternal during its intro videos. Match the game

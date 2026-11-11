@@ -117,7 +117,7 @@ if [[ "$OS" == "Linux" ]]; then
   link_file ".config/clipse/custom_theme.json"
   # Individual file only: the btop dir also holds btop.log (data)
   link_file ".config/btop/btop.conf"
-  link_dir  ".config/swappy"
+  link_dir  ".config/satty"
   # GTK: hotglass override layer on Adwaita (nwg-look may replace the
   # settings.ini symlinks with plain files if used — rerun to relink)
   link_file ".config/gtk-3.0/settings.ini"

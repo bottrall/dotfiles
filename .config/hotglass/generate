@@ -12,6 +12,7 @@
 #                                  stylesheet as inline data, so @import can't resolve)
 #   ../clipse/custom_theme.json    clipse TUI theme (opaque fallbacks)
 #   ../starship.toml               [palettes.hotglass] block between marker comments
+#   ../satty/config.toml           [color-palette] block between marker comments
 #   ../../.local/share/icons/hotglass/
 #                                  icon theme: folder + generic file glyphs
 #                                  (inherits Adwaita for everything else)
@@ -178,6 +179,18 @@ palette = [
 ]
 splice(File.join(HERE, "../starship.toml"), "# hotglass:begin", "# hotglass:end", palette.join("\n"))
 
+# ---- satty annotation palette -----------------------------------------
+# Annotations exist to draw attention, so they get the accent and the full
+# vivid rail, plus white and ink for contrast on arbitrary screenshots.
+# Order is the 1..7 quick-select keys. Satty wants RRGGBBAA.
+satty_colors = [accent, *status.values_at("red", "yellow", "green", "blue"), white, black]
+satty = [
+  "# #{HEADER}",
+  "[color-palette]",
+  "palette = [#{satty_colors.map { |hex6| "\"##{hex6}FF\"" }.join(', ')}]",
+]
+splice(File.join(HERE, "../satty/config.toml"), "# hotglass:begin", "# hotglass:end", satty.join("\n"))
+
 # ---- icon theme (folders + generic file glyphs) -----------------------
 # Sharp geometry from the token palette: folders are a raised-glass tile
 # with a voltage tab (the prompt's directory block, iconified); files are
@@ -295,4 +308,4 @@ File.write("#{icons_root}/index.theme", index_theme)
 places.each { |name, glyph| File.write("#{icons_root}/scalable/places/#{name}.svg", folder_svg.call(glyph)) }
 mimetypes.each { |name, marks| File.write("#{icons_root}/scalable/mimetypes/#{name}.svg", page_svg.call(marks)) }
 
-puts "hotglass: wrote colors.css, hotglass.conf, hotglass.lua, clipse/custom_theme.json, wofi + starship blocks, icon theme"
+puts "hotglass: wrote colors.css, hotglass.conf, hotglass.lua, clipse/custom_theme.json, wofi + starship + satty blocks, icon theme"

@@ -12,7 +12,7 @@ A from-scratch design system for this desktop: pure-black glass, one electric pi
 
 ## Tokens
 
-Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, `hotglass.lua`, clipse theme, starship palette block, icon theme) are committed but never hand-edited.
+Colors live in `tokens.yml`; run `./generate` after any edit. Derived files (`colors.css`, `hotglass.conf`, `hotglass.lua`, clipse theme, starship and satty palette blocks, icon theme) are committed but never hand-edited.
 
 | Token | Value | Role |
 |---|---|---|
@@ -47,7 +47,7 @@ Shape and type constants (no runtime carrier — apply by hand, cite this doc):
 
 ## Scope
 
-**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, ghostty background/opacity, GTK4 via a libadwaita named-color override on Adwaita (this includes file pickers: `xdg-desktop-portal/` routes the portal's FileChooser to Nautilus itself via xdg-desktop-portal-gnome, which Electron/Chromium apps like VS Code go through), GTK 3 via Adwaita-dark + the same named colors (GTK3 Adwaita bakes its colors to literals, so this is nominal — GTK3 is off the daily path now), icon theme (generated folder + file glyphs; everything else inherits Adwaita).
+**In:** waybar, wofi (networkmanager-dmenu inherits), swaync, hyprlock, hyprland borders, starship, clipse, satty (annotation palette, square corners), ghostty background/opacity, GTK4 via a libadwaita named-color override on Adwaita (this includes file pickers: `xdg-desktop-portal/` routes the portal's FileChooser to Nautilus itself via xdg-desktop-portal-gnome, which Electron/Chromium apps like VS Code go through), GTK 3 via Adwaita-dark + the same named colors (GTK3 Adwaita bakes its colors to literals, so this is nominal — GTK3 is off the daily path now), icon theme (generated folder + file glyphs; everything else inherits Adwaita).
 
 **Out:** ghostty's ANSI-16 palette and everything that merely inherits it (git diff, btop), wallpaper, cursor theme.
 

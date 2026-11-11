@@ -21,10 +21,11 @@ hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("ghostty --class=dev.jake.cli
 
 hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("hyprlock"))
 
--- Take a screenshot of a region and pipe it to swappy for editing
-hl.bind(mainMod .. " + HOME", hl.dsp.exec_cmd("hyprshot -z --raw -m region | swappy -f -"))
--- Take a screenshot of a window and pipe it to swappy for editing
-hl.bind(mainMod .. " + SHIFT + HOME", hl.dsp.exec_cmd("hyprshot -z --raw -m window | swappy -f -"))
+-- Take a screenshot of a region and pipe it to satty for editing
+-- (options live in .config/satty/config.toml)
+hl.bind(mainMod .. " + HOME", hl.dsp.exec_cmd("hyprshot -z --raw -m region | satty -f -"))
+-- Take a screenshot of a window and pipe it to satty for editing
+hl.bind(mainMod .. " + SHIFT + HOME", hl.dsp.exec_cmd("hyprshot -z --raw -m window | satty -f -"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
