@@ -1,0 +1,323 @@
+/* <%= header %>
+   Template: hotglass/templates/menus.css.erb. See hotglass/DESIGN.md.
+
+   The bar menus (waybar/menus/: calendar, power, wifi): level 3 overlays,
+   right-aligned <%= t.fetch("overlay_offset") %>px under the bar. Anatomy: header (overline,
+   title, caption; optional trailing control) split by a hairline, then a
+   body: a list of 44px rows (glyph, label, caption) using the system's
+   selection mark, or the calendar grid. Buttons are quiet text buttons;
+   the destructive one is ember. */
+
+window.hotglass-menu {
+  background-color: <%= c(:surface_overlay) %>;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  box-shadow: inset 0 1px 0 <%= c(:edge_highlight) %>;
+  color: <%= c(:text_primary) %>;
+  font-family: <%= ui_family %>;
+  font-feature-settings: "tnum";
+}
+
+/* The click catcher beneath an open menu: invisible, but not fully
+   transparent, or GTK skips drawing it and the compositor never maps it. */
+window.hotglass-menu-catcher,
+window.background.hotglass-menu-catcher {
+  background: rgba(0, 0, 0, 0.01);
+  box-shadow: none;
+  border: none;
+}
+
+/* ---- header ---------------------------------------------------------- */
+
+.hotglass-menu .header {
+  padding: <%= px(16) %> <%= px(20) %> <%= px(12) %>;
+  border-bottom: <%= edge %> solid <%= c(:edge_hairline) %>;
+}
+
+.hotglass-menu .overline {
+  <%= font(:overline) %>
+  text-transform: uppercase;
+  color: <%= c(:text_tertiary) %>;
+}
+
+.hotglass-menu .title {
+  <%= font(:title) %>
+  color: <%= c(:text_primary) %>;
+  margin-top: <%= px(4) %>;
+}
+
+.hotglass-menu .caption {
+  <%= font(:caption) %>
+  color: <%= c(:text_tertiary) %>;
+  margin-top: 2px;
+}
+
+.hotglass-menu .caption.error {
+  color: <%= c(:red) %>;
+}
+
+/* ---- lists ----------------------------------------------------------- */
+
+.hotglass-menu list.menu-list {
+  background: transparent;
+  padding: <%= px(8) %> 0;
+}
+
+.hotglass-menu list.menu-list > row {
+  min-height: 44px;
+  padding: 0 <%= px(20) %>;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  transition: background-color <%= ms(:fast) %>;
+}
+
+.hotglass-menu list.menu-list > row:hover {
+  background-color: <%= c(:fill_hover) %>;
+}
+
+/* Keyboard position: the system selection language, fill.active plus the
+   3px accent mark on the leading edge. */
+.hotglass-menu list.menu-list > row:focus-visible {
+  background-color: <%= c(:fill_active) %>;
+  box-shadow: inset <%= mark %> 0 0 <%= c(:accent) %>;
+}
+
+.hotglass-menu list.menu-list > row.separator-row {
+  min-height: 0;
+  padding: <%= px(4) %> 0;
+}
+
+.hotglass-menu list.menu-list > row.separator-row:hover {
+  background: transparent;
+}
+
+.hotglass-menu .menu-separator {
+  min-height: 1px;
+  background: <%= c(:edge_hairline) %>;
+}
+
+.hotglass-menu .row-glyph {
+  min-width: 20px;
+  margin-right: <%= px(12) %>;
+  font-size: 16px;
+  color: <%= c(:text_tertiary) %>;
+}
+
+.hotglass-menu .row-label {
+  <%= font(:body) %>
+  font-weight: 500;
+  color: <%= c(:text_primary) %>;
+}
+
+.hotglass-menu .row-caption {
+  <%= font(:caption) %>
+  color: <%= c(:text_tertiary) %>;
+  margin-left: <%= px(12) %>;
+}
+
+.hotglass-menu row.active .row-label {
+  font-weight: 600;
+}
+
+.hotglass-menu row.active .row-glyph,
+.hotglass-menu row.active .row-caption {
+  color: <%= c(:accent) %>;
+}
+
+.hotglass-menu row:hover .row-glyph {
+  color: <%= c(:text_secondary) %>;
+}
+
+/* ---- buttons, switch, entry ----------------------------------------- */
+
+.hotglass-menu button.menu-button {
+  min-height: 44px;
+  padding: 0 <%= px(16) %>;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: <%= c(:text_primary) %>;
+  <%= font(:ui) %>
+  font-weight: 600;
+  transition: background-color <%= ms(:fast) %>, color <%= ms(:fast) %>;
+}
+
+.hotglass-menu button.menu-button:hover {
+  background: <%= c(:fill_hover) %>;
+}
+
+.hotglass-menu button.menu-button.primary {
+  min-height: 36px;
+  background: <%= c(:accent_deep) %>;
+  color: <%= c(:white) %>;
+}
+
+.hotglass-menu button.menu-button.danger {
+  color: <%= c(:red) %>;
+}
+
+.hotglass-menu button.menu-button.danger:hover {
+  background: <%= css_color([t.fetch("status").fetch("red"), 0.14]) %>;
+}
+
+.hotglass-menu .button-row {
+  border-top: <%= edge %> solid <%= c(:edge_hairline) %>;
+}
+
+.hotglass-menu .button-row > button + button {
+  border-left: <%= edge %> solid <%= c(:edge_hairline) %>;
+}
+
+.hotglass-menu .confirm {
+  padding: <%= px(16) %> <%= px(20) %>;
+}
+
+.hotglass-menu .footer {
+  border-top: <%= edge %> solid <%= c(:edge_hairline) %>;
+}
+
+.hotglass-menu .password {
+  padding: <%= px(12) %> <%= px(20) %>;
+  border-bottom: <%= edge %> solid <%= c(:edge_hairline) %>;
+}
+
+.hotglass-menu .password .caption {
+  margin: 0 0 <%= px(8) %>;
+}
+
+.hotglass-menu passwordentry {
+  min-height: 36px;
+  padding: 0 <%= px(8) %>;
+  border: <%= edge %> solid <%= c(:edge_default) %>;
+  border-radius: 0;
+  background: <%= c(:fill_subtle) %>;
+  box-shadow: none;
+  color: <%= c(:text_primary) %>;
+  caret-color: <%= c(:accent) %>;
+}
+
+.hotglass-menu passwordentry:focus-within {
+  border-color: <%= c(:accent) %>;
+}
+
+/* A square switch: fill.control track off, accent.deep track and white
+   knob on. */
+.hotglass-menu switch {
+  min-width: 36px;
+  min-height: 20px;
+  padding: 3px;
+  border: none;
+  border-radius: 0;
+  background: <%= c(:fill_control) %>;
+  box-shadow: none;
+  transition: background-color <%= ms(:fast) %>;
+}
+
+.hotglass-menu switch:checked {
+  background: <%= c(:accent_deep) %>;
+}
+
+.hotglass-menu switch > image {
+  opacity: 0;
+}
+
+.hotglass-menu switch > slider {
+  min-width: 14px;
+  min-height: 14px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: <%= c(:text_secondary) %>;
+}
+
+.hotglass-menu switch:checked > slider {
+  background: <%= c(:white) %>;
+}
+
+.hotglass-menu scrolledwindow {
+  background: transparent;
+}
+
+/* ---- calendar -------------------------------------------------------- */
+
+.hotglass-menu calendar {
+  padding: <%= px(8) %> <%= px(12) %> <%= px(12) %>;
+  border: none;
+  background: transparent;
+  color: <%= c(:text_secondary) %>;
+}
+
+.hotglass-menu calendar > header {
+  border: none;
+  background: transparent;
+  padding: 0 0 <%= px(8) %>;
+  color: <%= c(:text_primary) %>;
+  <%= font(:ui) %>
+  font-weight: 600;
+}
+
+.hotglass-menu calendar > header > button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: <%= c(:text_tertiary) %>;
+}
+
+.hotglass-menu calendar > header > button:hover {
+  background: <%= c(:fill_hover) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+.hotglass-menu calendar > grid > label.day-name {
+  <%= font(:caption) %>
+  color: <%= c(:text_tertiary) %>;
+  padding-bottom: <%= px(4) %>;
+}
+
+.hotglass-menu calendar > grid > label.day-number {
+  min-width: 40px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 0;
+  <%= font(:ui) %>
+  color: <%= c(:text_secondary) %>;
+}
+
+.hotglass-menu calendar > grid > label.day-number.other-month {
+  color: <%= c(:text_disabled) %>;
+}
+
+.hotglass-menu calendar > grid > label.day-number:hover {
+  background: <%= c(:fill_hover) %>;
+}
+
+.hotglass-menu calendar > grid > label.day-number:selected {
+  background: <%= c(:fill_active) %>;
+  color: <%= c(:text_primary) %>;
+}
+
+/* Today: primary, bolder, with the 16 x 2px accent mark beneath. */
+.hotglass-menu calendar > grid > label.day-number.today {
+  color: <%= c(:text_primary) %>;
+  font-weight: 700;
+  box-shadow: none;
+  background-image: linear-gradient(<%= c(:accent) %>, <%= c(:accent) %>);
+  background-size: 16px <%= bar_mark %>;
+  background-position: center 28px;
+  background-repeat: no-repeat;
+}
+
+.hotglass-menu calendar > grid > label.day-number.today:selected {
+  background-color: <%= c(:fill_active) %>;
+}
+
+/* Keyboard focus: the system ring color (GTK's default is blue). */
+.hotglass-menu *:focus-visible {
+  outline-color: <%= c(:accent) %>;
+}

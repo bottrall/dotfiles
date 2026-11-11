@@ -94,16 +94,16 @@ hl.workspace_rule({
 -- only the wallpaper, so window content shows faintly through overlays.)
 hl.layer_rule({
     name  = "glass-blur",
-    match = { namespace = "^(waybar|wofi|swayosd|swaync-.*|hotglass-calendar)$" },
+    match = { namespace = "^(waybar|wofi|swayosd|swaync-.*|hotglass-menu)$" },
 
     blur         = true,
     ignore_alpha = 0.5,
 })
 
--- The launcher, menus and the clock dropdown settle in instead of fading flat.
+-- The launcher and the bar menus settle in instead of fading flat.
 hl.layer_rule({
     name  = "wofi-popin",
-    match = { namespace = "^(wofi|hotglass-calendar)$" },
+    match = { namespace = "^(wofi|hotglass-menu)$" },
 
     animation = "popin 96%",
 })

@@ -45,9 +45,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("uwsm app -- clipse -listen")
     -- hotglass volume / caps-lock OSD; a no-op until swayosd is installed.
     hl.exec_cmd("command -v swayosd-server >/dev/null && uwsm app -- swayosd-server")
-    -- hotglass clock dropdown, resident so a clock click opens it instantly
-    -- (the GTK gems take ~1s to load); it shows nothing until activated.
-    hl.exec_cmd("uwsm app -- ~/.config/waybar/calendar/calendar.rb --gapplication-service")
+    -- hotglass bar menus (calendar, power, wifi), resident so a click opens
+    -- them instantly (the GTK gems take ~1s to load); nothing shows until then.
+    hl.exec_cmd("uwsm app -- ~/.config/waybar/menus/menus.rb --gapplication-service")
 end)
 
 

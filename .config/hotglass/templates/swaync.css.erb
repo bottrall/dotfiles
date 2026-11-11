@@ -48,14 +48,16 @@ blankwindow,
   outline-offset: 2px;
 }
 
-/* Floating stack: 12px below the bar and from the screen edge, 8px between
-   toasts. The extra left/bottom padding is room for the drop shadow. */
+/* Floating stack: overlay_offset (<%= t.fetch("overlay_offset") %>px) below the bar and from the
+   screen edge, never the window grid, so toast edges don't line up with the
+   window edges behind them; 8px between toasts. The left padding is room
+   for the drop shadow. */
 .floating-notifications scrolledwindow {
-  padding-top: <%= px(12) %>;
+  padding-top: <%= px(t.fetch("overlay_offset")) %>;
 }
 
 .floating-notifications .notification-row .notification-background {
-  padding: 0 <%= px(12) %> <%= px(8) %> <%= px(24) %>;
+  padding: 0 <%= px(t.fetch("overlay_offset")) %> <%= px(8) %> <%= px(24) %>;
 }
 
 .notification {

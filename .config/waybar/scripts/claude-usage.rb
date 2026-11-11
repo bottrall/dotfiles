@@ -21,11 +21,13 @@
 require 'json'
 require 'net/http'
 require 'time'
+require 'yaml'
 
 CREDENTIALS_PATH = File.expand_path('~/.claude/.credentials.json')
 ENDPOINT = URI('https://api.anthropic.com/api/oauth/usage')
 CACHE_PATH = File.expand_path('~/.cache/claude-usage.json')
 CACHE_TTL = 300 # seconds between real API hits
+TOKENS_PATH = File.expand_path('~/.config/hotglass/tokens.yml')
 WINDOWS = [
   { key: 'five_hour', label: '5-hour', short: '5h' },
   { key: 'seven_day', label: 'Weekly', short: '7d' },
@@ -56,9 +58,26 @@ def relative_time(seconds)
   "#{mins}m"
 end
 
-def mini_bar(pct, width = 10)
+# Accent and status colors from the hotglass tokens, for the tooltip bars.
+def palette
+  tokens = YAML.load_file(TOKENS_PATH)
+  { accent: "##{tokens.dig('accent', 'base')}", yellow: "##{tokens.dig('status', 'yellow')}",
+    red: "##{tokens.dig('status', 'red')}" }
+rescue Errno::ENOENT, Psych::SyntaxError, NoMethodError
+  { accent: '#FF52AB', yellow: '#FFC44D', red: '#FF6A4D' }
+end
+
+# Progress fills are accent; past the thresholds they take the status color.
+def fill_color(pct, colors)
+  return colors[:red] if pct >= CRITICAL_PCT
+  return colors[:yellow] if pct >= WARNING_PCT
+
+  colors[:accent]
+end
+
+def mini_bar(pct, color, width = 12)
   filled = (pct / 100.0 * width).round.clamp(0, width)
-  ('█' * filled) + ('░' * (width - filled))
+  "<span foreground='#{color}'>#{'━' * filled}</span><span alpha='30%'>#{'━' * (width - filled)}</span>"
 end
 
 def parse_window(entry, window)
@@ -78,14 +97,21 @@ def bar_text(windows)
   windows.map { |w| "#{w[:short]} #{w[:used].round}%" }.join(' · ')
 end
 
-def tooltip_line(window)
+# Tooltips share one shape (hotglass/DESIGN.md): what it is (600), values
+# (secondary), extra detail (tertiary). Rows are set in the mono face so the
+# bars and percentages line up.
+def tooltip_line(window, colors)
   tail = window[:resets_at] ? "resets in #{relative_time(window[:resets_at] - Time.now)}" : 'idle'
-  "#{window[:label].ljust(6)}  #{mini_bar(window[:used])}  #{window[:used].round}% used · #{tail}"
+  used = window[:used]
+  row = "<span alpha='72%'>#{window[:label].ljust(6)}</span>  #{mini_bar(used, fill_color(used, colors))}  " \
+        "#{format('%3d', used.round)}%"
+  "<span font_family='CaskaydiaCove Nerd Font'>#{row}</span>  <span alpha='49%'>#{tail}</span>"
 end
 
 def tooltip(windows, note: nil)
-  lines = ['<b>Claude Code usage</b>', *windows.map { |w| tooltip_line(w) }]
-  lines << "(cached: #{note})" if note
+  colors = palette
+  lines = ["<span weight='600'>Claude Code usage</span>", *windows.map { |w| tooltip_line(w, colors) }]
+  lines << "<span alpha='49%'>Showing cached numbers (#{note})</span>" if note
   lines.join("\n")
 end
 
@@ -176,7 +202,7 @@ rescue FetchError => e
   cached = stale && windows_from_cache(stale)
   return payload_from(cached, note: e.message) if cached
 
-  { text: 'n/a', tooltip: "<b>Claude Code usage</b>\n#{e.message}", class: 'claude-usage-error' }
+  { text: 'n/a', tooltip: "<span weight='600'>Claude Code usage</span>\n<span alpha='72%'>Couldn't load: #{e.message}</span>", class: 'claude-usage-error' }
 end
 
 emit(usage_payload)

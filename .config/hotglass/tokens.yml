@@ -79,6 +79,10 @@ type:
 
 space: [4, 8, 12, 16, 20, 24, 32]
 grid: 12 # window gaps: 12 between windows (gaps_in 6 per side) and to every edge
+# Overlays (toasts, control center, bar menus) sit 2 x grid from the bar and
+# the screen edge. Never the grid itself: then their edges line up exactly
+# with the window edges behind them and read as stuck to the window.
+overlay_offset: 24
 
 shape:
   radius: 0

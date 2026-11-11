@@ -48,14 +48,16 @@ blankwindow,
   outline-offset: 2px;
 }
 
-/* Floating stack: 12px below the bar and from the screen edge, 8px between
-   toasts. The extra left/bottom padding is room for the drop shadow. */
+/* Floating stack: overlay_offset (24px) below the bar and from the
+   screen edge, never the window grid, so toast edges don't line up with the
+   window edges behind them; 8px between toasts. The left padding is room
+   for the drop shadow. */
 .floating-notifications scrolledwindow {
-  padding-top: 12px;
+  padding-top: 24px;
 }
 
 .floating-notifications .notification-row .notification-background {
-  padding: 0 12px 8px 24px;
+  padding: 0 24px 8px 24px;
 }
 
 .notification {
