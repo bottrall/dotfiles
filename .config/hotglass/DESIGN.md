@@ -40,7 +40,7 @@ Edit `tokens.yml`, then run `./generate`. It audits contrast first and writes no
 | text | `primary` .94 · `secondary` .68 · `tertiary` .46 · `disabled` .28 | titles and values · body and resting labels · meta, timestamps, healthy stats · unavailable |
 | fill | `subtle` .04 · `hover` .08 · `active` .12 · `control` .18 | cards inside panels · hover · selected/pressed · switch track, troughs |
 | edge | `hairline` .08 · `default` .14 · `strong` .32 · `highlight` .10 | separators, inactive window · overlay edges, inputs · focused window · inner top light on overlays |
-| surface | `window` .78 · `bar` .66 · `overlay` .72 (black @) | level 1 · level 2 · level 3 |
+| surface | `window` .78 · `bar` .66 · `overlay` .88 (black @; dense enough to read without blur, which Hyprland 0.57 doesn't render here) | level 1 · level 2 · level 3 |
 | raise | `raise_1/2/3` | opaque fallbacks: prompt segments, TUIs, popovers |
 
 ### Elevation
@@ -105,7 +105,7 @@ Numbers that change in place (bar, OSD, clocks, timestamps) use tabular figures.
 | `edge.highlight` | `rgba(255, 255, 255, 0.1)` |
 | `surface.window` | `rgba(0, 0, 0, 0.78)` |
 | `surface.bar` | `rgba(0, 0, 0, 0.66)` |
-| `surface.overlay` | `rgba(0, 0, 0, 0.72)` |
+| `surface.overlay` | `rgba(0, 0, 0, 0.88)` |
 | `raise.1` | `#242424` |
 | `raise.2` | `#171717` |
 | `raise.3` | `#0D0D0D` |

@@ -186,7 +186,9 @@ module WifiMenu
           nmcli(%w[nmcli -t -f NAME,TYPE connection show]) do |_ok2, saved_out|
             nmcli(%w[nmcli -t -f NAME,TYPE connection show --active]) do |_ok3, active_out|
               args = %w[nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY device wifi list]
-              args += %w[--rescan yes] if rescan
+              # Without --rescan no, nmcli rescans (and waits) when its last
+              # scan is over ~30s old; show the cached list now, rescan after.
+              args += rescan ? %w[--rescan yes] : %w[--rescan no]
               nmcli(args) do |_ok4, list_out|
                 next unless alive
 

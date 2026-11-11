@@ -27,7 +27,7 @@ window#waybar {
    a three-line shape set in config.jsonc with Pango markup: what it is
    (600, primary), its values (secondary), what a click does (tertiary). */
 tooltip {
-  background-color: rgba(0, 0, 0, 0.72);
+  background-color: rgba(0, 0, 0, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);

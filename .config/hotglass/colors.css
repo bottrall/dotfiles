@@ -23,7 +23,7 @@
 @define-color edge-highlight rgba(255, 255, 255, 0.1);
 @define-color surface-window rgba(0, 0, 0, 0.78);
 @define-color surface-bar rgba(0, 0, 0, 0.66);
-@define-color surface-overlay rgba(0, 0, 0, 0.72);
+@define-color surface-overlay rgba(0, 0, 0, 0.88);
 @define-color raise-1 #242424;
 @define-color raise-2 #171717;
 @define-color raise-3 #0D0D0D;

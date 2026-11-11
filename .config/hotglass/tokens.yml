@@ -46,7 +46,10 @@ edge:
 surface:
   window: 0.78    # ghostty, GTK apps, floating tools
   bar: 0.66       # waybar (sits over the wallpaper's bright sky)
-  overlay: 0.72   # launcher, toasts, control center, OSD, tooltips, menus
+  overlay: 0.88   # launcher, toasts, control center, OSD, tooltips, menus. Dense
+                  # enough to read on its own: on this machine Hyprland (0.57)
+                  # renders no blur at all, so window text behind an overlay
+                  # must fade to texture rather than rely on blur to soften it.
 
 # Opaque raised surfaces (white @ alpha flattened on black) for contexts
 # with no translucency: prompt segments, TUIs.
