@@ -91,10 +91,10 @@
   // the time reads as primary at 600.
   "clock": {
     "format": "<span alpha='72%'>{0:%a %d %b}</span>  <span weight='600'>{0:%H:%M}</span>",
-    // Click opens the hotglass calendar dropdown (click again, Esc or click
-    // elsewhere to close); it replaces the old calendar tooltip.
+    // Click opens the hotglass calendar dropdown (click anywhere or Esc to
+    // close); it replaces the old calendar tooltip.
     "tooltip": false,
-    "on-click": "~/.config/waybar/calendar/calendar.py",
+    "on-click": "~/.config/waybar/calendar/toggle.sh",
     "cursor": "default",
   },
   "custom/claude-usage": {

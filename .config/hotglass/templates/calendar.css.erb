@@ -114,6 +114,15 @@ window.hotglass-calendar {
   background-color: <%= c(:fill_active) %>;
 }
 
+/* The click catcher beneath the dropdown: invisible, but not fully
+   transparent, or GTK skips drawing it and the compositor never maps it. */
+window.hotglass-calendar-catcher,
+window.background.hotglass-calendar-catcher {
+  background: rgba(0, 0, 0, 0.01);
+  box-shadow: none;
+  border: none;
+}
+
 /* Keyboard focus: the system ring color (GTK's default is blue). */
 .hotglass-calendar *:focus-visible {
   outline-color: <%= c(:accent) %>;
