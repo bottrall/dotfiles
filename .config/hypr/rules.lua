@@ -79,13 +79,29 @@ hl.window_rule({
     fullscreen = true,
 })
 
--- swaync notifications + control center: blur like regular windows.
--- ignore_alpha 0 keeps the fully-transparent parts of the layer surface
--- (the area around the toasts) from being blurred too.
+-- hotglass: a lone tiled window has nothing to be distinguished from, so it
+-- gets no focus edge and no shadow (see hotglass/DESIGN.md, focus model).
+hl.workspace_rule({
+    workspace   = "w[tv1]",
+    border_size = 0,
+    no_shadow   = true,
+})
+
+-- hotglass: every glass layer is blurred. ignore_alpha 0.5 blurs behind the
+-- glass itself (surfaces are .66–.72 black) but not behind the transparent
+-- margins or the low-alpha drop shadows drawn inside them.
 hl.layer_rule({
-    name  = "swaync-blur",
-    match = { namespace = "^swaync-" },
+    name  = "glass-blur",
+    match = { namespace = "^(waybar|wofi|swayosd|swaync-.*)$" },
 
     blur         = true,
-    ignore_alpha = 0,
+    ignore_alpha = 0.5,
+})
+
+-- The launcher and menus settle in instead of fading flat.
+hl.layer_rule({
+    name  = "wofi-popin",
+    match = { namespace = "^wofi$" },
+
+    animation = "popin 96%",
 })

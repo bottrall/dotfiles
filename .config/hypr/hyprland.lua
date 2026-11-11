@@ -43,6 +43,8 @@ hl.monitor({
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("uwsm app -- clipse -listen")
+    -- hotglass volume / caps-lock OSD; a no-op until swayosd is installed.
+    hl.exec_cmd("command -v swayosd-server >/dev/null && uwsm app -- swayosd-server")
 end)
 
 

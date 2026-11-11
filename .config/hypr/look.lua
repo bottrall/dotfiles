@@ -1,19 +1,22 @@
 -- Look and feel: general, decoration, animations, layouts, misc.
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 
--- hotglass design tokens — see ~/.config/hotglass/DESIGN.md
-local tokens = dofile(os.getenv("HOME") .. "/.config/hotglass/hotglass.lua")
+-- hotglass 2.0 design tokens (generated) — see ~/.config/hotglass/DESIGN.md.
+-- Focus is shown with light, not color: the focused window gets a brighter
+-- 1px edge and a soft shadow; unfocused windows get a hairline and a 12% dim.
+-- A lone tiled window gets neither (see the w[tv1] rule in rules.lua).
+local t = dofile(os.getenv("HOME") .. "/.config/hotglass/hotglass.lua")
 
 hl.config({
     general = {
-        gaps_in  = 5,
-        gaps_out = 10,
+        gaps_in  = t.gapsIn,
+        gaps_out = t.gapsOut,
 
-        border_size = 3,
+        border_size = t.border,
 
         col = {
-            active_border   = tokens.edgeFocus,
-            inactive_border = tokens.edgeIdle,
+            active_border   = t.color.edgeStrong,
+            inactive_border = t.color.edgeHairline,
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
@@ -29,22 +32,31 @@ hl.config({
         rounding       = 0,
         rounding_power = 2,
 
-        -- Change transparency of focused and unfocused windows
         active_opacity   = 1.0,
         inactive_opacity = 1.0,
 
+        dim_inactive = true,
+        dim_strength = t.dimInactive,
+
         shadow = {
-            enabled      = true,
-            range        = 4,
-            render_power = 3,
-            color        = 0xee1a1a1a,
+            enabled        = true,
+            range          = t.shadow.range,
+            render_power   = 3,
+            offset         = t.shadow.offset,
+            color          = t.shadow.color,
+            color_inactive = "rgba(00000000)",
         },
 
+        -- Popups (menus, tooltips) blur too; ignorealpha keeps their
+        -- low-alpha drop shadows from being blurred into a halo.
         blur = {
-            enabled  = true,
-            size     = 3,
-            passes   = 1,
-            vibrancy = 0.1696,
+            enabled            = true,
+            size               = t.blur.size,
+            passes             = t.blur.passes,
+            noise              = t.blur.noise,
+            vibrancy           = t.blur.vibrancy,
+            popups             = true,
+            popups_ignorealpha = 0.5,
         },
     },
 
@@ -69,27 +81,27 @@ hl.config({
     },
 })
 
--- Animation curves and per-leaf tuning.
+-- Motion: things decelerate in and accelerate out, and exits are faster
+-- than entrances. Speeds come from the tokens (Hyprland speed = 100ms).
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Animations/
-hl.curve("easeOutQuint",   { type = "bezier", points = { {0.23, 1},    {0.32, 1}    } })
-hl.curve("easeInOutCubic", { type = "bezier", points = { {0.65, 0.05}, {0.36, 1}    } })
-hl.curve("linear",         { type = "bezier", points = { {0, 0},       {1, 1}       } })
-hl.curve("almostLinear",   { type = "bezier", points = { {0.5, 0.5},   {0.75, 1}    } })
-hl.curve("quick",          { type = "bezier", points = { {0.15, 0},    {0.1, 1}     } })
+hl.curve("enter",  { type = "bezier", points = t.curve.enter })
+hl.curve("exit",   { type = "bezier", points = t.curve.exit })
+hl.curve("linear", { type = "bezier", points = { {0, 0}, {1, 1} } })
 
-hl.animation({ leaf = "global",        enabled = true, speed = 10,   bezier = "default" })
-hl.animation({ leaf = "border",        enabled = true, speed = 5.39, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true, speed = 4.79, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 4.1,  bezier = "easeOutQuint", style = "popin 87%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.49, bezier = "linear",       style = "popin 87%" })
-hl.animation({ leaf = "fadeIn",        enabled = true, speed = 1.73, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut",       enabled = true, speed = 1.46, bezier = "almostLinear" })
-hl.animation({ leaf = "fade",          enabled = true, speed = 3.03, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true, speed = 3.81, bezier = "easeOutQuint" })
-hl.animation({ leaf = "layersIn",      enabled = true, speed = 4,    bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = true, speed = 1.5,  bezier = "linear",       style = "fade" })
-hl.animation({ leaf = "fadeLayersIn",  enabled = true, speed = 1.79, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 1.39, bezier = "almostLinear" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 1.94, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 1.21, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.94, bezier = "almostLinear", style = "fade" })
+hl.animation({ leaf = "global",        enabled = true, speed = t.speed.base, bezier = "enter" })
+hl.animation({ leaf = "border",        enabled = true, speed = t.speed.fast, bezier = "enter" })
+hl.animation({ leaf = "windows",       enabled = true, speed = t.speed.base, bezier = "enter" })
+hl.animation({ leaf = "windowsIn",     enabled = true, speed = t.speed.base, bezier = "enter", style = "popin 95%" })
+hl.animation({ leaf = "windowsOut",    enabled = true, speed = t.speed.exit, bezier = "exit",  style = "popin 95%" })
+hl.animation({ leaf = "fadeIn",        enabled = true, speed = t.speed.base, bezier = "enter" })
+hl.animation({ leaf = "fadeOut",       enabled = true, speed = t.speed.exit, bezier = "exit" })
+hl.animation({ leaf = "fade",          enabled = true, speed = t.speed.fast, bezier = "enter" })
+hl.animation({ leaf = "fadeDim",       enabled = true, speed = t.speed.base, bezier = "enter" })
+hl.animation({ leaf = "layers",        enabled = true, speed = t.speed.base, bezier = "enter" })
+hl.animation({ leaf = "layersIn",      enabled = true, speed = t.speed.base, bezier = "enter", style = "fade" })
+hl.animation({ leaf = "layersOut",     enabled = true, speed = t.speed.exit, bezier = "exit",  style = "fade" })
+hl.animation({ leaf = "fadeLayersIn",  enabled = true, speed = t.speed.base, bezier = "enter" })
+hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = t.speed.exit, bezier = "exit" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = t.speed.slow, bezier = "enter", style = "slidefade 12%" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = t.speed.slow, bezier = "enter", style = "slidefade 12%" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = t.speed.slow, bezier = "enter", style = "slidefade 12%" })

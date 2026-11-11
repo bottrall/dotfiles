@@ -72,11 +72,21 @@ hl.bind(mainMod .. " + bracketright", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag())
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize())
 
--- Multimedia keys for volume
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true })
-hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true })
+-- Multimedia keys for volume. hotglass shows a volume OSD through swayosd
+-- (`pacman -S swayosd`; the server starts in hyprland.lua). Until it's
+-- installed, or if its server is down, each key falls back to plain wpctl.
+local function osd_or(osd_args, fallback)
+    return hl.dsp.exec_cmd("swayosd-client " .. osd_args .. " 2>/dev/null || " .. fallback)
+end
+
+hl.bind("XF86AudioRaiseVolume", osd_or("--output-volume raise --max-volume 100", "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", osd_or("--output-volume lower",                  "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        osd_or("--output-volume mute-toggle",            "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true })
+hl.bind("XF86AudioMicMute",     osd_or("--input-volume mute-toggle",             "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true })
+
+-- Caps Lock OSD: on release (so the LED state has settled), without eating
+-- the key itself.
+hl.bind("Caps_Lock", hl.dsp.exec_cmd("swayosd-client --caps-lock 2>/dev/null || true"), { release = true, non_consuming = true })
 
 -- Requires playerctl
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
