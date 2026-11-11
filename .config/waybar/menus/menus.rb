@@ -76,11 +76,18 @@ def load_css
   Gtk::StyleContext.add_provider_for_display(Gdk::Display.default, provider, Gtk::StyleProvider::PRIORITY_USER + 1)
 end
 
-BUILDERS = {
-  "calendar" => CalendarMenu.method(:build),
-  "power" => PowerMenu.method(:build),
-  "wifi" => WifiMenu.method(:build),
-}.freeze
+MENU_NAMES = %w[calendar power wifi].freeze
+
+# The Wi-Fi menu opens with the last known NetworkManager snapshot already
+# rendered (no pop-in). It's fetched at startup and kept warm with a cheap
+# cached read every minute; each open refreshes it too.
+def builders(wifi_cache)
+  {
+    "calendar" => CalendarMenu.method(:build),
+    "power" => PowerMenu.method(:build),
+    "wifi" => ->(app, **options) { WifiMenu.build(app, cache: wifi_cache, **options) },
+  }
+end
 
 app = Gtk::Application.new(APP_ID, :handles_command_line)
 host = nil
@@ -88,8 +95,15 @@ host = nil
 app.signal_connect("startup") do |application|
   application.hold # stay resident between opens
   load_css
-  host = MenuHost.new(application, BUILDERS, offset: MenuUI.overlay_offset)
-  BUILDERS.each_key do |name|
+  wifi_cache = {}
+  keep_warm = -> { WifiMenu.fetch { |snapshot| wifi_cache[:snapshot] = snapshot } }
+  keep_warm.call
+  GLib::Timeout.add_seconds(60) do
+    keep_warm.call
+    true # keep repeating
+  end
+  host = MenuHost.new(application, builders(wifi_cache), offset: MenuUI.overlay_offset)
+  MENU_NAMES.each do |name|
     action = Gio::SimpleAction.new(name)
     action.signal_connect("activate") { host.toggle(name) }
     application.add_action(action)
@@ -100,7 +114,7 @@ end
 # instance; with no name it just stays resident.
 app.signal_connect("command-line") do |_application, command_line|
   name = command_line.arguments.drop(1).first
-  host.toggle(name) if BUILDERS.key?(name)
+  host.toggle(name) if MENU_NAMES.include?(name)
   0
 end
 

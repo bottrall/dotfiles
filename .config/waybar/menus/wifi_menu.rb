@@ -1,11 +1,16 @@
 # frozen_string_literal: true
 
 # Wi-Fi menu, backed by nmcli. Header: the connected network (or state) with
-# a radio switch; the caption carries status (scanning, connecting, errors in
+# a radio switch; the caption carries status (signal, connecting, errors in
 # the status red). List: networks, connected first, then saved, then by
 # signal. Clicking a saved or open network connects; a new secured network
-# opens an inline password field. All nmcli calls are async, so the menu
-# never freezes while NetworkManager works.
+# opens an inline password field. All nmcli calls are async.
+#
+# No pop-in: the menus process is resident, so it keeps the last snapshot of
+# NetworkManager's state (fetched at startup, refreshed on every open) and
+# the menu opens with it already rendered. The list viewport has a fixed
+# height, and a refresh only re-renders rows when something visible changed,
+# so updates never resize or reflow the menu.
 
 module WifiMenu
   module_function
@@ -13,6 +18,9 @@ module WifiMenu
   SIGNAL_GLYPHS = ["\u{F092F}", "\u{F091F}", "\u{F0922}", "\u{F0925}", "\u{F0928}"].freeze
   LOCK_GLYPH = "\u{F033E}"
   WIFI_TYPE = "802-11-wireless"
+  ROW_HEIGHT = 44     # matches list.menu-list > row in menus.css
+  VISIBLE_ROWS = 8
+  LIST_PADDING = 16   # list.menu-list padding, top + bottom
 
   # ---- pure helpers ----------------------------------------------------
 
@@ -66,6 +74,21 @@ module WifiMenu
     ["nmcli", "device", "wifi", "connect", network[:ssid]]
   end
 
+  # What the rows show: a refresh with the same signature changes nothing on
+  # screen, so it skips the re-render (signal counts by glyph step).
+  def signature(snapshot)
+    [snapshot[:enabled], snapshot[:networks].map { [it[:ssid], it[:active], it[:saved], it[:secure], it[:signal] / 20] }]
+  end
+
+  # Title and caption for a snapshot (nil = nothing fetched yet).
+  def header_text(snapshot)
+    return ["Wi-Fi", "Scanning…"] if snapshot.nil?
+    return ["Wi-Fi is off", "Turn it on to see networks"] unless snapshot[:enabled]
+
+    active = snapshot[:networks].find { it[:active] }
+    active ? [active[:ssid], "Signal #{active[:signal]}%"] : ["Not connected", "Choose a network"]
+  end
+
   # ---- effects ---------------------------------------------------------
 
   # Run argv without blocking the main loop; yields (ok, output).
@@ -79,15 +102,36 @@ module WifiMenu
     on_done.call(false, e.message)
   end
 
+  # NetworkManager's state as a snapshot: { enabled:, active_name:, networks: }.
+  # Without --rescan no, nmcli rescans (and waits seconds) whenever its last
+  # scan is over ~30s old; rescan: true asks for a fresh scan explicitly.
+  def fetch(rescan: false, &on_done)
+    nmcli(%w[nmcli radio wifi]) do |_ok, radio_out|
+      next on_done.call({ enabled: false, active_name: nil, networks: [] }) unless radio_out.strip == "enabled"
+
+      nmcli(%w[nmcli -t -f NAME,TYPE connection show]) do |_ok2, saved_out|
+        nmcli(%w[nmcli -t -f NAME,TYPE connection show --active]) do |_ok3, active_out|
+          list = %w[nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY device wifi list --rescan] + [rescan ? "yes" : "no"]
+          nmcli(list) do |_ok4, list_out|
+            on_done.call({ enabled: true, active_name: wifi_names(active_out).first,
+                           networks: parse_networks(list_out, wifi_names(saved_out)) })
+          end
+        end
+      end
+    end
+  end
+
   # ---- UI --------------------------------------------------------------
 
-  def build(app, offset:, **)
+  # cache: a Hash shared across opens (owned by menus.rb); cache[:snapshot]
+  # is the last known state, so the menu can open fully rendered.
+  def build(app, offset:, cache:, **)
     MenuUI.dropdown(app, width: 360, offset:).tap do |window|
       alive = true
       window.signal_connect("destroy") { alive = false }
 
       radio = Gtk::Switch.new.tap { it.valign = :center }
-      header, (overline, title, caption) = MenuUI.header("Wi-Fi", "", "Scanning…", trailing: radio)
+      header, (_overline, title, caption) = MenuUI.header("Wi-Fi", "", "", trailing: radio)
 
       password_entry = Gtk::PasswordEntry.new.tap do |entry|
         entry.show_peek_icon = true
@@ -100,26 +144,67 @@ module WifiMenu
       password_box.visible = false
 
       rows = {}
-      state = { networks: [], active_name: nil, pending: nil }
+      state = { pending: nil, shown: nil, syncing: false }
+      list = nil
 
       set_status = lambda do |text, error: false|
         caption.text = text
         error ? caption.add_css_class("error") : caption.remove_css_class("error")
       end
 
-      list = nil
-      refresh = nil
+      scroller = Gtk::ScrolledWindow.new.tap do |scrolled|
+        scrolled.set_policy(:never, :automatic)
+        height = (VISIBLE_ROWS * ROW_HEIGHT) + LIST_PADDING
+        scrolled.min_content_height = height
+        scrolled.max_content_height = height
+      end
+      disconnect = MenuUI.button("Disconnect", "menu-button") {}
+      footer = MenuUI.vbox(disconnect, css: "footer")
+
+      render_rows = lambda do |snapshot|
+        rows.clear
+        while (child = list.first_child)
+          list.remove(child)
+        end
+        snapshot[:networks].each do |network|
+          row = MenuUI.row(signal_glyph(network[:signal]), network[:ssid], caption: caption_for(network),
+                                                                          css: network[:active] ? "active" : nil)
+          rows[row] = network
+          list.append(row)
+        end
+      end
+
+      # Header text always follows the snapshot; rows, the switch and the
+      # footer only change when the signature does.
+      show = lambda do |snapshot|
+        title.text, status = header_text(snapshot)
+        set_status.call(status)
+        next if snapshot.nil? || signature(snapshot) == state[:shown]
+
+        state[:shown] = signature(snapshot)
+        state[:syncing] = true
+        radio.active = snapshot[:enabled]
+        state[:syncing] = false
+        scroller.visible = snapshot[:enabled]
+        footer.visible = snapshot[:networks].any? { it[:active] }
+        render_rows.call(snapshot)
+      end
+
+      refresh = lambda do |rescan: false|
+        fetch(rescan:) do |snapshot|
+          cache[:snapshot] = snapshot
+          show.call(snapshot) if alive
+        end
+      end
+
       connect = lambda do |network, password = nil|
         password_box.visible = false
         set_status.call("Connecting to #{network[:ssid]}…")
         nmcli(connect_argv(network, password)) do |ok, _out|
           next unless alive
+          next refresh.call if ok
 
-          if ok
-            refresh.call
-          else
-            set_status.call("Couldn't connect to #{network[:ssid]}", error: true)
-          end
+          set_status.call("Couldn't connect to #{network[:ssid]}", error: true)
         end
       end
 
@@ -143,62 +228,14 @@ module WifiMenu
 
         network[:secure] && !network[:saved] ? ask_password.call(network) : connect.call(network)
       end
+      scroller.child = list
 
-      disconnect = MenuUI.button("Disconnect", "menu-button") do
-        next unless state[:active_name]
+      disconnect.signal_connect("clicked") do
+        name = cache.dig(:snapshot, :active_name)
+        next unless name
 
         set_status.call("Disconnecting…")
-        nmcli(["nmcli", "connection", "down", "id", state[:active_name]]) { refresh.call if alive }
-      end
-      footer = MenuUI.vbox(disconnect, css: "footer")
-
-      render = lambda do |enabled|
-        rows.clear
-        while (child = list.first_child)
-          list.remove(child)
-        end
-        active = state[:networks].find { it[:active] }
-        title.text = enabled ? (active ? active[:ssid] : "Not connected") : "Wi-Fi is off"
-        set_status.call(enabled ? (active ? "Signal #{active[:signal]}%" : "Choose a network") : "Turn it on to see networks")
-        footer.visible = !active.nil?
-        state[:networks].first(12).each do |network|
-          row = MenuUI.row(signal_glyph(network[:signal]), network[:ssid], caption: caption_for(network),
-                                                                          css: network[:active] ? "active" : nil)
-          rows[row] = network
-          list.append(row)
-        end
-      end
-
-      refresh = lambda do |rescan: false|
-        nmcli(%w[nmcli radio wifi]) do |_ok, radio_out|
-          next unless alive
-
-          enabled = radio_out.strip == "enabled"
-          state[:syncing] = true
-          radio.active = enabled
-          state[:syncing] = false
-          unless enabled
-            state[:networks] = []
-            render.call(false)
-            next
-          end
-
-          nmcli(%w[nmcli -t -f NAME,TYPE connection show]) do |_ok2, saved_out|
-            nmcli(%w[nmcli -t -f NAME,TYPE connection show --active]) do |_ok3, active_out|
-              args = %w[nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY device wifi list]
-              # Without --rescan no, nmcli rescans (and waits) when its last
-              # scan is over ~30s old; show the cached list now, rescan after.
-              args += rescan ? %w[--rescan yes] : %w[--rescan no]
-              nmcli(args) do |_ok4, list_out|
-                next unless alive
-
-                state[:active_name] = wifi_names(active_out).first
-                state[:networks] = parse_networks(list_out, wifi_names(saved_out))
-                render.call(true)
-              end
-            end
-          end
-        end
+        nmcli(["nmcli", "connection", "down", "id", name]) { refresh.call if alive }
       end
 
       radio.signal_connect("state-set") do |_switch, on|
@@ -211,14 +248,11 @@ module WifiMenu
         false
       end
 
-      scroller = Gtk::ScrolledWindow.new.tap do |scrolled|
-        scrolled.set_policy(:never, :automatic)
-        scrolled.propagate_natural_height = true
-        scrolled.max_content_height = 360
-        scrolled.child = list
-      end
       window.child = MenuUI.vbox(header, password_box, scroller, footer)
       footer.visible = false
+      show.call(cache[:snapshot])
+      # Cached list first (fast), then a fresh scan; each only re-renders if
+      # something visible changed.
       refresh.call
       GLib::Timeout.add(200) { refresh.call(rescan: true) if alive; false }
     end
