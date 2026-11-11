@@ -122,8 +122,7 @@
       "activated": "󰅶",
       "deactivated": "󰾪",
     },
-    "tooltip-format-activated": "<span weight='600'>Keeping the screen awake</span>",
-    "tooltip-format-deactivated": "<span weight='600'>Screen sleeps when idle</span>",
+    "tooltip": false,
     "cursor": "default",
   },
   "custom/notification": {
