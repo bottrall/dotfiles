@@ -2,8 +2,8 @@
    Template: hotglass/templates/waybar.css.erb. See hotglass/DESIGN.md.
 
    Bar anatomy (level 2 glass): workspaces left, nothing in the centre (the
-   webcam sits over it), clusters on the right with a 16px gap between
-   clusters. Tone follows importance: the clock is the only primary item at
+   webcam sits over it), modules on the right at an even 24px rhythm. Tone,
+   not spacing, does the grouping: the clock is the only primary item at
    600; network and volume are secondary; healthy stats are tertiary and
    only take a status color when they cross a threshold. */
 
@@ -100,27 +100,18 @@ button {
 #custom-notification,
 #custom-power {
   margin: 0;
-  padding: 0 <%= px(8) %>;
+  padding: 0 <%= px(12) %>;
   transition: background-color <%= ms(:fast) %>, color <%= ms(:fast) %>;
 }
 
+/* Spacing around tray icons comes from per-icon padding, so the hover
+   highlight covers the whole target and there's no dead gap. */
 #tray {
   padding: 0;
 }
 
 #tray image {
-  padding: 0 <%= px(8) %>;
-}
-
-/* Cluster boundaries: [media] [claude] [tray] [network volume]
-   [cpu memory temperature] [clock] [idle notifications power] */
-#custom-claude-usage,
-#tray,
-#network,
-#cpu,
-#clock,
-#idle_inhibitor {
-  margin-left: <%= px(16) %>;
+  padding: 0 <%= px(12) %>;
 }
 
 #custom-power {
@@ -128,7 +119,8 @@ button {
 }
 
 /* One hover treatment for everything clickable. The clock only has a
-   tooltip and stays inert. */
+   tooltip and stays inert. Custom modules never get :hover on their own
+   label in waybar 0.16, only on its parent, hence the "*:hover >" form. */
 #mpris:hover,
 #network:hover,
 #pulseaudio:hover,
@@ -136,9 +128,9 @@ button {
 #memory:hover,
 #temperature:hover,
 #idle_inhibitor:hover,
-#custom-notification:hover,
-#custom-power:hover,
-#custom-claude-usage:hover,
+*:hover > #custom-notification,
+*:hover > #custom-power,
+*:hover > #custom-claude-usage,
 #tray > widget:hover,
 #tray > eventbox:hover {
   background-color: <%= c(:fill_hover) %>;
@@ -204,6 +196,6 @@ button {
 }
 
 /* The destructive affordance shows ember only on approach. */
-#custom-power:hover {
+*:hover > #custom-power {
   color: <%= c(:red) %>;
 }

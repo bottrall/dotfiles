@@ -4,8 +4,8 @@
   "modules-left": ["hyprland/workspaces"],
   // The centre stays empty: the webcam sits over the middle of the bar.
   "modules-center": [],
-  // Clusters, 16px apart (see style.css): [media] [claude] [tray]
-  // [network volume] [cpu memory temperature] [clock] [idle notifications power]
+  // Modules sit at an even 24px rhythm (see style.css); tone does the grouping:
+  // [media] [claude] [tray] [network volume] [cpu memory temperature] [clock] [idle notifications power]
   "modules-right": [
     "mpris",
     "custom/claude-usage",
