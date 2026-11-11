@@ -38,6 +38,7 @@ TEMPLATES = {
   "gtk3.css.erb" => "../gtk-3.0/gtk.css",
   "hyprlock.conf.erb" => "../hypr/hyprlock.conf",
   "ghostty.conf.erb" => "../ghostty/hotglass.conf",
+  "calendar.css.erb" => "../waybar/calendar/calendar.css",
 }.freeze
 
 # ---- color math (pure) -------------------------------------------------

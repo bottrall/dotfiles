@@ -60,6 +60,19 @@ hl.window_rule({
     center = true,
 })
 
+-- hotglass clock dropdown (waybar/calendar/calendar.py): an overlay, so it
+-- floats right-aligned under the bar on the 12px grid, in the same column as
+-- the control center, and draws its own edge instead of a window border.
+hl.window_rule({
+    name  = "hotglass-calendar",
+    match = { class = "^dev\\.jake\\.hotglass\\.calendar$" },
+
+    float       = true,
+    move        = "(monitor_w-window_w-12) 44",
+    border_size = 0,
+    animation   = "popin 96%",
+})
+
 -- Games: force fullscreen. Hyprland 0.56 tiles XWayland windows that ask for
 -- fullscreen before they map (SDL and Wine both do), which leaves CS2 under
 -- the bar and crashes DOOM Eternal during its intro videos. Match the game

@@ -91,7 +91,11 @@
   // the time reads as primary at 600.
   "clock": {
     "format": "<span alpha='72%'>{0:%a %d %b}</span>  <span weight='600'>{0:%H:%M}</span>",
-    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+    // Click opens the hotglass calendar dropdown (click again, Esc or click
+    // elsewhere to close); it replaces the old calendar tooltip.
+    "tooltip": false,
+    "on-click": "~/.config/waybar/calendar/calendar.py",
+    "cursor": "default",
   },
   "custom/claude-usage": {
     // Clawd (the Claude Code crab) + usage text in one module: the crab is a
