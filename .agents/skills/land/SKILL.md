@@ -65,7 +65,7 @@ Each pass refreshes the PR's state, deals with whatever is blocking, and either 
   gh api graphql -F owner="${REPO%/*}" -F repo="${REPO#*/}" -F n=<n> -f query='
     query($owner:String!,$repo:String!,$n:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$n){
       reviewThreads(first:100){nodes{id isResolved isOutdated path line
-        comments(first:50){nodes{databaseId author{login} body createdAt url}}}}}}}'
+        comments(first:50){nodes{databaseId author{login __typename} body createdAt url}}}}}}}'
   ```
 
 - **`MERGED`** (a merge queue or someone else landed it): go to step 4. **`CLOSED`:** stop.
@@ -78,15 +78,19 @@ Feedback is anything a reviewer — human or bot — has said that isn't handled
 - Reviews in `CHANGES_REQUESTED`, and review bodies with actionable content.
 - Top-level PR comments posted since my last reply or since the PR was last pushed.
 
-On the first pass, that's every unhandled item — not just new ones. Skip items already in the handled set. Classify each against **What counts as small**:
+On the first pass, that's every unhandled item — not just new ones. Skip items already in the handled set. Note who wrote each: a **bot** is an automated account (GraphQL `author.__typename` is `Bot`, or the login ends in `[bot]`) — CodeRabbit, Copilot, and the like. Everyone else is a **person**; when unsure, treat the author as a person.
 
-- **Small fix** → make it (2e), then reply on the thread with what changed and the commit SHA.
-- **Factual question** the code answers → reply with the answer.
-- **Bot suggestion that's wrong** (Copilot, CodeRabbit, and the like) → reply briefly with why, and move on.
-- **Already addressed or outdated** (`isOutdated` and the concern no longer applies) → reply saying so.
+Classify each against **What counts as small**:
+
+- **Small fix** → make it (2e), then reply on the thread: for a person, the commit SHA alone; for a bot, what changed and the SHA.
+- **Factual question** the code answers → from a bot, reply with the answer; from a person, **stop** — an answer takes prose, and that's mine to write.
+- **Bot suggestion that's wrong** → reply briefly with why, and move on.
+- **Already addressed or outdated** (`isOutdated` and the concern no longer applies) → if a commit on this PR addressed it, reply with that commit's SHA. Otherwise, for a bot, reply saying so; for a person, don't reply — list it in the report.
 - **Anything else** — design pushback, scope, a question for me, a human I'd disagree with → **stop**, quoting the comment.
 
-Every reply goes out on my behalf without a draft, so it ends with the signoff:
+**Replies to people are a commit SHA and nothing else** — no prose, no signoff. Post one only when their point was fixed or their suggestion taken; the body is the full SHA of the commit that did it (GitHub renders it as a link). Never reply to a person in any other case.
+
+**Replies to bots** may use prose, kept brief. They go out on my behalf without a draft, so they end with the signoff:
 
 > — 🤖 Riffer (beep boop)
 
