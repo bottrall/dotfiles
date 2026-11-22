@@ -21,8 +21,3 @@ Produce a single HTML report from whatever the context of this conversation is, 
 - Build charts as inline SVG, canvas, or plain HTML/CSS — whatever suits the data. Don't pull in a charting library unless the data genuinely needs one.
 - Filename: `<YYYY-MM-DD>-<slug>.html` in `~/reports`, where slug is a few hyphenated words describing the subject. Create the directory if needed.
 - Give me the artifact link.
-
-## Updates
-
-- When I ask for changes, edit the existing report's file and re-publish it to the same artifact. Only create a new file and artifact when I ask for a new report.
-- If the report is from an earlier conversation, publish the update to its existing artifact URL. Find it with the Artifact tool's list, or ask me.
