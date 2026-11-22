@@ -5,7 +5,7 @@ description: HTML report generator. Use when the user asks for a report.
 
 # HTML Report
 
-Produce a single HTML report from whatever the context of this conversation is, save it to `~/reports`, and publish it as a Claude Artifact.
+Produce a single HTML report from whatever the context of this conversation is and publish it as a Claude Artifact.
 
 ## Content
 
@@ -19,5 +19,4 @@ Produce a single HTML report from whatever the context of this conversation is, 
 
 - Publish the HTML file with the Artifact tool.
 - Build charts as inline SVG, canvas, or plain HTML/CSS — whatever suits the data. Don't pull in a charting library unless the data genuinely needs one.
-- Filename: `<YYYY-MM-DD>-<slug>.html` in `~/reports`, where slug is a few hyphenated words describing the subject. Create the directory if needed.
 - Give me the artifact link.
