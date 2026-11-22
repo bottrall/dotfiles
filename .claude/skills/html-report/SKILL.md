@@ -19,7 +19,7 @@ Produce a single HTML report from whatever the context of this conversation is, 
 
 - Publish the HTML file with the Artifact tool.
 - Build charts as inline SVG, canvas, or plain HTML/CSS — whatever suits the data. Don't pull in a charting library unless the data genuinely needs one.
-- Filename: `<YYYY-MM-DD>-<slug>.html` in `~/reports`, where slug is a few hyphenated words describing the subject. Create the directory if needed. If a file with that name already exists, add a `-2`/`-3` suffix rather than overwriting.
+- Filename: `<YYYY-MM-DD>-<slug>.html` in `~/reports`, where slug is a few hyphenated words describing the subject. Create the directory if needed. If a new report's filename is already taken, add a `-2`/`-3` suffix rather than overwriting the existing file.
 - Give me the artifact link.
 
 ## Updates
