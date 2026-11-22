@@ -1,0 +1,138 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Briefing renderer. Turns collect's JSON and Claude's picks into one
+# self-contained HTML page on stdout.
+#
+#   render ITEMS_JSON PICKS_JSON > page.html
+#
+# Collected items are referenced by id only, so their titles and links come
+# from the collected data, never from the picks. Every string is HTML-escaped
+# and only http(s) URLs become links. Unknown ids are warned about on stderr
+# and skipped. Everything collected but not picked is listed under "Skipped".
+
+require 'erb'
+require 'json'
+require 'time'
+require 'uri'
+
+TEMPLATE_PATH = File.join(__dir__, 'template.html.erb')
+FAILING_CONCLUSIONS = %w[failure timed_out cancelled action_required startup_failure].freeze
+
+# --- pure helpers -------------------------------------------------------------
+
+def safe_url(url)
+  url if %w[http https].include?(URI.parse(url.to_s).scheme&.downcase)
+rescue URI::InvalidURIError
+  nil
+end
+
+def local_time(iso, format) = Time.iso8601(iso).localtime.strftime(format)
+
+def pr_details(status)
+  return [] unless status
+
+  checks = status['checks'] || {}
+  failing = checks.slice(*FAILING_CONCLUSIONS).values.sum
+  [
+    ('draft' if status['draft']),
+    ('conflicts' if status['mergeable_state'] == 'dirty'),
+    ("#{failing} failing" if failing.positive?),
+    ("#{checks['pending']} pending" if checks['pending']),
+    *(status['reviews'] || {}).map { |who, state| "#{state.downcase.tr('_', ' ')} by @#{who}" },
+  ].compact
+end
+
+def details(item)
+  case item['kind']
+  when 'my_pr' then pr_details(item['status'])
+  when 'closed_pr' then [item['merged'] ? 'merged' : 'closed unmerged']
+  when 'reply' then ["#{item['count']} new · latest @#{item['latest_author']}"]
+  when 'new_in_my_repos' then [item['bot'] ? 'bot' : "@#{item['author']}"]
+  else []
+  end
+end
+
+def meta(item)
+  ref = item['repo'] && "#{item['repo']}##{item['number']}"
+  [item['source'], ref, *details(item)].compact.join(' · ')
+end
+
+def collected_entry(item, why)
+  { title: item['title'].to_s, url: safe_url(item['url']), why: why.to_s, meta: meta(item) }
+end
+
+def inline_entry(pick)
+  { title: pick['title'].to_s, url: safe_url(pick['url']), why: pick['why'].to_s, meta: pick['source'].to_s }
+end
+
+def picks_list(picks) = Array(picks['sections']).flat_map { |section| Array(section['items']) }
+
+def picked_ids(picks) = picks_list(picks).filter_map { |pick| pick['id'] }
+
+def unknown_ids(picks, by_id) = picked_ids(picks).reject { |id| by_id.key?(id) }
+
+def sections(picks, by_id)
+  Array(picks['sections']).map do |section|
+    entries = Array(section['items']).filter_map do |pick|
+      next inline_entry(pick) unless pick.key?('id')
+
+      by_id[pick['id']] && collected_entry(by_id[pick['id']], pick['why'])
+    end
+    { title: section['title'].to_s, entries: }
+  end.reject { |section| section[:entries].empty? }
+end
+
+def skipped(collected, picks)
+  picked = picked_ids(picks)
+  collected.fetch('items').reject { |item| picked.include?(item['id']) }
+           .group_by { |item| item['source'] }
+           .map do |source, items|
+             { source:, entries: items.map { |item| item.merge('url' => safe_url(item['url'])) } }
+           end
+end
+
+def footer(collected)
+  {
+    since: local_time(collected.fetch('since'), '%a %-d %b %H:%M'),
+    generated: local_time(collected.fetch('generated_at'), '%a %-d %b %H:%M'),
+    orgs_skipped: Array(collected['skipped_orgs']).size,
+    reply_scan: collected['reply_scan'],
+    errors: Array(collected['errors']),
+  }
+end
+
+def page(collected, picks, by_id)
+  generated = collected.fetch('generated_at')
+  {
+    title: "Briefing · #{local_time(generated, '%a %-d %b')}",
+    heading: local_time(generated, '%A %-d %B'),
+    lede: picks['lede'].to_s,
+    sections: sections(picks, by_id),
+    skipped: skipped(collected, picks),
+    footer: footer(collected),
+  }
+end
+
+# --- template -----------------------------------------------------------------
+
+module View
+  extend ERB::Util
+
+  def self.render(template, page) = ERB.new(template, trim_mode: '-').result(binding)
+end
+
+# --- entry point --------------------------------------------------------------
+
+def main(argv)
+  abort 'Usage: render ITEMS_JSON PICKS_JSON > page.html' unless argv.size == 2
+
+  collected, picks = argv.map { |path| JSON.parse(File.read(path)) }
+  by_id = collected.fetch('items').to_h { |item| [item['id'], item] }
+  unknown_ids(picks, by_id).each { |id| warn "render: unknown id #{id.inspect}, skipped" }
+  puts View.render(File.read(TEMPLATE_PATH), page(collected, picks, by_id))
+rescue Errno::ENOENT, JSON::ParserError, KeyError => e
+  abort "render: #{e.message}"
+end
+
+main(ARGV) if $PROGRAM_NAME == __FILE__

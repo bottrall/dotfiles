@@ -18,7 +18,7 @@ Personal dotfiles for macOS and Arch Linux.
 
 **Shell helpers** — `.config/sh/`: `repos` lists local projects from the untracked `~/.repos.local`, `sweep` resets the dev environment across them (supports `--dry-run`), and `wta`/`wtd` add and remove git worktrees.
 
-**Claude Code** — `.claude/`, symlinked into `~/.claude/`: global instructions, settings, and skills. Machine-specific config for the work-tracking skills lives in the untracked `~/.work.local.md`.
+**Claude Code** — `.claude/`, symlinked into `~/.claude/`: global instructions, settings, and skills. Machine-specific config for the work-tracking skills lives in the untracked `~/.work.local.md`. `/briefing` builds a one-page morning briefing from GitHub, feeds, and whatever connectors the machine has, tuned per machine by the untracked `~/.briefing.local.md`.
 
 **riffer-rig** — `.riffer/` and `.agents/skills/`, symlinked into `~`: the same instructions and skills adapted for [riffer-rig](https://github.com/bottrall/riffer-rig). `~/.riffer/auth.json` holds API keys and is never linked or committed.
 
