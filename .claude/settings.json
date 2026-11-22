@@ -6,10 +6,18 @@
   "permissions": {
     "defaultMode": "bypassPermissions"
   },
-  "model": "opus[1m]",
+  "model": "fable",
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": false,
     "code-review@claude-plugins-official": false
+  },
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-fable-5-2": {
+      "effortLevel": "high"
+    }
   },
   "tui": "fullscreen",
   "voice": {
@@ -21,10 +29,5 @@
   "skipWorkflowUsageWarning": true,
   "inputNeededNotifEnabled": false,
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true,
-  "modelSettings": {
-    "claude-opus-5-5": {
-      "effortLevel": "high"
-    }
-  }
+  "voiceEnabled": true
 }
