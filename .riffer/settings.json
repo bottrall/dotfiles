@@ -1,7 +1,7 @@
 {
   "model": "anthropic/claude-haiku-5-5",
   "reasoning": "high",
-  "catalog_files": ["/Users/jakebottrall/dotfiles/.riffer/models.json"],
+  "catalog_files": ["~/dotfiles/.riffer/models.json"],
   "mcp": {
     "servers": {
       "kagi": {
