@@ -1,0 +1,48 @@
+# Feeds for the briefing, by group. Each entry has a display name and one of:
+#   github: owner/repo   -> that repo's releases feed
+#   rubygems: name       -> that gem's versions feed
+#   url: https://...     -> any RSS or Atom feed
+# Every host here must be on a cloud environment's network allowlist for the
+# scheduled run to reach it.
+
+releases:
+  - name: Ruby
+    github: ruby/ruby
+  - name: RBS
+    github: ruby/rbs
+  - name: rbs-inline
+    github: soutaro/rbs-inline
+  - name: Agent Client Protocol
+    github: agentclientprotocol/agent-client-protocol
+  - name: Claude Code
+    github: anthropics/claude-code
+  - name: openai-ruby
+    github: openai/openai-ruby
+  - name: anthropic gem
+    rubygems: anthropic
+
+news:
+  # Ruby security advisories come through here.
+  - name: Ruby news
+    url: https://www.ruby-lang.org/en/feeds/news.rss
+
+# Anthropic has no official feed; its three are community-generated mirrors.
+ai:
+  - name: OpenAI
+    url: https://openai.com/news/rss.xml
+  - name: Anthropic news
+    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml
+  - name: Anthropic engineering
+    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_engineering.xml
+  - name: Google AI
+    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_google_ai.xml
+
+reading:
+  - name: Claude blog
+    url: https://claude.dev/rss.xml
+  - name: Simon Willison
+    url: https://simonwillison.net/atom/everything/
+  - name: Ruby Weekly
+    url: https://rubyweekly.com/rss/
+  - name: Ruby on Rails
+    url: https://rubyonrails.org/feed.xml

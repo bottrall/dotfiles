@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= h page[:title] %></title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --text: #1f1d1a;
+    --muted: #6b665e;
+    --rule: #e3dfd6;
+    --accent: #a3264f;
+    --link: #1f1d1a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151413;
+      --surface: #1e1d1b;
+      --text: #ece8e1;
+      --muted: #a29c92;
+      --rule: #34312d;
+      --accent: #f07aa0;
+      --link: #ece8e1;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151413;
+    --surface: #1e1d1b;
+    --text: #ece8e1;
+    --muted: #a29c92;
+    --rule: #34312d;
+    --accent: #f07aa0;
+    --link: #ece8e1;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow-wrap: anywhere;
+  }
+  main { max-width: 42rem; margin: 0 auto; padding: 32px 16px 48px; }
+  header { margin-bottom: 28px; }
+  .date { margin: 0; color: var(--muted); font-size: 0.875rem; letter-spacing: 0.02em; text-transform: uppercase; }
+  h1 { margin: 4px 0 12px; font-size: 1.75rem; line-height: 1.2; }
+  .lede { margin: 0; font-size: 1.125rem; }
+  section { margin-top: 28px; }
+  h2 {
+    margin: 0 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--accent);
+    color: var(--accent); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  ul { list-style: none; margin: 0; padding: 0; }
+  .entry { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .entry:last-child { border-bottom: 0; }
+  .title { font-weight: 600; }
+  a { color: var(--link); text-decoration-color: var(--accent); text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  .why { margin: 2px 0 0; }
+  .meta { margin: 2px 0 0; color: var(--muted); font-size: 0.8125rem; }
+  details { margin-top: 36px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; }
+  summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+  h3 { margin: 16px 0 4px; color: var(--muted); font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .skipped li { padding: 3px 0; font-size: 0.875rem; }
+  .skipped time { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+  footer { margin-top: 28px; color: var(--muted); font-size: 0.8125rem; }
+  footer p { margin: 4px 0; }
+  footer ul { margin-top: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="date"><%= h page[:heading] %></p>
+    <h1>Briefing</h1>
+<% unless page[:lede].empty? -%>
+    <p class="lede"><%= h page[:lede] %></p>
+<% end -%>
+  </header>
+<% page[:sections].each do |section| -%>
+  <section>
+    <h2><%= h section[:title] %></h2>
+    <ul>
+<% section[:entries].each do |entry| -%>
+      <li class="entry">
+<% if entry[:url] -%>
+        <a class="title" href="<%= h entry[:url] %>" target="_blank" rel="noopener noreferrer"><%= h entry[:title] %></a>
+<% else -%>
+        <span class="title"><%= h entry[:title] %></span>
+<% end -%>
+<% unless entry[:why].empty? -%>
+        <p class="why"><%= h entry[:why] %></p>
+<% end -%>
+<% unless entry[:meta].empty? -%>
+        <p class="meta"><%= h entry[:meta] %></p>
+<% end -%>
+      </li>
+<% end -%>
+    </ul>
+  </section>
+<% end -%>
+<% unless page[:skipped].empty? -%>
+  <details>
+    <summary>Skipped (<%= page[:skipped].sum { |group| group[:entries].size } %>)</summary>
+<% page[:skipped].each do |group| -%>
+    <h3><%= h group[:source] %></h3>
+    <ul class="skipped">
+<% group[:entries].each do |item| -%>
+      <li>
+<% if item['url'] -%>
+        <a href="<%= h item['url'] %>" target="_blank" rel="noopener noreferrer"><%= h item['title'] %></a>
+<% else -%>
+        <%= h item['title'] %>
+<% end -%>
+        <time datetime="<%= h item['date'] %>"><%= h item['date'].to_s[0, 10] %></time>
+      </li>
+<% end -%>
+    </ul>
+<% end -%>
+  </details>
+<% end -%>
+  <footer>
+    <p>Covers <%= h page[:footer][:since] %> → <%= h page[:footer][:generated] %><% if page[:footer][:orgs_skipped].positive? %> · <%= page[:footer][:orgs_skipped] %> <%= page[:footer][:orgs_skipped] == 1 ? 'org' : 'orgs' %> skipped<% end %></p>
+<% if page[:footer][:reply_scan]&.fetch('truncated', false) -%>
+    <p>Replies checked in the 100 most recently updated of <%= page[:footer][:reply_scan]['candidates'] %> threads.</p>
+<% end -%>
+<% unless page[:footer][:errors].empty? -%>
+    <p>Couldn't collect:</p>
+    <ul>
+<% page[:footer][:errors].each do |error| -%>
+      <li><%= h error['source'] %>: <%= h error['message'] %></li>
+<% end -%>
+    </ul>
+<% end -%>
+  </footer>
+</main>
+</body>
+</html>

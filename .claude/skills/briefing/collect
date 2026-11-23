@@ -1,0 +1,429 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Briefing collector. Gathers what changed since the last briefing from GitHub
+# (the `gh` CLI, REST only) and the feeds in sources.yml, and prints one JSON
+# document for the briefing skill to edit and render.
+#
+#   collect [--since ISO8601] [--state PATH] [--exclude-org ORG]... [--sources PATH]
+#   collect --mark-run GENERATED_AT [--state PATH]
+#
+# The window starts at --since, else the state file's timestamp, else 24h ago.
+# --mark-run advances the state file once the briefing has been delivered.
+#
+# What goes in depends on what this machine can reach: an org whose SAML SSO
+# blocks this machine's token is dropped whole (listed under skipped_orgs)
+# before any per-item call touches it. A failing source is recorded under
+# errors and collection carries on.
+#
+# Stdlib only (plus the rss gem bundled with Ruby), so it runs in a bare cloud
+# sandbox with just Ruby and gh. Paths resolve relative to this script's real
+# location, so it also works through a symlink.
+
+require 'digest'
+require 'fileutils'
+require 'json'
+require 'net/http'
+require 'open3'
+require 'optparse'
+require 'rss'
+require 'time'
+require 'uri'
+require 'yaml'
+
+DEFAULT_WINDOW = 24 * 60 * 60
+DEFAULT_STATE = File.join(ENV.fetch('XDG_STATE_HOME', File.expand_path('~/.local/state')), 'briefing', 'last_run')
+DEFAULT_SOURCES = File.join(__dir__, 'sources.yml')
+SEARCH_PAGE_SIZE = 100
+PARALLELISM = 8
+EXCERPT_LENGTH = 200
+HTTP_TIMEOUT = 15
+MAX_REDIRECTS = 3
+USER_AGENT = 'briefing-collector'
+
+SOURCE_LABELS = {
+  'review_request' => 'Review requests',
+  'assigned' => 'Assigned issues',
+  'my_pr' => 'Your open PRs',
+  'closed_pr' => 'Your closed PRs',
+  'new_in_my_repos' => 'New in your repos',
+  'reply' => 'Replies to you',
+}.freeze
+
+FEED_SHORTHANDS = {
+  'github' => ->(repo) { "https://github.com/#{repo}/releases.atom" },
+  'rubygems' => ->(name) { "https://rubygems.org/gems/#{name}/versions.atom" },
+  'url' => ->(url) { url },
+}.freeze
+
+# --- results ----------------------------------------------------------------
+
+def ok(value) = { ok: true, value: }
+def failure(message, **extra) = { ok: false, error: message, **extra }
+def error_entry(source, message) = { source:, message: }
+
+# --- pure helpers -------------------------------------------------------------
+
+def parse_time(text)
+  Time.iso8601(text.to_s.strip)
+rescue ArgumentError
+  nil
+end
+
+def stamp(time) = time.utc.iso8601
+
+def http_url?(url)
+  %w[http https].include?(URI.parse(url.to_s).scheme&.downcase)
+rescue URI::InvalidURIError
+  false
+end
+
+def squish(text, length) = text.to_s.gsub(/<[^>]*>/, ' ').gsub(/\s+/, ' ').strip[0, length]
+
+# Network-bound work, so threads overlap the waits (Open3 and Net::HTTP release
+# the GVL). Batches of PARALLELISM keep gh and the feed hosts from being flooded.
+def parallel_map(list, &block)
+  list.each_slice(PARALLELISM).flat_map { |slice| slice.map { |x| Thread.new { block.call(x) } }.map(&:value) }
+end
+
+# --- GitHub: pure -------------------------------------------------------------
+
+def search_queries(login, since)
+  {
+    'review_request' => 'is:pr is:open user-review-requested:@me',
+    'assigned' => 'is:issue is:open assignee:@me',
+    'my_pr' => 'is:pr is:open author:@me',
+    'closed_pr' => "is:pr author:@me is:closed closed:>=#{stamp(since)}",
+    'new_in_my_repos' => "user:#{login} is:open created:>=#{stamp(since)} -author:@me",
+    'reply' => "involves:@me updated:>=#{stamp(since)}",
+  }.transform_values { |query| "#{query} archived:false" }
+end
+
+# Newest first, so a truncated first page still holds the most recent activity.
+def search_path(query)
+  "search/issues?#{URI.encode_www_form(q: query, sort: 'updated', order: 'desc', per_page: SEARCH_PAGE_SIZE)}"
+end
+
+def repo_name(raw) = raw.fetch('repository_url').split('/').last(2).join('/')
+def owner(raw) = repo_name(raw).split('/').first
+def pr?(raw) = raw.key?('pull_request')
+def bot?(user) = user&.fetch('type', nil) == 'Bot'
+
+def base_item(kind, raw)
+  repo = repo_name(raw)
+  {
+    id: "#{kind}:#{repo}##{raw.fetch('number')}",
+    kind:,
+    title: raw.fetch('title'),
+    url: raw.fetch('html_url'),
+    source: SOURCE_LABELS.fetch(kind),
+    date: raw.fetch('updated_at'),
+    repo:,
+    number: raw.fetch('number'),
+    author: raw.dig('user', 'login'),
+    pr: pr?(raw),
+  }
+end
+
+def closed_pr_item(raw)
+  base_item('closed_pr', raw).merge(date: raw.fetch('closed_at'), merged: !raw.dig('pull_request', 'merged_at').nil?)
+end
+
+def new_in_my_repos_item(raw)
+  base_item('new_in_my_repos', raw).merge(date: raw.fetch('created_at'), bot: bot?(raw['user']))
+end
+
+# Latest standing state per reviewer, as GitHub counts it: a later COMMENTED
+# review doesn't undo an approval or a change request.
+def review_states(reviews, login)
+  reviews.reject { |r| r.dig('user', 'login') == login || r['state'] == 'PENDING' }
+         .group_by { |r| r.dig('user', 'login') }
+         .transform_values { |rs| (rs.reject { |r| r['state'] == 'COMMENTED' }.last || rs.last).fetch('state') }
+end
+
+def check_summary(response) = response.fetch('check_runs').map { |run| run['conclusion'] || 'pending' }.tally
+
+def reply(raw, at_key)
+  { author: raw.dig('user', 'login'), bot: bot?(raw['user']), at: raw[at_key], url: raw['html_url'], body: raw['body'] }
+end
+
+def human_replies(replies, login, since)
+  replies.select { |r| r[:at] && !r[:bot] && r[:author] != login && parse_time(r[:at]) >= since }
+         .sort_by { |r| parse_time(r[:at]) }
+end
+
+def reply_item(raw, replies)
+  latest = replies.last
+  base_item('reply', raw).merge(
+    url: latest[:url], date: latest[:at], thread_url: raw.fetch('html_url'), count: replies.size,
+    latest_author: latest[:author], excerpt: squish(latest[:body], EXCERPT_LENGTH),
+  )
+end
+
+# --- GitHub: effects (through the injected `gh`) -------------------------------
+#
+# `gh` is anything with `call(path)` returning ok(parsed JSON) or
+# failure(message, saml: bool).
+
+def gh_get(run, path)
+  out, err, success = run.call(['gh', 'api', path])
+  return ok(JSON.parse(out)) if success
+
+  failure(gh_error_message(out, err), saml: "#{out}\n#{err}".match?(/SAML/i))
+rescue JSON::ParserError
+  failure("unreadable response from #{path}")
+end
+
+def gh_error_message(out, err)
+  api_message(out) || err.lines.map(&:strip).find { |line| line.start_with?('gh:') } || err.lines.first.to_s.strip
+end
+
+def api_message(out)
+  parsed = JSON.parse(out)
+  parsed['message'] if parsed.is_a?(Hash) && parsed['message'].is_a?(String)
+rescue JSON::ParserError
+  nil
+end
+
+def call_errors(source, results) = results.reject { |r| r[:ok] }.map { |r| error_entry(source, r[:error]) }
+
+# Orgs to drop whole: those named by --exclude-org, and those whose SAML SSO
+# blocks this token, found with one cheap call on one of each org's repos.
+def skipped_orgs(gh, raw_items, login, exclude_orgs)
+  excluded = exclude_orgs.map(&:downcase)
+  raw_items.group_by { |raw| owner(raw) }
+           .reject { |org, _| org.casecmp?(login) }
+           .filter_map do |org, raws|
+             next { org:, reason: 'excluded by --exclude-org' } if excluded.include?(org.downcase)
+
+             probe = gh.call("repos/#{repo_name(raws.first)}/pulls?per_page=1")
+             { org:, reason: 'SAML SSO enforced; token not authorized' } if probe[:saml]
+           end
+end
+
+def my_pr_item(gh, raw, login)
+  repo = repo_name(raw)
+  number = raw.fetch('number')
+  label = "GitHub #{repo}##{number}"
+  pull = gh.call("repos/#{repo}/pulls/#{number}")
+  return [base_item('my_pr', raw), call_errors(label, [pull])] unless pull[:ok]
+
+  reviews = gh.call("repos/#{repo}/pulls/#{number}/reviews?per_page=100")
+  checks = gh.call("repos/#{repo}/commits/#{pull[:value].dig('head', 'sha')}/check-runs?per_page=100")
+  status = {
+    draft: pull[:value]['draft'],
+    mergeable_state: pull[:value]['mergeable_state'],
+    reviews: reviews[:ok] ? review_states(reviews[:value], login) : nil,
+    checks: checks[:ok] ? check_summary(checks[:value]) : nil,
+  }
+  [base_item('my_pr', raw).merge(status:), call_errors(label, [reviews, checks])]
+end
+
+def reply_for(gh, raw, login, since)
+  repo = repo_name(raw)
+  number = raw.fetch('number')
+  comments = gh.call("repos/#{repo}/issues/#{number}/comments?#{URI.encode_www_form(since: stamp(since), per_page: 100)}")
+  reviews = pr?(raw) ? gh.call("repos/#{repo}/pulls/#{number}/reviews?per_page=100") : ok([])
+  replies = human_replies(
+    [*(comments[:ok] ? comments[:value].map { |c| reply(c, 'created_at') } : []),
+     *(reviews[:ok] ? reviews[:value].map { |r| reply(r, 'submitted_at') } : [])],
+    login, since,
+  )
+  [replies.empty? ? nil : reply_item(raw, replies), call_errors("GitHub #{repo}##{number}", [comments, reviews])]
+end
+
+def collect_github(gh, since:, exclude_orgs:)
+  user = gh.call('user')
+  return { login: nil, items: [], skipped_orgs: [], errors: [error_entry('GitHub', user[:error])] } unless user[:ok]
+
+  login = user[:value].fetch('login')
+  searches = search_queries(login, since).to_h { |kind, query| [kind, gh.call(search_path(query))] }
+  search_errors = searches.reject { |_, r| r[:ok] }.map { |kind, r| error_entry("GitHub: #{SOURCE_LABELS[kind]}", r[:error]) }
+  found = searches.select { |_, r| r[:ok] }.transform_values { |r| r[:value] }
+
+  skipped = skipped_orgs(gh, found.values.flat_map { |res| res.fetch('items') }, login, exclude_orgs)
+  dropped = skipped.map { |s| s[:org].downcase }
+  visible = found.transform_values { |res| res.fetch('items').reject { |raw| dropped.include?(owner(raw).downcase) } }
+  hits = ->(kind) { visible.fetch(kind, []) }
+
+  my_prs = parallel_map(hits.call('my_pr')) { |raw| my_pr_item(gh, raw, login) }
+  # Issues with no comments can't hold a reply; PRs may still have reviews.
+  replies = parallel_map(hits.call('reply').select { |raw| pr?(raw) || raw.fetch('comments').positive? }) do |raw|
+    reply_for(gh, raw, login, since)
+  end
+  reply_total = found.dig('reply', 'total_count') || 0
+
+  {
+    login:,
+    items: [
+      *hits.call('review_request').map { |raw| base_item('review_request', raw) },
+      *my_prs.map(&:first),
+      *hits.call('assigned').map { |raw| base_item('assigned', raw) },
+      *hits.call('new_in_my_repos').map { |raw| new_in_my_repos_item(raw) },
+      *hits.call('closed_pr').map { |raw| closed_pr_item(raw) },
+      *replies.filter_map(&:first),
+    ],
+    skipped_orgs: skipped,
+    errors: [*search_errors, *my_prs.flat_map(&:last), *replies.flat_map(&:last)],
+    reply_scan: { candidates: reply_total, truncated: reply_total > SEARCH_PAGE_SIZE },
+  }
+end
+
+# --- feeds: pure --------------------------------------------------------------
+
+def feed_specs(config)
+  config.flat_map do |group, entries|
+    Array(entries).map do |entry|
+      key = FEED_SHORTHANDS.keys.find { |k| entry.key?(k) }
+      url = key && FEED_SHORTHANDS.fetch(key).call(entry.fetch(key).to_s)
+      { group:, name: entry.fetch('name', url.to_s), url: }
+    end
+  end
+end
+
+def feed_entry(entry)
+  case entry
+  when RSS::Atom::Feed::Entry
+    link = entry.links.find { |l| [nil, 'alternate'].include?(l.rel) } || entry.link
+    { title: entry.title&.content, url: link&.href, guid: entry.id&.content,
+      date: (entry.published || entry.updated)&.content, summary: (entry.summary || entry.content)&.content }
+  else
+    { title: entry.title, url: entry.link, guid: entry.respond_to?(:guid) ? entry.guid&.content : nil,
+      date: entry.date, summary: entry.description }
+  end
+end
+
+# Feed bodies are untrusted and can break the parser in many ways; any of them
+# is one failed source, never the end of the run.
+def parse_feed(body)
+  feed = RSS::Parser.parse(body, false)
+  feed ? ok(feed.items.map { |entry| feed_entry(entry) }) : failure('not an RSS or Atom feed')
+rescue StandardError => e
+  failure("unparseable feed (#{e.class})")
+end
+
+def feed_item(spec, entry)
+  key = entry[:guid] || entry[:url] || entry[:title]
+  {
+    id: "#{spec[:group]}:#{Digest::SHA256.hexdigest("#{spec[:name]}\n#{key}")[0, 10]}",
+    kind: spec[:group],
+    title: squish(entry[:title], 300),
+    url: entry[:url],
+    source: spec[:name],
+    date: stamp(entry[:date]),
+    summary: squish(entry[:summary], 300),
+  }
+end
+
+# --- feeds: effects (through the injected `fetch`) ------------------------------
+#
+# `fetch` is anything with `call(url)` returning ok(body) or failure(message).
+
+def http_get(url, redirects_left = MAX_REDIRECTS)
+  uri = URI(url)
+  response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https',
+                                                 open_timeout: HTTP_TIMEOUT, read_timeout: HTTP_TIMEOUT) do |http|
+    http.request(Net::HTTP::Get.new(uri, 'User-Agent' => USER_AGENT))
+  end
+  case response
+  when Net::HTTPSuccess then ok(response.body)
+  when Net::HTTPRedirection
+    target = URI.join(url, response['location'].to_s).to_s
+    return failure('too many redirects') if redirects_left.zero?
+    return failure('redirect to a non-http(s) URL') unless http_url?(target)
+
+    http_get(target, redirects_left - 1)
+  else failure("HTTP #{response.code}")
+  end
+rescue StandardError => e # DNS, TLS, timeouts, resets: one failed source
+  failure("#{e.class}: #{e.message}"[0, 200])
+end
+
+def collect_feed(fetch, spec, since)
+  return [[], [error_entry(spec[:name], 'not an http(s) URL')]] unless http_url?(spec[:url])
+
+  body = fetch.call(spec[:url])
+  return [[], [error_entry(spec[:name], body[:error])]] unless body[:ok]
+
+  parsed = parse_feed(body[:value])
+  return [[], [error_entry(spec[:name], parsed[:error])]] unless parsed[:ok]
+
+  [parsed[:value].select { |e| e[:date].is_a?(Time) && e[:date] >= since }.map { |e| feed_item(spec, e) }, []]
+end
+
+def collect_feeds(fetch, sources, since)
+  return { items: [], errors: [error_entry('sources.yml', sources[:error])] } unless sources[:ok]
+
+  results = parallel_map(feed_specs(sources[:value])) { |spec| collect_feed(fetch, spec, since) }
+  { items: results.flat_map(&:first), errors: results.flat_map(&:last) }
+end
+
+# --- entry point --------------------------------------------------------------
+
+def parse_options(argv)
+  options = { state: DEFAULT_STATE, sources: DEFAULT_SOURCES, exclude_orgs: [] }
+  timestamp = ->(value) { parse_time(value) || raise(OptionParser::InvalidArgument, value) }
+  OptionParser.new do |o|
+    o.banner = 'Usage: collect [--since ISO8601] [--state PATH] [--exclude-org ORG]... [--sources PATH]' \
+               "\n       collect --mark-run GENERATED_AT [--state PATH]"
+    o.on('--since ISO8601', 'Window start (default: state file, else 24h ago)') { |v| options[:since] = timestamp.call(v) }
+    o.on('--state PATH', 'State file holding the last run time') { |v| options[:state] = v }
+    o.on('--exclude-org ORG', 'Drop an org entirely (repeatable)') { |v| options[:exclude_orgs] += [v] }
+    o.on('--sources PATH', 'Feed list (default: sources.yml beside this script)') { |v| options[:sources] = v }
+    o.on('--mark-run GENERATED_AT', 'Advance the state file to a run\'s generated_at, then exit') do |v|
+      options[:mark_run] = timestamp.call(v)
+    end
+  end.parse(argv)
+  options
+end
+
+def mark_run(state_path, time)
+  FileUtils.mkdir_p(File.dirname(state_path))
+  File.write(state_path, "#{stamp(time)}\n")
+end
+
+def read_state(path)
+  File.read(path)
+rescue Errno::ENOENT
+  nil
+end
+
+def load_sources(path)
+  ok(YAML.safe_load_file(path))
+rescue Errno::ENOENT, Psych::SyntaxError => e
+  failure(e.message)
+end
+
+def main(argv)
+  options = parse_options(argv)
+  return mark_run(options[:state], options[:mark_run]) if options[:mark_run]
+
+  started = Time.now.utc
+  since = options[:since] || parse_time(read_state(options[:state])) || started - DEFAULT_WINDOW
+  run = lambda do |cmd|
+    out, err, status = Open3.capture3(*cmd)
+    [out, err, status.success?]
+  rescue Errno::ENOENT => e # gh not installed
+    ['', "gh: #{e.message}", false]
+  end
+  gh = ->(path) { gh_get(run, path) }
+  fetch = ->(url) { http_get(url) }
+
+  feeds = Thread.new { collect_feeds(fetch, load_sources(options[:sources]), since) }
+  github = collect_github(gh, since:, exclude_orgs: options[:exclude_orgs])
+  feed_result = feeds.value
+
+  puts JSON.pretty_generate(
+    generated_at: stamp(started),
+    since: stamp(since),
+    login: github[:login],
+    items: [*github[:items], *feed_result[:items]].uniq { |item| item[:id] },
+    skipped_orgs: github[:skipped_orgs],
+    reply_scan: github[:reply_scan],
+    errors: [*github[:errors], *feed_result[:errors]],
+  )
+rescue OptionParser::ParseError => e
+  abort "collect: #{e.message}"
+end
+
+main(ARGV) if $PROGRAM_NAME == __FILE__
