@@ -6,7 +6,7 @@
   "permissions": {
     "defaultMode": "bypassPermissions"
   },
-  "model": "fable",
+  "model": "opus",
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": false,
     "code-review@claude-plugins-official": false
