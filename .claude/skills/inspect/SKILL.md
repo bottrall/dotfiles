@@ -46,6 +46,14 @@ When the change is **not mine**, `~/.claude/CLAUDE.md` is out of scope. It loads
 
 When the change is mine, review as usual.
 
+## Independence
+
+Reviewers and validators judge the diff, not anyone's account of it. Every subagent prompt in the steps below is a **closed list**: it carries exactly the items its step names, and nothing else.
+
+Never pass — quoted, paraphrased, or summarised — anything that comes from whoever wrote the change: a build subagent's report, a PR description, notes on what was intended, deliberately left out, already verified, or fixed in an earlier cycle. If this session holds that context (it does whenever `build` runs this review), it stays in this session. An author's explanation is exactly what lets a real finding be argued away before anyone has looked at the code.
+
+The one source of intent that crosses is **the task as I stated it** — my words or the ticket's content, verbatim, never a restatement. `build` always has one; when I invoke this skill directly, it's whatever I said the change is for. It's my requirement, not the author's claim to have met it. Pass it to the summarizer, every reviewer, and every validator; when none was given, pass nothing in its place.
+
 ## Model selection
 
 Every subagent launch includes a deliberate model choice, picked from whatever tiers the Agent tool currently exposes. No step is mapped to a model — decide per launch by weighing:
@@ -95,15 +103,18 @@ Launch a subagent to summarize the branch. It should:
 
 - Read `git diff $BASE` (committed + staged + unstaged) and `git log --oneline $BASE..HEAD` (commits only).
 - Run `git status --porcelain`; if non-empty, note which files have uncommitted changes so the reviewers in step 5 have that context.
-- Return a short summary of what the branch does.
+- Return a short summary of what the branch does, built from the diff and commits alone — what the code does, not what it was meant to do or why.
+
+Its prompt carries only `BASE`, the scope commands, and the task (see Independence). Pass its summary to the reviewers as returned — don't amend or annotate it.
 
 ### 5. Parallel review
 
-Launch **one reviewer per lens** in the criteria — five in parallel: Correctness, Security, Rules compliance, Performance, Simplicity / idiom. Each receives:
+Launch **one reviewer per lens** in the criteria — five in parallel: Correctness, Security, Rules compliance, Performance, Simplicity / idiom. Each receives exactly these, and nothing else (see Independence):
 
 - The full criteria text, verbatim.
 - Which single lens it owns. It reviews through that lens only, at the stated bar, and honours the false-positive list.
 - The rule-file paths from step 3 and the branch summary from step 4.
+- The task, verbatim, when one was given.
 - The resolved `BASE` commit and the exact scope commands from the Review scope section.
 - When the change is not mine, the instruction from the Authorship section, verbatim.
 
@@ -113,11 +124,15 @@ Each returns findings tagged with their tier — `path:line`, a reason tag namin
 
 For each finding, launch a subagent to adversarially confirm it is real and worth fixing with high confidence, using the criteria verbatim. E.g. if "variable is not defined" was flagged, verify that's actually true in the code; for a rule finding, verify the rule is in scope for the file and actually violated; for a simplicity finding, verify the proposed replacement does not lose behaviour a higher-ranked criterion requires. Drop any finding that doesn't survive. When the change is not mine, each validator also receives the instruction from the Authorship section, verbatim.
 
+Beyond the criteria and that instruction, a validator receives exactly the finding as its reviewer returned it, the resolved `BASE` and scope commands, and the task — nothing else (see Independence). It confirms against the code, never against an explanation of why the code is that way.
+
 Tier 2 findings skip validation — there is nothing adversarial to confirm in a classification, and re-judging it would reintroduce the silence this tier exists to prevent. For Tier 1 rule findings, validation is **correspondence, not re-judgement**: confirm the quoted rule exists in the quoted file and the quoted text is in the diff. Judging whether the finding is subjective was the lens's call; the validator checks facts.
 
 ### 7. Filter
 
 Drop every finding that failed validation in step 6, plus anything on the false-positive list. When the change is not mine, also drop any finding anchored in my global instructions rather than the criteria or a repo rule file. If two surviving findings conflict on the same code, keep the one from the higher-ranked lens and drop the other. What remains is the final set, tagged by tier: HIGH SIGNAL findings and in-passing findings.
+
+Those are the only grounds for dropping a finding. An explanation of why the code is that way — from the author, a build report, or this session's memory of either — is not one: a validator reading the code is the only appeal, and Tier 2 has none by design.
 
 ### 8. Report findings inline in chat
 

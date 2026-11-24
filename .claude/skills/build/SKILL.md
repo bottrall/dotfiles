@@ -86,6 +86,7 @@ Launch a subagent to do the work for this cycle. Its prompt must include, in thi
    - **Cycle 1:** implement the task.
    - **Cycle > 1:** its sole job is to resolve the exact blockers passed in from the previous phase — quote the review findings and/or CI failures verbatim — and apply any in-passing list carried alongside them. Fix precisely those (plus whatever is strictly necessary to make the fix correct) without regressing anything already working.
 4. **Verify locally before handing back.** Run automatic fixes (formatters/linters) & the tests that exercise the files it changed (the touched spec/test files and anything obviously covering them). A failing test is the builder's to fix in this cycle, not CI's to discover — a CI round is the most expensive way to find it.
+5. **Its report.** Status only: done or blocked, the verification commands it ran with their results, and anything it couldn't finish. No account of design choices, trade-offs, or why something was left as is — the report never reaches the review (see Phase 3), so anything a reader needs to know must be visible in the code itself, where the review can judge it.
 
 Leave the changes uncommitted — the review reads staged + unstaged work, and the launch phase handles committing.
 
@@ -95,9 +96,21 @@ Invoke the `inspect` skill via the Skill tool and run it exactly as written. It 
 
 Because **every surviving finding sends the loop back to Phase 2**, the review's HIGH SIGNAL bar and validation pass are what keep a false positive from burning a cycle.
 
+### Blind to the build
+
+The review sees the diff, never the builder's account of it. This session holds the builder's report, so this is the one place it can leak — and a builder that explains its choices to its own reviewers gets the findings I'd want fixed argued away.
+
+- **The task** passed to the review is the task from Inputs, verbatim — my words or the ticket's content — on every cycle, never "fix these findings".
+- **Nothing from any build subagent** goes into any review prompt: not its report, not a summary of it, not what it says it fixed, verified, or chose not to do. When writing each prompt, check it against the closed list in the `inspect` skill's Independence section.
+- **Every cycle is a fresh review.** Reviewers aren't told it's a re-review, what an earlier review found, or what changed since — they read the full branch diff cold.
+
+The builder's report exists so this session knows whether the build finished. Its job is done before Phase 3 starts.
+
 ### Gate
 
 Read the report the `inspect` skill printed. A finding's heading carries its tier: no suffix means HIGH SIGNAL, `(in-passing)` means Tier 2.
+
+Act on the report exactly as printed. Never drop, downgrade, or reinterpret a finding because the builder's report explained, anticipated, or disputed it — the review's validation pass is the only appeal.
 
 - **"No issues found":** proceed to Phase 4.
 - **In-passing findings only:** apply them now, in the main session — small, policy-level edits of the kind the criteria's Tier 2 names, already located precisely by the review. This does not increment the cycle counter. Run the project's lint and typecheck entry points (`bin/lint`, `bin/typecheck`, or their equivalents) plus the touched tests, then proceed to Phase 4.
