@@ -4,7 +4,7 @@
     "CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"
   },
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "auto"
   },
   "model": "opus",
   "enabledPlugins": {
